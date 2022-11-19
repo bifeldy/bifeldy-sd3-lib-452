@@ -11,6 +11,9 @@
  * 
  */
 
+using System.Linq;
+using System.Reflection;
+
 using Autofac;
 using Autofac.Builder;
 
@@ -28,6 +31,15 @@ namespace bifeldy_sd3_lib_452 {
             // builder.RegisterAssemblyTypes(Assembly.Load(nameof(nama_project_lain_yang_mau_di_import)))
             //     .Where(vsSln => vsSln.Namespace.Contains("nama_namespace_yang_mau_di_import"))
             //     .As(c => c.GetInterfaces().FirstOrDefault(i => i.Name == "I" + c.Name);
+
+            // Array Of Namespace For DI
+            string[] namespaceForDependencyInjection = {};
+
+            // Inject CClass As IInterface
+            _builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
+                .Where(type => namespaceForDependencyInjection.Any(type.Namespace.Contains))
+                .As(c => c.GetInterfaces().FirstOrDefault(i => i.Name == "I" + c.Name.Substring(1)))
+                .SingleInstance();
         }
 
         /// <summary>Di Panggil Sebelum Start();</summary>
