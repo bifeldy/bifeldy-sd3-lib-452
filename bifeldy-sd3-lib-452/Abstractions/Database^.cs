@@ -123,7 +123,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         }
 
         protected virtual async Task<(T, Exception)> ExecScalarAsync<T>(DbCommand databaseCommand, bool autoCloseConnection = true) {
-            T result = (T)Convert.ChangeType(null, typeof(T));
+            T result = (T) Convert.ChangeType(null, typeof(T));
             Exception exception = null;
             try {
                 if (DatabaseConnection.State == ConnectionState.Open) {
@@ -132,7 +132,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                 else {
                     await DatabaseConnection.OpenAsync();
                     object _obj = await databaseCommand.ExecuteScalarAsync();
-                    result = (T)Convert.ChangeType(_obj, typeof(T));
+                    result = (T) Convert.ChangeType(_obj, typeof(T));
                 }
             }
             catch (Exception ex) {

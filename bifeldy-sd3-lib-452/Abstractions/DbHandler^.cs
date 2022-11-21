@@ -107,7 +107,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         public async Task<string> GetJenisDc() {
             if (string.IsNullOrEmpty(DcJenis)) {
                 (string res, Exception ex) = await OraPg.ExecScalarAsync<string>("SELECT TBL_JENIS_DC FROM DC_TABEL_DC_T");
-                DcJenis = (ex == null) ? res : null;
+                DcJenis = (ex == null) ? res : throw ex;
             }
             return DcJenis;
         }
@@ -115,7 +115,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         public async Task<string> GetKodeDc() {
             if (string.IsNullOrEmpty(DcCode)) {
                 (string res, Exception ex) = await OraPg.ExecScalarAsync<string>("SELECT TBL_DC_KODE FROM DC_TABEL_DC_T");
-                DcCode = (ex == null) ? res : null;
+                DcCode = (ex == null) ? res : throw ex;
             }
             return DcCode;
         }
@@ -123,7 +123,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         public async Task<string> GetNamaDc() {
             if (string.IsNullOrEmpty(DcName)) {
                 (string res, Exception ex) = await OraPg.ExecScalarAsync<string>("SELECT TBL_DC_NAMA FROM DC_TABEL_DC_T");
-                DcName = (ex == null) ? res : null;
+                DcName = (ex == null) ? res : throw ex;
             }
             return DcName;
         }
@@ -208,7 +208,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                         new CDbQueryParamBind { NAME = "password", VALUE = password }
                     }
                 );
-                LoggedInUsername = (ex == null) ? res : null;
+                LoggedInUsername = (ex == null) ? res : throw ex;
             }
             return !string.IsNullOrEmpty(LoggedInUsername);
         }
@@ -244,7 +244,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                         new CDbQueryParamBind { NAME = "app_name", VALUE = $"%{_app.AppName}%" }
                     }
                 );
-                return (ex == null) && (res == LoggedInUsername);
+                return (ex == null) ? (res == LoggedInUsername) : throw ex;
             }
         }
 
