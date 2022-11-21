@@ -42,7 +42,7 @@ namespace bifeldy_sd3_lib_452 {
                 .SingleInstance();
         }
 
-        /// <summary>Di Panggil Sebelum Start();</summary>
+        /// <summary>Di Panggil Sebelum ResolveClass();</summary>
         /// <typeparam name="CClass">Nama Class Yang Ingin Di Daftarkan</typeparam>
         /// <typeparam name="IInterface">Nama Interface Dari Class Yang Ingin Di Daftarkan</typeparam>
         /// <param name="singleton">Menggunakan Instance Yang Sama Untuk Keseluruhan Program</param>
