@@ -42,15 +42,6 @@ namespace bifeldy_sd3_lib_452 {
                 .SingleInstance();
         }
 
-        public IContainer Container {
-            get {
-                if (_container == null) {
-                    _container = _builder.Build();
-                }
-                return _container;
-            }
-        }
-
         /// <summary>Di Panggil Sebelum ResolveClass();</summary>
         /// <typeparam name="CClass">Nama Class Yang Ingin Di Daftarkan</typeparam>
         /// <typeparam name="IInterface">Nama Interface Dari Class Yang Ingin Di Daftarkan</typeparam>
@@ -78,6 +69,13 @@ namespace bifeldy_sd3_lib_452 {
 
         public CClass ResolveClass<CClass>() {
             return _container.Resolve<CClass>();
+        }
+
+        public ILifetimeScope BeginLifetimeScope() {
+            if (_container == null) {
+                _container = _builder.Build();
+            }
+            return _container.BeginLifetimeScope();
         }
 
     }
