@@ -42,11 +42,30 @@ namespace bifeldy_sd3_lib_452 {
                 .SingleInstance();
         }
 
+        public IContainer Container {
+            get {
+                if (_container == null) {
+                    _container = _builder.Build();
+                }
+                return _container;
+            }
+        }
+
         /// <summary>Di Panggil Sebelum ResolveClass();</summary>
         /// <typeparam name="CClass">Nama Class Yang Ingin Di Daftarkan</typeparam>
         /// <typeparam name="IInterface">Nama Interface Dari Class Yang Ingin Di Daftarkan</typeparam>
         /// <param name="singleton">Menggunakan Instance Yang Sama Untuk Keseluruhan Program</param>
-        public void RegisterDI<CClass, IInterface>(bool singleton = true) {
+        public void RegisterDiClass<CClass>(bool singleton = true) {
+            IRegistrationBuilder<
+                CClass,
+                ConcreteReflectionActivatorData,
+                SingleRegistrationStyle
+            > registrationBuilder = _builder.RegisterType<CClass>();
+            if (singleton) {
+                registrationBuilder.SingleInstance();
+            }
+        }
+        public void RegisterDiClassAsInterface<CClass, IInterface>(bool singleton = true) {
             IRegistrationBuilder<
                 CClass,
                 ConcreteReflectionActivatorData,
@@ -58,9 +77,6 @@ namespace bifeldy_sd3_lib_452 {
         }
 
         public CClass ResolveClass<CClass>() {
-            if (_container == null) {
-                _container = _builder.Build();
-            }
             return _container.Resolve<CClass>();
         }
 
