@@ -25,7 +25,6 @@ using bifeldy_sd3_lib_452.Utilities;
 namespace bifeldy_sd3_lib_452.Abstractions {
 
     public interface IDbHandler {
-        bool IsUsingPostgres { get; set; }
         string LoggedInUsername { get; set; }
         string DbName { get; }
         IOracle Oracle { get; }
@@ -51,8 +50,6 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         private string DcCode = null;
         private string DcName = null;
         private string DcJenis = null;
-
-        public bool IsUsingPostgres { get; set; }
 
         public string LoggedInUsername { get; set; }
 
@@ -96,7 +93,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
 
         public IDatabase OraPg {
             get {
-                if (IsUsingPostgres) {
+                if (_app.IsUsingPostgres) {
                     return Postgres;
                 }
                 return Oracle;
@@ -145,7 +142,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                         SELECT
                             CASE
                                 WHEN COALESCE(aprove, 'N') = 'Y' AND {(
-                                        IsUsingPostgres ?
+                                        _app.IsUsingPostgres ?
                                         "COALESCE(tgl_berlaku, NOW())::DATE <= CURRENT_DATE" :
                                         "TRUNC(COALESCE(tgl_berlaku, SYSDATE)) <= TRUNC(SYSDATE)"
                                     )} 
@@ -174,7 +171,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                         (bool res2, Exception ex2) = await OraPg.ExecQueryAsync(
                             $@"
                                 INSERT INTO dc_monitoring_program_t (kode_dc, nama_program, ip_client, versi, tanggal)
-                                VALUES (:kode_dc, :nama_program, :ip_client, :versi, {(IsUsingPostgres ? "NOW()" : "SYSDATE")})
+                                VALUES (:kode_dc, :nama_program, :ip_client, :versi, {(_app.IsUsingPostgres ? "NOW()" : "SYSDATE")})
                             ",
                             new List<CDbQueryParamBind> {
                                 new CDbQueryParamBind { NAME = "kode_dc", VALUE = await GetKodeDc() },

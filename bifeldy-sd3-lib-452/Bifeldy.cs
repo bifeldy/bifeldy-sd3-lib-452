@@ -42,6 +42,10 @@ namespace bifeldy_sd3_lib_452 {
                 .SingleInstance();
         }
 
+        public Bifeldy(string[] args) : this() {
+            // bifeldy-sd3-wf-452.exe -arg0 arg1 --arg2 "a r g 3"
+        }
+
         /// <summary>Di Panggil Sebelum ResolveClass();</summary>
         /// <typeparam name="CClass">Nama Class Yang Ingin Di Daftarkan</typeparam>
         /// <typeparam name="IInterface">Nama Interface Dari Class Yang Ingin Di Daftarkan</typeparam>

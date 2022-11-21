@@ -24,6 +24,7 @@ using bifeldy_sd3_lib_452.Models;
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IApplication {
+        Process CurrentProcess { get; }
         string AppName { get; }
         string AppLocation { get; }
         string AppVersion { get; }
@@ -32,9 +33,11 @@ namespace bifeldy_sd3_lib_452.Utilities {
         CIpMacAddress[] GetIpMacAddress();
         string[] GetAllIpAddress();
         string[] GetAllMacAddress();
+        bool IsUsingPostgres { get; set; }
     }
 
     public class CApplication : IApplication {
+        public Process CurrentProcess { get; }
 
         private readonly SettingLib.Class1 _SettingLib;
         private readonly SettingLibRest.Class1 _SettingLibRest;
@@ -43,7 +46,11 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public string AppLocation { get; }
         public string AppVersion { get; }
 
+        public bool IsUsingPostgres { get; set; }
+
         public CApplication() {
+            CurrentProcess = Process.GetCurrentProcess();
+            //
             _SettingLib = new SettingLib.Class1();
             _SettingLibRest = new SettingLibRest.Class1();
             //
