@@ -15,9 +15,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using System.Data;
 using System.Data.Common;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using Oracle.ManagedDataAccess.Client;

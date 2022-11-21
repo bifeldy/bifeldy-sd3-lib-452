@@ -85,7 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Abstractions\Database^.cs" />
-    <Compile Include="Abstractions\Db^.cs" />
+    <Compile Include="Abstractions\DbHandler^.cs" />
     <Compile Include="Bifeldy.cs" />
     <Compile Include="Databases\MsSQL_.cs" />
     <Compile Include="Databases\Oracle_.cs" />

@@ -33,7 +33,7 @@ namespace bifeldy_sd3_lib_452 {
             //     .As(c => c.GetInterfaces().FirstOrDefault(i => i.Name == "I" + c.Name);
 
             // Array Of Namespace For DI
-            string[] namespaceForDependencyInjection = { "Utilities" };
+            string[] namespaceForDependencyInjection = { "Databases", "Utilities" };
 
             // Inject CClass As IInterface
             _builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
@@ -57,7 +57,7 @@ namespace bifeldy_sd3_lib_452 {
             }
         }
 
-        public CClass StartAppplication<CClass>() {
+        public CClass ResolveClass<CClass>() {
             if (_container == null) {
                 _container = _builder.Build();
             }

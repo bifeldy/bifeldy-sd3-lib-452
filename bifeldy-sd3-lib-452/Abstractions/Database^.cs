@@ -7,8 +7,8 @@
  * Department   :: IT SD 03
  * Mail         :: bias@indomaret.co.id
  * 
- * Catatan      ::  Class Database
- *              :: Seharusnya Tidak Untuk Didaftarkan Ke DI Container
+ * Catatan      :: Class Database Bawaan
+ *              :: Tidak Untuk Didaftarkan Ke DI Container
  *              :: Hanya Untuk Inherit
  *              :: Mohon & Harap Tidak Digunakan
  * 
