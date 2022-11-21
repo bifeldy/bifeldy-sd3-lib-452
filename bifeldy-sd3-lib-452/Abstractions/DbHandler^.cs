@@ -26,10 +26,10 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         bool IsUsingPostgres { get; set; }
         string LoggedInUsername { get; set; }
         string DbName { get; }
-        IDatabase OraPg { get; }
         IOracle Oracle { get; }
         IPostgres Postgres { get; }
         IMsSQL MsSql { get; }
+        IDatabase OraPg { get; }
         Task<string> GetJenisDc();
         Task<string> GetKodeDc();
         Task<string> GetNamaDc();
@@ -62,22 +62,6 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             _mssql = mssql;
         }
 
-        public IDatabase OraPg {
-            get {
-                IDatabase ret;
-                if (IsUsingPostgres) {
-                    ret = _postgres.Available ? _postgres : null;
-                }
-                else {
-                    ret = _oracle.Available ? _oracle : null;
-                }
-                if (ret == null) {
-                    throw new Exception("Gagal Membaca Dan Mengambil Informasi Oracle & Postgres Database");
-                }
-                return ret;
-            }
-        }
-
         public IOracle Oracle {
             get {
                 IOracle ret = _oracle.Available ? _oracle : null;
@@ -103,6 +87,22 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                 IMsSQL ret = _mssql.Available ? _mssql : null;
                 if (ret == null) {
                     throw new Exception("Gagal Membaca Dan Mengambil Informasi Ms. SQL Server Database");
+                }
+                return ret;
+            }
+        }
+
+        public IDatabase OraPg {
+            get {
+                IDatabase ret;
+                if (IsUsingPostgres) {
+                    ret = Postgres;
+                }
+                else {
+                    ret = Oracle;
+                }
+                if (ret == null) {
+                    throw new Exception($"Gagal Membaca Dan Mengambil Informasi {(IsUsingPostgres ? "Postgres" : "Oracle")} Database");
                 }
                 return ret;
             }
