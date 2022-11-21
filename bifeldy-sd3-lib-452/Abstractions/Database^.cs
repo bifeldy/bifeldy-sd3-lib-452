@@ -57,11 +57,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         public string DbTnsOdp { get; set; }
         public string DbConnectionString { get; set; }
 
-        public bool Available {
-            get {
-                return DatabaseConnection != null;
-            }
-        }
+        public bool Available => DatabaseConnection != null;
 
         public CDatabase(ILogger logger) {
             _logger = logger;
