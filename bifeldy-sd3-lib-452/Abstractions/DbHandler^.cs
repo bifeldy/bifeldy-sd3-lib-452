@@ -42,7 +42,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
 
     public abstract class CDbHandler : IDbHandler {
 
-        private readonly IApp _app;
+        private readonly IApplication _app;
 
         private readonly IOracle _oracle;
         private readonly IPostgres _postgres;
@@ -56,7 +56,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
 
         public string LoggedInUsername { get; set; }
 
-        public CDbHandler(IApp app, IOracle oracle, IPostgres postgres, IMsSQL mssql) {
+        public CDbHandler(IApplication app, IOracle oracle, IPostgres postgres, IMsSQL mssql) {
             _app = app;
 
             _oracle = oracle;

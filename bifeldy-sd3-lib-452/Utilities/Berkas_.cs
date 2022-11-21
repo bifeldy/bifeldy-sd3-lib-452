@@ -36,7 +36,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
     public sealed class CBerkas : IBerkas {
 
-        private readonly IApp _app;
+        private readonly IApplication _app;
         private readonly ILogger _logger;
 
         public int MaxOldRetentionDay { get; }
@@ -45,7 +45,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public string DownloadFolderPath { get; }
         public List<string> ListFileForTransfer { get; }
 
-        public CBerkas(IApp app, ILogger logger) {
+        public CBerkas(IApplication app, ILogger logger) {
             _app = app;
             _logger = logger;
 

@@ -32,13 +32,13 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private readonly IApp _app;
+        private readonly IApplication _app;
 
         public string LogErrorFolderPath { get; }
 
         private string LogInformation = "";
 
-        public CLogger(IApp app) {
+        public CLogger(IApplication app) {
             _app = app;
 
             LogErrorFolderPath = Path.Combine(_app.AppLocation, "Error_Logs");

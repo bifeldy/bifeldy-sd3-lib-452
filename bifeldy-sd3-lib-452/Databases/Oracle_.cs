@@ -32,13 +32,13 @@ namespace bifeldy_sd3_lib_452.Databases {
 
     public sealed class COracle : CDatabase, IOracle {
 
-        private readonly IApp _app;
+        private readonly IApplication _app;
         private readonly ILogger _logger;
 
         private OracleCommand DatabaseCommand { get; set; }
         private OracleDataAdapter DatabaseAdapter { get; set; }
 
-        public COracle(IApp app, ILogger logger) : base(logger) {
+        public COracle(IApplication app, ILogger logger) : base(logger) {
             _app = app;
             _logger = logger;
 

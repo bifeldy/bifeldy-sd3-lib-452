@@ -31,13 +31,13 @@ namespace bifeldy_sd3_lib_452.Databases {
 
     public sealed class CMsSQL : CDatabase, IMsSQL {
 
-        private readonly IApp _app;
+        private readonly IApplication _app;
         private readonly ILogger _logger;
 
         private SqlCommand DatabaseCommand { get; set; }
         private SqlDataAdapter DatabaseAdapter { get; set; }
 
-        public CMsSQL(IApp app, ILogger logger) : base(logger) {
+        public CMsSQL(IApplication app, ILogger logger) : base(logger) {
             _app = app;
             _logger = logger;
 

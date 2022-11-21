@@ -32,13 +32,13 @@ namespace bifeldy_sd3_lib_452.Databases {
 
     public sealed class CPostgres : CDatabase, IPostgres {
 
-        private readonly IApp _app;
+        private readonly IApplication _app;
         private readonly ILogger _logger;
 
         private NpgsqlCommand DatabaseCommand { get; set; }
         private NpgsqlDataAdapter DatabaseAdapter { get; set; }
 
-        public CPostgres(IApp app, ILogger logger) : base(logger) {
+        public CPostgres(IApplication app, ILogger logger) : base(logger) {
             _app = app;
             _logger = logger;
 
