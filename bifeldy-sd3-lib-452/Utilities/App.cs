@@ -23,7 +23,7 @@ using bifeldy_sd3_lib_452.Models;
 
 namespace bifeldy_sd3_lib_452.Utilities {
 
-    public interface IApp {
+    public interface IApplication {
         string AppName { get; }
         string AppLocation { get; }
         string AppVersion { get; }
@@ -34,7 +34,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         string[] GetAllMacAddress();
     }
 
-    public class CApp : IApp {
+    public class CApplication : IApplication {
 
         private readonly SettingLib.Class1 _SettingLib;
         private readonly SettingLibRest.Class1 _SettingLibRest;
@@ -43,7 +43,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public string AppLocation { get; }
         public string AppVersion { get; }
 
-        public CApp() {
+        public CApplication() {
             _SettingLib = new SettingLib.Class1();
             _SettingLibRest = new SettingLibRest.Class1();
             //
