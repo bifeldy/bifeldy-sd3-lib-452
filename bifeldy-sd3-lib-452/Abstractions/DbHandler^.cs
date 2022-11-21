@@ -15,9 +15,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 using bifeldy_sd3_lib_452.Databases;
+using bifeldy_sd3_lib_452.Models;
 using bifeldy_sd3_lib_452.Utilities;
 
 namespace bifeldy_sd3_lib_452.Abstractions {
@@ -130,9 +132,14 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         }
 
         public async Task<string> CekVersi() {
+            bool debug = false;
             #if DEBUG
+                debug = true;
+            #endif
+            if (debug) {
                 return "OKE";
-            #else
+            }
+            else {
                 (string res1, Exception ex1) = await OraPg.ExecScalarAsync<string>(
                     $@"
                         SELECT
@@ -154,9 +161,9 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                             dc_kode = :dc_kode
                             AND UPPER(nama_prog) LIKE :nama_prog
                     ",
-                    new List<CDbHandlerQueryParamBind> {
-                        new CDbHandlerQueryParamBind { NAME = "dc_kode", VALUE = await GetKodeDc() },
-                        new CDbHandlerQueryParamBind { NAME = "nama_prog", VALUE = $"%{_app.AppName}%" }
+                    new List<CDbQueryParamBind> {
+                        new CDbQueryParamBind { NAME = "dc_kode", VALUE = await GetKodeDc() },
+                        new CDbQueryParamBind { NAME = "nama_prog", VALUE = $"%{_app.AppName}%" }
                     }
                 );
                 if (ex1 == null) {
@@ -169,11 +176,11 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                                 INSERT INTO dc_monitoring_program_t (kode_dc, nama_program, ip_client, versi, tanggal)
                                 VALUES (:kode_dc, :nama_program, :ip_client, :versi, {(IsUsingPostgres ? "NOW()" : "SYSDATE")})
                             ",
-                            new List<CDbHandlerQueryParamBind> {
-                                new CDbHandlerQueryParamBind { NAME = "kode_dc", VALUE = await GetKodeDc() },
-                                new CDbHandlerQueryParamBind { NAME = "nama_program", VALUE = _app.AppName },
-                                new CDbHandlerQueryParamBind { NAME = "ip_client", VALUE = _app.GetAllIpAddress().FirstOrDefault() },
-                                new CDbHandlerQueryParamBind { NAME = "versi", VALUE = _app.AppVersion }
+                            new List<CDbQueryParamBind> {
+                                new CDbQueryParamBind { NAME = "kode_dc", VALUE = await GetKodeDc() },
+                                new CDbQueryParamBind { NAME = "nama_program", VALUE = _app.AppName },
+                                new CDbQueryParamBind { NAME = "ip_client", VALUE = _app.GetAllIpAddress().FirstOrDefault() },
+                                new CDbQueryParamBind { NAME = "versi", VALUE = _app.AppVersion }
                             }
                         );
                         return res2 ? "OKE" : ex2.Message;
@@ -183,7 +190,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                     }
                 }
                 return ex1.Message;
-            #endif
+            }
         }
 
         public async Task<bool> LoginUser(string userNameNik, string password) {
@@ -198,10 +205,10 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                             (UPPER(user_name) = :user_name OR UPPER(user_nik) = :user_nik)
                             AND UPPER(user_password) = :password
                     ",
-                    new List<CDbHandlerQueryParamBind> {
-                        new CDbHandlerQueryParamBind { NAME = "user_name", VALUE = userNameNik },
-                        new CDbHandlerQueryParamBind { NAME = "user_nik", VALUE = userNameNik },
-                        new CDbHandlerQueryParamBind { NAME = "password", VALUE = password }
+                    new List<CDbQueryParamBind> {
+                        new CDbQueryParamBind { NAME = "user_name", VALUE = userNameNik },
+                        new CDbQueryParamBind { NAME = "user_nik", VALUE = userNameNik },
+                        new CDbQueryParamBind { NAME = "password", VALUE = password }
                     }
                 );
                 LoggedInUsername = (ex == null) ? res : null;
@@ -210,9 +217,14 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         }
 
         public async Task<bool> CheckIpMac() {
+            bool debug = false;
             #if DEBUG
+                debug = true;
+            #endif
+            if (debug) {
                 return true;
-            #else
+            }
+            else {
                 (string res, Exception ex) = await OraPg.ExecScalarAsync<string>(
                     $@"
                         SELECT
@@ -228,15 +240,15 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                             (b.ip_addr IN (:ip_v4_v6) OR b.ip_addr IN (:mac_addr)) AND
                             UPPER(c.sec_app_name) LIKE :app_name
                     ",
-                    new List<CDbHandlerQueryParamBind> {
-                        new CDbHandlerQueryParamBind { NAME = "user_name", VALUE = LoggedInUsername },
-                        new CDbHandlerQueryParamBind { NAME = "ip_v4_v6", VALUE = _app.GetAllIpAddress() },
-                        new CDbHandlerQueryParamBind { NAME = "mac_addr", VALUE = _app.GetAllMacAddress() },
-                        new CDbHandlerQueryParamBind { NAME = "app_name", VALUE = $"%{_app.AppName}%" }
+                    new List<CDbQueryParamBind> {
+                        new CDbQueryParamBind { NAME = "user_name", VALUE = LoggedInUsername },
+                        new CDbQueryParamBind { NAME = "ip_v4_v6", VALUE = _app.GetAllIpAddress() },
+                        new CDbQueryParamBind { NAME = "mac_addr", VALUE = _app.GetAllMacAddress() },
+                        new CDbQueryParamBind { NAME = "app_name", VALUE = $"%{_app.AppName}%" }
                     }
                 );
                 return (ex == null) && (res == LoggedInUsername);
-            #endif
+            }
         }
 
     }
