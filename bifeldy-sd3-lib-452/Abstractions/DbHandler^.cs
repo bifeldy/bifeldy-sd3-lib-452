@@ -94,17 +94,10 @@ namespace bifeldy_sd3_lib_452.Abstractions {
 
         public IDatabase OraPg {
             get {
-                IDatabase ret;
                 if (IsUsingPostgres) {
-                    ret = Postgres;
+                    return Postgres;
                 }
-                else {
-                    ret = Oracle;
-                }
-                if (ret == null) {
-                    throw new Exception($"Gagal Membaca Dan Mengambil Informasi {(IsUsingPostgres ? "Postgres" : "Oracle")} Database");
-                }
-                return ret;
+                return Oracle;
             }
         }
 
