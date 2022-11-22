@@ -11,6 +11,7 @@
  * 
  */
 
+using System;
 using System.Linq;
 using System.Reflection;
 
@@ -60,6 +61,18 @@ namespace bifeldy_sd3_lib_452 {
                 registrationBuilder.SingleInstance();
             }
         }
+
+        public void RegisterDiClassNamed<CClass>(bool singleton = true) {
+            IRegistrationBuilder<
+                CClass,
+                ConcreteReflectionActivatorData,
+                SingleRegistrationStyle
+            > registrationBuilder = _builder.RegisterType<CClass>().Named<object>(typeof(CClass).Name);
+            if (singleton) {
+                registrationBuilder.SingleInstance();
+            }
+        }
+
         public void RegisterDiClassAsInterface<CClass, IInterface>(bool singleton = true) {
             IRegistrationBuilder<
                 CClass,
@@ -73,6 +86,10 @@ namespace bifeldy_sd3_lib_452 {
 
         public CClass ResolveClass<CClass>() {
             return _container.Resolve<CClass>();
+        }
+
+        public object ResolveNamed(string name) {
+            return _container.ResolveNamed<object>(name);
         }
 
         public ILifetimeScope BeginLifetimeScope() {
