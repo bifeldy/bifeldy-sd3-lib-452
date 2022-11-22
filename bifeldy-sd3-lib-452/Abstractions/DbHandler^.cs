@@ -65,7 +65,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             get {
                 IOracle ret = _oracle.Available ? _oracle : null;
                 if (ret == null) {
-                    throw new Exception("Gagal Membaca Dan Mengambil Informasi Oracle Database");
+                    throw new Exception("Gagal Membaca Dan Mengambil `Kunci` Oracle Database");
                 }
                 return ret;
             }
@@ -75,7 +75,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             get {
                 IPostgres ret = _postgres.Available ? _postgres : null;
                 if (ret == null) {
-                    throw new Exception("Gagal Membaca Dan Mengambil Informasi Postgres Database");
+                    throw new Exception("Gagal Membaca Dan Mengambil `Kunci` Postgres Database");
                 }
                 return ret;
             }
@@ -85,7 +85,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             get {
                 IMsSQL ret = _mssql.Available ? _mssql : null;
                 if (ret == null) {
-                    throw new Exception("Gagal Membaca Dan Mengambil Informasi Ms. SQL Server Database");
+                    throw new Exception("Gagal Membaca Dan Mengambil `Kunci` Ms. SQL Server Database");
                 }
                 return ret;
             }
