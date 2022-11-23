@@ -134,7 +134,11 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         }
 
         protected virtual async Task<(T, Exception)> ExecScalarAsync<T>(DbCommand databaseCommand, bool autoCloseConnection = true) {
-            T result = (T) Convert.ChangeType(null, typeof(T));
+            dynamic x = null;
+            if (typeof(T) == typeof(DateTime)) {
+                x = DateTime.MinValue;
+            }
+            T result = (T) Convert.ChangeType(x, typeof(T));
             Exception exception = null;
             try {
                 if (DatabaseConnection.State == ConnectionState.Open) {

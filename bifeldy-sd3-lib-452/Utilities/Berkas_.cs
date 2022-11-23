@@ -23,15 +23,15 @@ using Ionic.Zip;
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IBerkas {
-        int MaxOldRetentionDay { get; }
-        string TempFolderPath { get; }
-        string ZipFolderPath { get; }
-        string DownloadFolderPath { get; }
-        List<string> ListFileForTransfer { get; }
+        int MaxOldRetentionDay { get; set; }
+        string TempFolderPath { get; set; }
+        string ZipFolderPath { get; set; }
+        string DownloadFolderPath { get; set; }
+        List<string> ListFileForZip { get; }
         void CleanUp();
         void DeleteOldFilesInFolder(string folderPath, int maxOldDays = 14);
         bool DataTable2CSV(DataTable table, string filename, string separator, string outputFolderPath = null);
-        int ZipFileInTempFolder(string zipFileName);
+        int ZipListFileInTempFolder(string zipFileName);
     }
 
     public sealed class CBerkas : IBerkas {
@@ -39,17 +39,18 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private readonly IApplication _app;
         private readonly ILogger _logger;
 
-        public int MaxOldRetentionDay { get; }
-        public string TempFolderPath { get; }
-        public string ZipFolderPath { get; }
-        public string DownloadFolderPath { get; }
-        public List<string> ListFileForTransfer { get; }
+        public int MaxOldRetentionDay { get; set; }
+        public string TempFolderPath { get; set; }
+        public string ZipFolderPath { get; set; }
+        public string DownloadFolderPath { get; set; }
+
+        public List<string> ListFileForZip { get; }
 
         public CBerkas(IApplication app, ILogger logger) {
             _app = app;
             _logger = logger;
 
-            ListFileForTransfer = new List<string>();
+            ListFileForZip = new List<string>();
             MaxOldRetentionDay = 14;
             TempFolderPath = Path.Combine(_app.AppLocation, "Temp_Files");
             if (!Directory.Exists(TempFolderPath)) {
@@ -129,11 +130,11 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return res;
         }
 
-        public int ZipFileInTempFolder(string zipFileName) {
+        public int ZipListFileInTempFolder(string zipFileName) {
             int result = 0;
             try {
                 ZipFile zip = new ZipFile();
-                foreach (string targetFileName in ListFileForTransfer) {
+                foreach (string targetFileName in ListFileForZip) {
                     string filePath = Path.Combine(TempFolderPath, targetFileName);
                     zip.AddFile(filePath, "");
                     result++;
