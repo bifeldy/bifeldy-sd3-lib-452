@@ -37,10 +37,7 @@ namespace bifeldy_sd3_lib_452 {
             string[] namespaceForDependencyInjection = { "Databases", "Utilities" };
 
             // Inject CClass As IInterface
-            _builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
-                .Where(type => namespaceForDependencyInjection.Any(type.Namespace.Contains))
-                .As(c => c.GetInterfaces().FirstOrDefault(i => i.Name == "I" + c.Name.Substring(1)))
-                .SingleInstance();
+            RegisterDiClassAsInterfaceByNamespace(Assembly.GetExecutingAssembly(), namespaceForDependencyInjection);
         }
 
         public Bifeldy(string[] args) : this() {
@@ -62,6 +59,19 @@ namespace bifeldy_sd3_lib_452 {
             }
         }
 
+        public void RegisterDiClassByNamespace(Assembly assembly, string[] namespaces, bool singleton = true) {
+            IRegistrationBuilder<
+                object,
+                Autofac.Features.Scanning.ScanningActivatorData,
+                DynamicRegistrationStyle
+            > registrationBuilder = _builder
+                                        .RegisterAssemblyTypes(assembly)
+                                        .Where(type => namespaces.Any(type.Namespace.Contains) && type.IsClass);
+            if (singleton) {
+                registrationBuilder.SingleInstance();
+            }
+        }
+
         public void RegisterDiClassNamed<CClass>(bool singleton = true) {
             IRegistrationBuilder<
                 CClass,
@@ -73,12 +83,40 @@ namespace bifeldy_sd3_lib_452 {
             }
         }
 
+        public void RegisterDiClassNamedByNamespace(Assembly assembly, string[] namespaces, bool singleton = true) {
+            IRegistrationBuilder<
+                object,
+                Autofac.Features.Scanning.ScanningActivatorData,
+                DynamicRegistrationStyle
+            > registrationBuilder = _builder
+                                        .RegisterAssemblyTypes(assembly)
+                                        .Where(type => namespaces.Any(type.Namespace.Contains) && type.IsClass)
+                                        .Named<object>(c => c.Name);
+            if (singleton) {
+                registrationBuilder.SingleInstance();
+            }
+        }
+
         public void RegisterDiClassAsInterface<CClass, IInterface>(bool singleton = true) {
             IRegistrationBuilder<
                 CClass,
                 ConcreteReflectionActivatorData,
                 SingleRegistrationStyle
             > registrationBuilder = _builder.RegisterType<CClass>().As<IInterface>();
+            if (singleton) {
+                registrationBuilder.SingleInstance();
+            }
+        }
+
+        public void RegisterDiClassAsInterfaceByNamespace(Assembly assembly, string[] namespaces, bool singleton = true) {
+            IRegistrationBuilder<
+                object,
+                Autofac.Features.Scanning.ScanningActivatorData,
+                DynamicRegistrationStyle
+            > registrationBuilder = _builder
+                                        .RegisterAssemblyTypes(assembly)
+                                        .Where(type => namespaces.Any(type.Namespace.Contains) && type.IsClass)
+                                        .As(c => c.GetInterfaces().FirstOrDefault(i => i.Name == "I" + c.Name.Substring(1)));
             if (singleton) {
                 registrationBuilder.SingleInstance();
             }

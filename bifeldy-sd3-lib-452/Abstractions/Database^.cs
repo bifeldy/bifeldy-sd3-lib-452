@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using bifeldy_sd3_lib_452.Models;
@@ -92,6 +93,20 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                 DatabaseTransaction.Rollback();
             }
             CloseConnection();
+        }
+
+        protected void LogQueryParameter(DbCommand databaseCommand) {
+            string sqlTextQueryParameters = databaseCommand.CommandText;
+            for (int i = 0; i < databaseCommand.Parameters.Count; i++) {
+                object val = databaseCommand.Parameters[i].Value;
+                if (databaseCommand.Parameters[i].Value.GetType() == typeof(string) || databaseCommand.Parameters[i].Value.GetType() == typeof(DateTime)) {
+                    val = $"'{databaseCommand.Parameters[i].Value}'";
+                }
+                sqlTextQueryParameters = sqlTextQueryParameters.Replace($":{databaseCommand.Parameters[i].ParameterName}", val.ToString());
+            }
+            sqlTextQueryParameters = sqlTextQueryParameters.Replace($"\r\n", " ");
+            sqlTextQueryParameters = Regex.Replace(sqlTextQueryParameters, @"\s+", " ");
+            _logger.WriteLog(GetType().Name, sqlTextQueryParameters.Trim());
         }
 
         protected virtual async Task<(DataTable, Exception)> GetDataTableAsync(DbDataAdapter dataAdapter, bool autoCloseConnection = true) {

@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using Npgsql;
@@ -100,17 +99,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                     }
                 }
             }
-            string sqlTextQueryParameters = DatabaseCommand.CommandText;
-            for (int i = 0; i < DatabaseCommand.Parameters.Count; i++) {
-                object val = DatabaseCommand.Parameters[i].Value;
-                if (DatabaseCommand.Parameters[i].Value.GetType() == typeof(string)) {
-                    val = $"'{DatabaseCommand.Parameters[i].Value}'";
-                }
-                sqlTextQueryParameters = sqlTextQueryParameters.Replace($":{DatabaseCommand.Parameters[i].ParameterName}", val.ToString());
-            }
-            sqlTextQueryParameters = sqlTextQueryParameters.Replace($"\r\n", " ");
-            sqlTextQueryParameters = Regex.Replace(sqlTextQueryParameters, @"\s+", " ");
-            _logger.WriteLog(GetType().Name, sqlTextQueryParameters.Trim());
+            LogQueryParameter(DatabaseCommand);
         }
 
         public override async Task<(DataTable, Exception)> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true) {
