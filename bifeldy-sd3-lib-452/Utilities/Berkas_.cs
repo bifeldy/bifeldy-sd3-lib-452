@@ -70,6 +70,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             DeleteOldFilesInFolder(_logger.LogErrorFolderPath, MaxOldRetentionDay);
             DeleteOldFilesInFolder(TempFolderPath, MaxOldRetentionDay);
             DeleteOldFilesInFolder(ZipFolderPath, MaxOldRetentionDay);
+            ListFileForZip.Clear();
         }
 
         public void DeleteOldFilesInFolder(string folderPath, int maxOldDays = 0) {
