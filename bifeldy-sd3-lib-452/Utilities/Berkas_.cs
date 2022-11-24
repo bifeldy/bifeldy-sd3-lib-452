@@ -131,14 +131,16 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public int ZipListFileInTempFolder(string zipFileName) {
-            int result = 0;
+            int totalFileInZip = 0;
             try {
                 ZipFile zip = new ZipFile();
                 foreach (string targetFileName in ListFileForZip) {
                     string filePath = Path.Combine(TempFolderPath, targetFileName);
-                    zip.AddFile(filePath, "");
-                    result++;
-                    _logger.WriteLog($"{GetType().Name}ZipAdd", filePath);
+                    ZipEntry zipEntry = zip.AddFile(filePath, "");
+                    if (zipEntry != null) {
+                        totalFileInZip++;
+                    }
+                    _logger.WriteLog($"{GetType().Name}ZipAdd{(zipEntry == null ? "Fail" : "Ok")}", filePath);
                 }
                 string outputPath = Path.Combine(ZipFolderPath, zipFileName);
                 zip.Save(outputPath);
@@ -147,7 +149,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
             catch (Exception ex) {
                 _logger.WriteError(ex.Message);
             }
-            return result;
+            finally {
+                ListFileForZip.Clear();
+            }
+            return totalFileInZip;
         }
 
     }
