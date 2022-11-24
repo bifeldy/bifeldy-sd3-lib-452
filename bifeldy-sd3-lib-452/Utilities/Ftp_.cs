@@ -59,6 +59,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
             catch (Exception ex) {
                 _logger.WriteError(ex, 3);
+                throw ex;
             }
             return ftpClient;
         }
