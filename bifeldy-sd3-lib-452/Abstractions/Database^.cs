@@ -28,11 +28,11 @@ using bifeldy_sd3_lib_452.Utilities;
 namespace bifeldy_sd3_lib_452.Abstractions {
 
     public interface IDatabase {
-        Task<(DataTable, Exception)> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true);
-        Task<(T, Exception)> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true);
-        Task<(bool, Exception)> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true);
-        Task<(CDbExecProcResult, Exception)> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true);
-        Task<(int, Exception)> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true);
+        Task<(DataTable, Exception)> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
+        Task<(T, Exception)> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null);
+        Task<(bool, Exception)> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
+        Task<(CDbExecProcResult, Exception)> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null);
+        Task<(int, Exception)> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null);
         Task<(DbDataReader, Exception)> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = false);
         Task<(string, Exception)> RetrieveBlob(string stringPathDownload, string stringFileName, string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = false);
         bool Available { get; }
@@ -75,6 +75,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         }
 
         public async Task MarkBeforeExecQueryCommitAndRollback() {
+            _logger.WriteLog(GetType().Name, "Mark Before Commit Or Rollback ...");
             if (DatabaseConnection.State != ConnectionState.Open) {
                 await DatabaseConnection.OpenAsync();
             }
@@ -82,6 +83,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         }
 
         public void MarkSuccessExecQueryAndCommit() {
+            _logger.WriteLog(GetType().Name, "Mark Success & Commit ...");
             if (DatabaseTransaction != null) {
                 DatabaseTransaction.Commit();
             }
@@ -89,6 +91,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         }
 
         public void MarkFailExecQueryAndRollback() {
+            _logger.WriteLog(GetType().Name, "Mark Fail & Rollback ...");
             if (DatabaseTransaction != null) {
                 DatabaseTransaction.Rollback();
             }
@@ -109,53 +112,70 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             _logger.WriteLog(GetType().Name, sqlTextQueryParameters.Trim());
         }
 
-        protected virtual async Task<(DataTable, Exception)> GetDataTableAsync(DbDataAdapter dataAdapter, bool autoCloseConnection = true) {
+        protected virtual async Task<(DataTable, Exception)> GetDataTableAsync(DbDataAdapter dataAdapter) {
             DataTable dataTable = new DataTable();
             Exception exception = null;
             try {
-                if (DatabaseConnection.State == ConnectionState.Open) {
-                    throw new Exception("Database Connection Already In Use!");
-                }
-                else {
+                if (DatabaseTransaction == null) {
+                    if (DatabaseConnection.State == ConnectionState.Open) {
+                        throw new Exception("Database Connection Already In Use!");
+                    }
                     await DatabaseConnection.OpenAsync();
-                    dataAdapter.Fill(dataTable);
                 }
+                dataAdapter.Fill(dataTable);
             }
             catch (Exception ex) {
                 _logger.WriteError(ex, 4);
                 exception = ex;
             }
             finally {
-                if (autoCloseConnection) {
+                if (DatabaseTransaction == null) {
                     DatabaseConnection.Close();
                 }
             }
             return (dataTable, exception);
         }
 
-        protected virtual async Task<(T, Exception)> ExecScalarAsync<T>(DbCommand databaseCommand, bool autoCloseConnection = true) {
+        protected virtual async Task<(T, Exception)> ExecScalarAsync<T>(DbCommand databaseCommand) {
             dynamic x = null;
-            if (typeof(T) == typeof(DateTime)) {
-                x = DateTime.MinValue;
+            switch (Type.GetTypeCode(typeof(T))) {
+                case TypeCode.DateTime:
+                    x = DateTime.MinValue;
+                    break;
+                case TypeCode.Byte:
+                case TypeCode.SByte:
+                case TypeCode.Int16:
+                case TypeCode.UInt16:
+                case TypeCode.Int32:
+                case TypeCode.UInt32:
+                case TypeCode.Int64:
+                case TypeCode.UInt64:
+                case TypeCode.Decimal:
+                case TypeCode.Double:
+                    x = 0;
+                    break;
+                case TypeCode.Boolean:
+                    x = false;
+                    break;
             }
             T result = (T) Convert.ChangeType(x, typeof(T));
             Exception exception = null;
             try {
-                if (DatabaseConnection.State == ConnectionState.Open) {
-                    throw new Exception("Database Connection Already In Use!");
-                }
-                else {
+                if (DatabaseTransaction == null) {
+                    if (DatabaseConnection.State == ConnectionState.Open) {
+                        throw new Exception("Database Connection Already In Use!");
+                    }
                     await DatabaseConnection.OpenAsync();
-                    object _obj = await databaseCommand.ExecuteScalarAsync();
-                    result = (T) Convert.ChangeType(_obj, typeof(T));
                 }
+                object _obj = await databaseCommand.ExecuteScalarAsync();
+                result = (T) Convert.ChangeType(_obj, typeof(T));
             }
             catch (Exception ex) {
                 _logger.WriteError(ex, 4);
                 exception = ex;
             }
             finally {
-                if (autoCloseConnection) {
+                if (DatabaseTransaction == null) {
                     DatabaseConnection.Close();
                 }
             }
@@ -165,11 +185,11 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         // Harap Jalankan `await MarkBeforeCommitAndRollback();` Telebih Dahulu Jika `autoCloseConnection = false`
         // Lalu Bisa Menjalankan `ExecQueryAsync();` Berkali - Kali (Dengan Koneksi Yang Sama)
         // Setelah Selesai Panggil `MarkSuccessExecQueryAndCommit();` atau `MarkFailExecQueryAndRollback();` Jika Gagal
-        protected virtual async Task<(bool, Exception)> ExecQueryAsync(DbCommand databaseCommand, bool autoCloseConnection = true) {
+        protected virtual async Task<(bool, Exception)> ExecQueryAsync(DbCommand databaseCommand) {
             bool result = false;
             Exception exception = null;
             try {
-                if (autoCloseConnection) {
+                if (DatabaseTransaction == null) {
                     if (DatabaseConnection.State == ConnectionState.Open) {
                         throw new Exception("Database Connection Already In Use!");
                     }
@@ -182,7 +202,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                 exception = ex;
             }
             finally {
-                if (autoCloseConnection) {
+                if (DatabaseTransaction == null) {
                     DatabaseConnection.Close();
                 }
             }
@@ -197,21 +217,21 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             };
             Exception exception = null;
             try {
-                if (DatabaseConnection.State == ConnectionState.Open) {
-                    throw new Exception("Database Connection Already In Use!");
-                }
-                else {
+                if (DatabaseTransaction == null) {
+                    if (DatabaseConnection.State == ConnectionState.Open) {
+                        throw new Exception("Database Connection Already In Use!");
+                    }
                     await DatabaseConnection.OpenAsync();
-                    result.STATUS = await databaseCommand.ExecuteNonQueryAsync() == -1;
-                    result.PARAMETERS = databaseCommand.Parameters;
                 }
+                result.STATUS = await databaseCommand.ExecuteNonQueryAsync() == -1;
+                result.PARAMETERS = databaseCommand.Parameters;
             }
             catch (Exception ex) {
                 _logger.WriteError(ex, 4);
                 exception = ex;
             }
             finally {
-                if (autoCloseConnection) {
+                if (DatabaseTransaction == null) {
                     DatabaseConnection.Close();
                 }
             }
@@ -222,20 +242,20 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             int result = 0;
             Exception exception = null;
             try {
-                if (DatabaseConnection.State == ConnectionState.Open) {
-                    throw new Exception("Database Connection Already In Use!");
-                }
-                else {
+                if (DatabaseTransaction == null) {
+                    if (DatabaseConnection.State == ConnectionState.Open) {
+                        throw new Exception("Database Connection Already In Use!");
+                    }
                     await DatabaseConnection.OpenAsync();
-                    result = dataAdapter.Update(dataSet, dataSetTableName);
                 }
+                result = dataAdapter.Update(dataSet, dataSetTableName);
             }
             catch (Exception ex) {
                 _logger.WriteError(ex, 4);
                 exception = ex;
             }
             finally {
-                if (autoCloseConnection) {
+                if (DatabaseTransaction == null) {
                     DatabaseConnection.Close();
                 }
             }
@@ -246,19 +266,19 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             DbDataReader result = null;
             Exception exception = null;
             try {
-                if (DatabaseConnection.State == ConnectionState.Open) {
-                    throw new Exception("Database Connection Already In Use!");
-                }
-                else {
+                if (DatabaseTransaction == null) {
+                    if (DatabaseConnection.State == ConnectionState.Open) {
+                        throw new Exception("Database Connection Already In Use!");
+                    }
                     await DatabaseConnection.OpenAsync();
-                    result = await databaseCommand.ExecuteReaderAsync();
                 }
+                result = await databaseCommand.ExecuteReaderAsync();
             }
             catch (Exception ex) {
                 _logger.WriteError(ex, 4);
             }
             finally {
-                if (autoCloseConnection) {
+                if (DatabaseTransaction == null) {
                     DatabaseConnection.Close();
                 }
             }
@@ -269,44 +289,45 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             string result = null;
             Exception exception = null;
             try {
-                if (DatabaseConnection.State == ConnectionState.Open) {
-                    throw new Exception("Database Connection Already In Use!");
-                }
-                else {
+                if (DatabaseTransaction == null) {
+                    if (DatabaseConnection.State == ConnectionState.Open) {
+                        throw new Exception("Database Connection Already In Use!");
+                    }
                     await DatabaseConnection.OpenAsync();
-                    DbDataReader rdrGetBlob = await databaseCommand.ExecuteReaderAsync(CommandBehavior.SequentialAccess);
-                    if (!rdrGetBlob.HasRows) {
-                        throw new Exception("Error file not found");
-                    }
-                    while (await rdrGetBlob.ReadAsync()) {
-                        FileStream fs = new FileStream($"{stringPathDownload}/{stringFileName}", FileMode.OpenOrCreate, FileAccess.Write);
-                        BinaryWriter bw = new BinaryWriter(fs);
-                        long startIndex = 0;
-                        int bufferSize = 8192;
-                        byte[] outbyte = new byte[bufferSize - 1];
-                        int retval = (int)rdrGetBlob.GetBytes(0, startIndex, outbyte, 0, bufferSize);
-                        while (retval != bufferSize) {
-                            bw.Write(outbyte);
-                            bw.Flush();
-                            Array.Clear(outbyte, 0, bufferSize);
-                            startIndex += bufferSize;
-                            retval = (int)rdrGetBlob.GetBytes(0, startIndex, outbyte, 0, bufferSize);
-                        }
-                        bw.Write(outbyte, 0, (retval > 0 ? retval : 1) - 1);
-                        bw.Flush();
-                        bw.Close();
-                    }
-                    rdrGetBlob.Close();
-                    rdrGetBlob = null;
-                    result = $"{stringPathDownload}/{stringFileName}";
                 }
+                string filePathResult = $"{stringPathDownload}/{stringFileName}";
+                DbDataReader rdrGetBlob = await databaseCommand.ExecuteReaderAsync(CommandBehavior.SequentialAccess);
+                if (!rdrGetBlob.HasRows) {
+                    throw new Exception("Error file not found");
+                }
+                while (await rdrGetBlob.ReadAsync()) {
+                    FileStream fs = new FileStream(filePathResult, FileMode.OpenOrCreate, FileAccess.Write);
+                    BinaryWriter bw = new BinaryWriter(fs);
+                    long startIndex = 0;
+                    int bufferSize = 8192;
+                    byte[] outbyte = new byte[bufferSize - 1];
+                    int retval = (int)rdrGetBlob.GetBytes(0, startIndex, outbyte, 0, bufferSize);
+                    while (retval != bufferSize) {
+                        bw.Write(outbyte);
+                        bw.Flush();
+                        Array.Clear(outbyte, 0, bufferSize);
+                        startIndex += bufferSize;
+                        retval = (int)rdrGetBlob.GetBytes(0, startIndex, outbyte, 0, bufferSize);
+                    }
+                    bw.Write(outbyte, 0, (retval > 0 ? retval : 1) - 1);
+                    bw.Flush();
+                    bw.Close();
+                }
+                rdrGetBlob.Close();
+                rdrGetBlob = null;
+                result = filePathResult;
             }
             catch (Exception ex) {
                 _logger.WriteError(ex, 4);
                 exception = ex;
             }
             finally {
-                if (autoCloseConnection) {
+                if (DatabaseTransaction == null) {
                     DatabaseConnection.Close();
                 }
             }
@@ -315,11 +336,11 @@ namespace bifeldy_sd3_lib_452.Abstractions {
 
         /** Wajib di Override */
 
-        public abstract Task<(DataTable, Exception)> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true);
-        public abstract Task<(T, Exception)> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true);
-        public abstract Task<(bool, Exception)> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true);
-        public abstract Task<(CDbExecProcResult, Exception)> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true);
-        public abstract Task<(int, Exception)> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true);
+        public abstract Task<(DataTable, Exception)> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
+        public abstract Task<(T, Exception)> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null);
+        public abstract Task<(bool, Exception)> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
+        public abstract Task<(CDbExecProcResult, Exception)> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null);
+        public abstract Task<(int, Exception)> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null);
         public abstract Task<(DbDataReader, Exception)> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = false);
         public abstract Task<(string, Exception)> RetrieveBlob(string stringPathDownload, string stringFileName, string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = false);
 

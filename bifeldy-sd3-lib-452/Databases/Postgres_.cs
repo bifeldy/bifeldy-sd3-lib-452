@@ -45,11 +45,11 @@ namespace bifeldy_sd3_lib_452.Databases {
         }
 
         private void InitializePostgresDatabase() {
-            DbIpAddrss = _app.GetVariabelPg("IPPostgres");
-            DbPort = _app.GetVariabelPg("PortPostgres");
-            DbUsername = _app.GetVariabelPg("UserPostgres");
-            DbPassword = _app.GetVariabelPg("PasswordPostgres");
-            DbName = _app.GetVariabelPg("DatabasePostgres");
+            DbIpAddrss = _app.GetVariabel("IPPostgres");
+            DbPort = _app.GetVariabel("PortPostgres");
+            DbUsername = _app.GetVariabel("UserPostgres");
+            DbPassword = _app.GetVariabel("PasswordPostgres");
+            DbName = _app.GetVariabel("DatabasePostgres");
             try {
                 DbConnectionString = $"Host={DbIpAddrss};Port={DbPort};Username={DbUsername};Password={DbPassword};Database={DbName};";
                 DatabaseConnection = new NpgsqlConnection(DbConnectionString);
@@ -102,28 +102,28 @@ namespace bifeldy_sd3_lib_452.Databases {
             LogQueryParameter(DatabaseCommand);
         }
 
-        public override async Task<(DataTable, Exception)> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true) {
+        public override async Task<(DataTable, Exception)> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
-            return await GetDataTableAsync(DatabaseAdapter, closeConnection);
+            return await GetDataTableAsync(DatabaseAdapter);
         }
 
-        public override async Task<(T, Exception)> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true) {
+        public override async Task<(T, Exception)> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null) {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
-            return await ExecScalarAsync<T>(DatabaseCommand, closeConnection);
+            return await ExecScalarAsync<T>(DatabaseCommand);
         }
 
-        public override async Task<(bool, Exception)> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true) {
+        public override async Task<(bool, Exception)> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
-            return await ExecQueryAsync(DatabaseCommand, closeConnection);
+            return await ExecQueryAsync(DatabaseCommand);
         }
 
-        public override async Task<(CDbExecProcResult, Exception)> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true) {
+        public override async Task<(CDbExecProcResult, Exception)> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null) {
             string sqlTextQueryParameters = "(";
             for (int i = 0; i < bindParam.Count; i++) {
                 sqlTextQueryParameters += $":{bindParam[i].NAME}";
@@ -133,14 +133,14 @@ namespace bifeldy_sd3_lib_452.Databases {
             DatabaseCommand.CommandText = $"CALL {procedureName} {sqlTextQueryParameters}";
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
-            return await ExecProcedureAsync(DatabaseCommand, closeConnection);
+            return await ExecProcedureAsync(DatabaseCommand);
         }
 
-        public override async Task<(int, Exception)> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true) {
+        public override async Task<(int, Exception)> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null) {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
-            return await UpdateTable(DatabaseAdapter, dataSet, dataSetTableName, closeConnection);
+            return await UpdateTable(DatabaseAdapter, dataSet, dataSetTableName);
         }
 
         /// <summary>Jangan Lupa Di Close !!</summary>
@@ -148,7 +148,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
-            return await ExecReaderAsync(DatabaseCommand, closeConnection);
+            return await ExecReaderAsync(DatabaseCommand);
         }
 
         /// <summary>Jangan Lupa Di Close !!</summary>
@@ -156,7 +156,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
-            return await RetrieveBlob(DatabaseCommand, stringPathDownload, stringFileName, closeConnection);
+            return await RetrieveBlob(DatabaseCommand, stringPathDownload, stringFileName);
         }
 
     }

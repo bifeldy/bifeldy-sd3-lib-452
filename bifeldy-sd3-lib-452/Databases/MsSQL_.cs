@@ -44,10 +44,10 @@ namespace bifeldy_sd3_lib_452.Databases {
         }
 
         private void InitializeMsSqlDatabase() {
-            DbIpAddrss = _app.GetVariabelOraSql("IPSql");
-            DbUsername = _app.GetVariabelOraSql("UserSql");
-            DbPassword = _app.GetVariabelOraSql("PasswordSql");
-            DbName = _app.GetVariabelOraSql("DatabaseSql");
+            DbIpAddrss = _app.GetVariabel("IPSql");
+            DbUsername = _app.GetVariabel("UserSql");
+            DbPassword = _app.GetVariabel("PasswordSql");
+            DbName = _app.GetVariabel("DatabaseSql");
             try {
                 DbConnectionString = $"Data Source={DbIpAddrss};Initial Catalog={DbName};User ID={DbUsername};Password={DbPassword};";
                 DatabaseConnection = new SqlConnection(DbConnectionString);
@@ -100,39 +100,39 @@ namespace bifeldy_sd3_lib_452.Databases {
 
         /** Bagian Ini Mirip :: Oracle - Ms. Sql Server - PostgreSQL */
 
-        public override async Task<(DataTable, Exception)> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true) {
+        public override async Task<(DataTable, Exception)> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
-            return await GetDataTableAsync(DatabaseAdapter, closeConnection);
+            return await GetDataTableAsync(DatabaseAdapter);
         }
 
-        public override async Task<(T, Exception)> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true) {
+        public override async Task<(T, Exception)> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null) {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
-            return await ExecScalarAsync<T>(DatabaseCommand, closeConnection);
+            return await ExecScalarAsync<T>(DatabaseCommand);
         }
 
-        public override async Task<(bool, Exception)> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true) {
+        public override async Task<(bool, Exception)> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
-            return await ExecQueryAsync(DatabaseCommand, closeConnection);
+            return await ExecQueryAsync(DatabaseCommand);
         }
 
-        public override async Task<(CDbExecProcResult, Exception)> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true) {
+        public override async Task<(CDbExecProcResult, Exception)> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null) {
             DatabaseCommand.CommandText = procedureName;
             DatabaseCommand.CommandType = CommandType.StoredProcedure;
             BindQueryParameter(bindParam);
-            return await ExecProcedureAsync(DatabaseCommand, closeConnection);
+            return await ExecProcedureAsync(DatabaseCommand);
         }
 
-        public override async Task<(int, Exception)> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = true) {
+        public override async Task<(int, Exception)> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null) {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
-            return await UpdateTable(DatabaseAdapter, dataSet, dataSetTableName, closeConnection);
+            return await UpdateTable(DatabaseAdapter, dataSet, dataSetTableName);
         }
 
         /// <summary>Jangan Lupa Di Close !!</summary>
@@ -140,7 +140,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
-            return await ExecReaderAsync(DatabaseCommand, closeConnection);
+            return await ExecReaderAsync(DatabaseCommand);
         }
 
         /// <summary>Jangan Lupa Di Close !!</summary>
@@ -148,7 +148,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
-            return await RetrieveBlob(DatabaseCommand, stringPathDownload, stringFileName, closeConnection);
+            return await RetrieveBlob(DatabaseCommand, stringPathDownload, stringFileName);
         }
 
     }
