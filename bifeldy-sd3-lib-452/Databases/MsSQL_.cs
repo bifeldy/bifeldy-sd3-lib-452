@@ -13,7 +13,6 @@
  * 
  */
 
-using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -100,51 +99,49 @@ namespace bifeldy_sd3_lib_452.Databases {
 
         /** Bagian Ini Mirip :: Oracle - Ms. Sql Server - PostgreSQL */
 
-        public override async Task<(DataTable, Exception)> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
+        public override async Task<DataTable> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
             return await GetDataTableAsync(DatabaseAdapter);
         }
 
-        public override async Task<(T, Exception)> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null) {
+        public override async Task<T> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null) {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
             return await ExecScalarAsync<T>(DatabaseCommand);
         }
 
-        public override async Task<(bool, Exception)> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
+        public override async Task<bool> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
             return await ExecQueryAsync(DatabaseCommand);
         }
 
-        public override async Task<(CDbExecProcResult, Exception)> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null) {
+        public override async Task<CDbExecProcResult> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null) {
             DatabaseCommand.CommandText = procedureName;
             DatabaseCommand.CommandType = CommandType.StoredProcedure;
             BindQueryParameter(bindParam);
             return await ExecProcedureAsync(DatabaseCommand);
         }
 
-        public override async Task<(int, Exception)> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null) {
+        public override async Task<int> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null) {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
             return await UpdateTable(DatabaseAdapter, dataSet, dataSetTableName);
         }
 
-        /// <summary>Jangan Lupa Di Close !!</summary>
-        public override async Task<(DbDataReader, Exception)> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = false) {
+        public override async Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
             return await ExecReaderAsync(DatabaseCommand);
         }
 
-        /// <summary>Jangan Lupa Di Close !!</summary>
-        public override async Task<(string, Exception)> RetrieveBlob(string stringPathDownload, string stringFileName, string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = false) {
+        public override async Task<string> RetrieveBlob(string stringPathDownload, string stringFileName, string queryString, List<CDbQueryParamBind> bindParam = null) {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);

@@ -28,13 +28,13 @@ using bifeldy_sd3_lib_452.Utilities;
 namespace bifeldy_sd3_lib_452.Abstractions {
 
     public interface IDatabase {
-        Task<(DataTable, Exception)> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
-        Task<(T, Exception)> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null);
-        Task<(bool, Exception)> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
-        Task<(CDbExecProcResult, Exception)> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null);
-        Task<(int, Exception)> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null);
-        Task<(DbDataReader, Exception)> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = false);
-        Task<(string, Exception)> RetrieveBlob(string stringPathDownload, string stringFileName, string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = false);
+        Task<DataTable> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
+        Task<T> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null);
+        Task<bool> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
+        Task<CDbExecProcResult> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null);
+        Task<int> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null);
+        Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
+        Task<string> RetrieveBlob(string stringPathDownload, string stringFileName, string queryString, List<CDbQueryParamBind> bindParam = null);
         bool Available { get; }
         string DbName { get; set; }
         Task MarkBeforeExecQueryCommitAndRollback();
@@ -112,8 +112,8 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             _logger.WriteLog(GetType().Name, sqlTextQueryParameters.Trim());
         }
 
-        protected virtual async Task<(DataTable, Exception)> GetDataTableAsync(DbDataAdapter dataAdapter) {
-            DataTable dataTable = new DataTable();
+        protected virtual async Task<DataTable> GetDataTableAsync(DbDataAdapter dataAdapter) {
+            DataTable result = new DataTable();
             Exception exception = null;
             try {
                 if (DatabaseTransaction == null) {
@@ -122,7 +122,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                     }
                     await DatabaseConnection.OpenAsync();
                 }
-                dataAdapter.Fill(dataTable);
+                dataAdapter.Fill(result);
             }
             catch (Exception ex) {
                 _logger.WriteError(ex, 4);
@@ -133,10 +133,10 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                     DatabaseConnection.Close();
                 }
             }
-            return (dataTable, exception);
+            return (exception == null) ? result : throw exception;
         }
 
-        protected virtual async Task<(T, Exception)> ExecScalarAsync<T>(DbCommand databaseCommand) {
+        protected virtual async Task<T> ExecScalarAsync<T>(DbCommand databaseCommand) {
             dynamic x = null;
             switch (Type.GetTypeCode(typeof(T))) {
                 case TypeCode.DateTime:
@@ -179,13 +179,10 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                     DatabaseConnection.Close();
                 }
             }
-            return (result, exception);
+            return (exception == null) ? result : throw exception;
         }
 
-        // Harap Jalankan `await MarkBeforeCommitAndRollback();` Telebih Dahulu Jika `autoCloseConnection = false`
-        // Lalu Bisa Menjalankan `ExecQueryAsync();` Berkali - Kali (Dengan Koneksi Yang Sama)
-        // Setelah Selesai Panggil `MarkSuccessExecQueryAndCommit();` atau `MarkFailExecQueryAndRollback();` Jika Gagal
-        protected virtual async Task<(bool, Exception)> ExecQueryAsync(DbCommand databaseCommand) {
+        protected virtual async Task<bool> ExecQueryAsync(DbCommand databaseCommand) {
             bool result = false;
             Exception exception = null;
             try {
@@ -206,10 +203,10 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                     DatabaseConnection.Close();
                 }
             }
-            return (result, exception);
+            return (exception == null) ? result : throw exception;
         }
 
-        protected virtual async Task<(CDbExecProcResult, Exception)> ExecProcedureAsync(DbCommand databaseCommand, bool autoCloseConnection = true) {
+        protected virtual async Task<CDbExecProcResult> ExecProcedureAsync(DbCommand databaseCommand) {
             CDbExecProcResult result = new CDbExecProcResult {
                 STATUS = false,
                 QUERY = databaseCommand.CommandText,
@@ -235,10 +232,10 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                     DatabaseConnection.Close();
                 }
             }
-            return (result, exception);
+            return (exception == null) ? result : throw exception;
         }
 
-        protected virtual async Task<(int, Exception)> UpdateTable(DbDataAdapter dataAdapter, DataSet dataSet, string dataSetTableName, bool autoCloseConnection = true) {
+        protected virtual async Task<int> UpdateTable(DbDataAdapter dataAdapter, DataSet dataSet, string dataSetTableName) {
             int result = 0;
             Exception exception = null;
             try {
@@ -259,10 +256,11 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                     DatabaseConnection.Close();
                 }
             }
-            return (result, exception);
+            return (exception == null) ? result : throw exception;
         }
 
-        protected virtual async Task<(DbDataReader, Exception)> ExecReaderAsync(DbCommand databaseCommand, bool autoCloseConnection = false) {
+        // Jangan Lupa Di Close Koneksinya, Setelah Selesai Baca Dan Tidak Digunakan Lagi
+        protected virtual async Task<DbDataReader> ExecReaderAsync(DbCommand databaseCommand) {
             DbDataReader result = null;
             Exception exception = null;
             try {
@@ -276,16 +274,17 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             }
             catch (Exception ex) {
                 _logger.WriteError(ex, 4);
+                exception = ex;
             }
             finally {
                 if (DatabaseTransaction == null) {
                     DatabaseConnection.Close();
                 }
             }
-            return (result, exception);
+            return (exception == null) ? result : throw exception;
         }
 
-        protected virtual async Task<(string, Exception)> RetrieveBlob(DbCommand databaseCommand, string stringPathDownload, string stringFileName, bool autoCloseConnection = false) {
+        protected virtual async Task<string> RetrieveBlob(DbCommand databaseCommand, string stringPathDownload, string stringFileName) {
             string result = null;
             Exception exception = null;
             try {
@@ -331,18 +330,18 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                     DatabaseConnection.Close();
                 }
             }
-            return (result, exception);
+            return (exception == null) ? result : throw exception;
         }
 
         /** Wajib di Override */
 
-        public abstract Task<(DataTable, Exception)> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
-        public abstract Task<(T, Exception)> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null);
-        public abstract Task<(bool, Exception)> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
-        public abstract Task<(CDbExecProcResult, Exception)> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null);
-        public abstract Task<(int, Exception)> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null);
-        public abstract Task<(DbDataReader, Exception)> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = false);
-        public abstract Task<(string, Exception)> RetrieveBlob(string stringPathDownload, string stringFileName, string queryString, List<CDbQueryParamBind> bindParam = null, bool closeConnection = false);
+        public abstract Task<DataTable> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
+        public abstract Task<T> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null);
+        public abstract Task<bool> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
+        public abstract Task<CDbExecProcResult> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null);
+        public abstract Task<int> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null);
+        public abstract Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
+        public abstract Task<string> RetrieveBlob(string stringPathDownload, string stringFileName, string queryString, List<CDbQueryParamBind> bindParam = null);
 
     }
 
