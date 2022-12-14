@@ -37,9 +37,9 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         Task<string> RetrieveBlob(string stringPathDownload, string stringFileName, string queryString, List<CDbQueryParamBind> bindParam = null);
         bool Available { get; }
         string DbName { get; set; }
-        Task MarkBeforeExecQueryCommitAndRollback();
-        void MarkSuccessExecQueryAndCommit();
-        void MarkFailExecQueryAndRollback();
+        Task MarkBeforeCommitRollback();
+        void MarkSuccessCommitAndClose();
+        void MarkFailedRollbackAndClose();
         void CloseConnection();
     }
 
@@ -65,16 +65,16 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         }
 
         public void CloseConnection() {
-            if (DatabaseConnection.State == ConnectionState.Open) {
-                DatabaseConnection.Close();
-            }
             if (DatabaseTransaction != null) {
                 DatabaseTransaction.Dispose();
                 DatabaseTransaction = null;
             }
+            if (DatabaseConnection.State == ConnectionState.Open) {
+                DatabaseConnection.Close();
+            }
         }
 
-        public async Task MarkBeforeExecQueryCommitAndRollback() {
+        public async Task MarkBeforeCommitRollback() {
             _logger.WriteLog(GetType().Name, "Mark Before Commit Or Rollback ...");
             if (DatabaseConnection.State != ConnectionState.Open) {
                 await DatabaseConnection.OpenAsync();
@@ -82,7 +82,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             DatabaseTransaction = DatabaseConnection.BeginTransaction(IsolationLevel.ReadCommitted);
         }
 
-        public void MarkSuccessExecQueryAndCommit() {
+        public void MarkSuccessCommitAndClose() {
             _logger.WriteLog(GetType().Name, "Mark Success & Commit ...");
             if (DatabaseTransaction != null) {
                 DatabaseTransaction.Commit();
@@ -90,7 +90,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             CloseConnection();
         }
 
-        public void MarkFailExecQueryAndRollback() {
+        public void MarkFailedRollbackAndClose() {
             _logger.WriteLog(GetType().Name, "Mark Fail & Rollback ...");
             if (DatabaseTransaction != null) {
                 DatabaseTransaction.Rollback();
