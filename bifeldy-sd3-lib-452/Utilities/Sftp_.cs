@@ -8,7 +8,7 @@
  * Mail         :: bias@indomaret.co.id
  * 
  * Catatan      :: Secure SSH
- *              :: Seharusnya Tidak Untuk Didaftarkan Ke DI Container
+ *              :: Harap Didaftarkan Ke DI Container
  * 
  */
 
