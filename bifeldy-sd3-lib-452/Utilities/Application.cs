@@ -28,8 +28,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         string AppName { get; }
         string AppLocation { get; }
         string AppVersion { get; }
-        string GetVariabelOraSql(string key);
-        string GetVariabelPg(string key);
+        string GetVariabel(string key);
         CIpMacAddress[] GetIpMacAddress();
         string[] GetAllIpAddress();
         string[] GetAllMacAddress();
@@ -59,29 +58,27 @@ namespace bifeldy_sd3_lib_452.Utilities {
             AppVersion = string.Join("", Assembly.GetExecutingAssembly().GetName().Version.ToString().Split('.'));
         }
 
-        public string GetVariabelOraSql(string key) {
+        public string GetVariabel(string key) {
             try {
                 // http://xxx.xxx.xxx.xxx/KunciGxxx/Service.asmx
-                return _SettingLib.GetVariabel(key);
+                string result = _SettingLib.GetVariabel(key);
+                if (result.ToUpper().Contains("ERROR")) {
+                    throw new Exception("SettingLib Gagal");
+                }
+                return result;
             }
             catch {
                 try {
                     // http://xxx.xxx.xxx.xxx/KunciGxxx
-                    return _SettingLibRest.GetVariabel(key);
+                    string result = _SettingLibRest.GetVariabel(key);
+                    if (result.ToUpper().Contains("ERROR")) {
+                        throw new Exception("SettingLibRest Gagal");
+                    }
+                    return result;
                 }
                 catch {
                     return null;
                 }
-            }
-        }
-
-        public string GetVariabelPg(string key) {
-            try {
-                // http://xxx.xxx.xxx.xxx/KunciGxxx
-                return _SettingLibRest.GetVariabel(key);
-            }
-            catch {
-                return null;
             }
         }
 
