@@ -32,6 +32,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         void DeleteOldFilesInFolder(string folderPath, int maxOldDays = 14);
         bool DataTable2CSV(DataTable table, string filename, string separator, string outputFolderPath = null);
         int ZipListFileInTempFolder(string zipFileName);
+        int ZipAllFileInFolder(string zipFileName, string folderPath);
     }
 
     public sealed class CBerkas : IBerkas {
@@ -152,6 +153,29 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
             finally {
                 ListFileForZip.Clear();
+            }
+            return totalFileInZip;
+        }
+
+        public int ZipAllFileInFolder(string zipFileName, string folderPath) {
+            int totalFileInZip = 0;
+            try {
+                ZipFile zip = new ZipFile();
+                DirectoryInfo directoryInfo = new DirectoryInfo(folderPath);
+                FileInfo[] fileInfos = directoryInfo.GetFiles();
+                foreach (FileInfo fileInfo in fileInfos) {
+                    ZipEntry zipEntry = zip.AddFile(fileInfo.FullName, "");
+                    if (zipEntry != null) {
+                        totalFileInZip++;
+                    }
+                    _logger.WriteLog($"{GetType().Name}ZipAdd{(zipEntry == null ? "Fail" : "Ok")}", fileInfo.FullName);
+                }
+                string outputPath = Path.Combine(ZipFolderPath, zipFileName);
+                zip.Save(outputPath);
+                _logger.WriteLog($"{GetType().Name}ZipSave", outputPath);
+            }
+            catch (Exception ex) {
+                _logger.WriteError(ex.Message);
             }
             return totalFileInZip;
         }
