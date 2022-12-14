@@ -60,7 +60,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public void WriteLog(string subject, string body, bool newLine = false) {
-            string content = $"[{DateTime.Now}] {subject} :: {body} {Environment.NewLine}";
+            string content = $"[{DateTime.Now:HH:mm:ss tt zzz}] {subject} :: {body} {Environment.NewLine}";
             if (newLine) {
                 content += Environment.NewLine;
             }
