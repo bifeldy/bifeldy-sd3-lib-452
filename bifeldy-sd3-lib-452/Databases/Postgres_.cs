@@ -53,7 +53,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             try {
                 DbConnectionString = $"Host={DbIpAddrss};Port={DbPort};Username={DbUsername};Password={DbPassword};Database={DbName};";
                 DatabaseConnection = new NpgsqlConnection(DbConnectionString);
-                DatabaseCommand = new NpgsqlCommand("", (NpgsqlConnection)DatabaseConnection);
+                DatabaseCommand = new NpgsqlCommand("", (NpgsqlConnection) DatabaseConnection);
                 DatabaseAdapter = new NpgsqlDataAdapter(DatabaseCommand);
                 _logger.WriteLog(GetType().Name, DbConnectionString);
             }

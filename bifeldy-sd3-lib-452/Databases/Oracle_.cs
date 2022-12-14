@@ -59,7 +59,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             try {
                 DbConnectionString = $"Data Source={DbTnsOdp};User ID={DbUsername};Password={DbPassword};";
                 DatabaseConnection = new OracleConnection(DbConnectionString);
-                DatabaseCommand = new OracleCommand("", (OracleConnection)DatabaseConnection);
+                DatabaseCommand = new OracleCommand("", (OracleConnection) DatabaseConnection);
                 DatabaseCommand.BindByName = true;
                 DatabaseAdapter = new OracleDataAdapter(DatabaseCommand);
                 _logger.WriteLog(GetType().Name, DbConnectionString);

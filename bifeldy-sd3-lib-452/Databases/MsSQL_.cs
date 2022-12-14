@@ -50,7 +50,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             try {
                 DbConnectionString = $"Data Source={DbIpAddrss};Initial Catalog={DbName};User ID={DbUsername};Password={DbPassword};";
                 DatabaseConnection = new SqlConnection(DbConnectionString);
-                DatabaseCommand = new SqlCommand("", (SqlConnection)DatabaseConnection);
+                DatabaseCommand = new SqlCommand("", (SqlConnection) DatabaseConnection);
                 DatabaseAdapter = new SqlDataAdapter(DatabaseCommand);
                 _logger.WriteLog(GetType().Name, DbConnectionString);
             }
