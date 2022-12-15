@@ -134,6 +134,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             return await UpdateTable(DatabaseAdapter, dataSet, dataSetTableName);
         }
 
+        /// <summary> Jangan Lupa Di Close Koneksinya (Wajib) </summary>
         public override async Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;

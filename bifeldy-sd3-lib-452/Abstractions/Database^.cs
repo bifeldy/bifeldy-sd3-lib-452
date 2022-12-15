@@ -35,8 +35,9 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         Task<int> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null);
         Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         Task<string> RetrieveBlob(string stringPathDownload, string stringFileName, string queryString, List<CDbQueryParamBind> bindParam = null);
-        bool Available { get; }
         string DbName { get; set; }
+        bool Available { get; }
+        bool HasUnCommitRollbackSqlQuery { get; }
         Task MarkBeforeCommitRollback();
         void MarkSuccessCommitAndClose();
         void MarkFailedRollbackAndClose();
@@ -59,6 +60,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         public string DbConnectionString { get; set; }
 
         public bool Available => DatabaseConnection != null;
+        public bool HasUnCommitRollbackSqlQuery => DatabaseTransaction != null;
 
         public CDatabase(ILogger logger) {
             _logger = logger;
@@ -66,12 +68,12 @@ namespace bifeldy_sd3_lib_452.Abstractions {
 
         public void CloseConnection(bool force = false) {
             if (force) {
-                if (DatabaseTransaction != null) {
+                if (HasUnCommitRollbackSqlQuery) {
                     DatabaseTransaction.Dispose();
                 }
                 DatabaseTransaction = null;
             }
-            if (DatabaseTransaction == null && DatabaseConnection.State == ConnectionState.Open) {
+            if (!HasUnCommitRollbackSqlQuery && DatabaseConnection.State == ConnectionState.Open) {
                 DatabaseConnection.Close();
             }
         }
@@ -84,21 +86,21 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         }
 
         public void MarkSuccessCommitAndClose() {
-            if (DatabaseTransaction != null) {
+            if (HasUnCommitRollbackSqlQuery) {
                 DatabaseTransaction.Commit();
             }
-            CloseConnection();
+            CloseConnection(true);
         }
 
         public void MarkFailedRollbackAndClose() {
-            if (DatabaseTransaction != null) {
+            if (HasUnCommitRollbackSqlQuery) {
                 DatabaseTransaction.Rollback();
             }
             CloseConnection(true);
         }
 
         private async Task OpenConnection() {
-            if (DatabaseTransaction == null) {
+            if (!HasUnCommitRollbackSqlQuery) {
                 if (DatabaseConnection.State == ConnectionState.Open) {
                     throw new Exception("Database Connection Already In Use!");
                 }
@@ -232,7 +234,9 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             return (exception == null) ? result : throw exception;
         }
 
-        // Jangan Lupa Di Close Koneksinya, Setelah Selesai Baca Dan Tidak Digunakan Lagi
+        /// <summary> Jangan Lupa Di Close Koneksinya (Wajib) </summary>
+        /// <summary> Saat Setelah Selesai Baca Dan Tidak Digunakan Lagi </summary>
+        /// <summary> Bisa Pakai Manual Panggil Fungsi Close / Commit / Rollback Di Atas </summary>
         protected virtual async Task<DbDataReader> ExecReaderAsync(DbCommand databaseCommand) {
             DbDataReader result = null;
             Exception exception = null;
@@ -245,7 +249,8 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                 exception = ex;
             }
             finally {
-                CloseConnection();
+                // Kalau Koneksinya Di Close Dari Sini Tidak Akan Bisa Pakai Reader Untuk Baca Lagi
+                // CloseConnection();
             }
             return (exception == null) ? result : throw exception;
         }
