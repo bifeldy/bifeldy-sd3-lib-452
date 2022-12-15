@@ -20,23 +20,20 @@ using System.IO;
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface ILogger {
-        string LogInfo { get; }
         string LogErrorFolderPath { get; }
-        void ClearLog();
+        void SetReportLogInfoTarget(object control);
         void WriteLog(string subject, string body, bool newLine = false);
         void WriteError(string errorMessage, int skipFrame = 1);
         void WriteError(Exception errorException, int skipFrame = 2);
     }
 
-    public sealed class CLogger : ILogger, INotifyPropertyChanged {
-
-        public event PropertyChangedEventHandler PropertyChanged;
+    public sealed class CLogger : ILogger {
 
         private readonly IApplication _app;
 
         public string LogErrorFolderPath { get; }
 
-        private string LogInformation = "";
+        public IProgress<string> LogInformation = null;
 
         public CLogger(IApplication app) {
             _app = app;
@@ -47,16 +44,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
-        public string LogInfo {
-            get => LogInformation;
-            set {
-                LogInformation = value;
-                NotifyPropertyChanged("LogInfo");
-            }
-        }
-
-        public void NotifyPropertyChanged(string propertyName) {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        public void SetReportLogInfoTarget(dynamic control) {
+            LogInformation = new Progress<string>(log => {
+                control.Text += log;
+            });
         }
 
         public void WriteLog(string subject, string body, bool newLine = false) {
@@ -64,7 +55,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
             if (newLine) {
                 content += Environment.NewLine;
             }
-            LogInfo = (content + LogInformation);
+            if (LogInformation != null) {
+                LogInformation.Report(content);
+            }
         }
 
         public void WriteError(string errorMessage, int skipFrame = 1) {
@@ -81,10 +74,6 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public void WriteError(Exception errorException, int skipFrame = 2) {
             WriteError(errorException.Message, skipFrame);
-        }
-
-        public void ClearLog() {
-            LogInfo = "";
         }
 
     }
