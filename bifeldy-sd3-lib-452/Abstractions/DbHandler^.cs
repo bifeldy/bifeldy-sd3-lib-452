@@ -27,10 +27,10 @@ namespace bifeldy_sd3_lib_452.Abstractions {
     public interface IDbHandler {
         string LoggedInUsername { get; set; }
         string DbName { get; }
-        IOracle Oracle { get; }
-        IPostgres Postgres { get; }
-        IMsSQL MsSql { get; }
-        IDatabase OraPg { get; }
+        void CloseAllConnection(bool force = false);
+        Task MarkBeforeCommitRollback();
+        void MarkSuccessCommitAndClose();
+        void MarkFailedRollbackAndClose();
         Task<string> GetJenisDc();
         Task<string> GetKodeDc();
         Task<string> GetNamaDc();
@@ -61,7 +61,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             _mssql = mssql;
         }
 
-        public IOracle Oracle {
+        protected IOracle Oracle {
             get {
                 IOracle ret = _oracle.Available ? _oracle : null;
                 if (ret == null) {
@@ -71,7 +71,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             }
         }
 
-        public IPostgres Postgres {
+        protected IPostgres Postgres {
             get {
                 IPostgres ret = _postgres.Available ? _postgres : null;
                 if (ret == null) {
@@ -81,7 +81,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             }
         }
 
-        public IMsSQL MsSql {
+        protected IMsSQL MsSql {
             get {
                 IMsSQL ret = _mssql.Available ? _mssql : null;
                 if (ret == null) {
@@ -91,7 +91,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             }
         }
 
-        public IDatabase OraPg {
+        protected IDatabase OraPg {
             get {
                 if (_app.IsUsingPostgres) {
                     return Postgres;
@@ -103,6 +103,30 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         /** Custom Queries */
 
         public string DbName => $"{OraPg?.DbName} / {MsSql?.DbName}";
+
+        public void CloseAllConnection(bool force = false) {
+            _oracle.CloseConnection(force);
+            _postgres.CloseConnection(force);
+            _mssql.CloseConnection(force);
+        }
+
+        public async Task MarkBeforeCommitRollback() {
+            await _oracle.MarkBeforeCommitRollback();
+            await _postgres.MarkBeforeCommitRollback();
+            await _mssql.MarkBeforeCommitRollback();
+        }
+
+        public void MarkSuccessCommitAndClose() {
+            _oracle.MarkSuccessCommitAndClose();
+            _postgres.MarkSuccessCommitAndClose();
+            _mssql.MarkSuccessCommitAndClose();
+        }
+
+        public void MarkFailedRollbackAndClose() {
+            _oracle.MarkFailedRollbackAndClose();
+            _postgres.MarkFailedRollbackAndClose();
+            _mssql.MarkFailedRollbackAndClose();
+        }
 
         public async Task<string> GetJenisDc() {
             if (string.IsNullOrEmpty(DcJenis)) {

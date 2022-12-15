@@ -38,10 +38,10 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         string DbName { get; set; }
         bool Available { get; }
         bool HasUnCommitRollbackSqlQuery { get; }
+        void CloseConnection(bool force = false);
         Task MarkBeforeCommitRollback();
         void MarkSuccessCommitAndClose();
         void MarkFailedRollbackAndClose();
-        void CloseConnection(bool force = false);
     }
 
     public abstract class CDatabase : IDatabase {
@@ -66,7 +66,19 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             _logger = logger;
         }
 
+        private async Task OpenConnection() {
+            if (!Available) return;
+            if (!HasUnCommitRollbackSqlQuery) {
+                if (DatabaseConnection.State == ConnectionState.Open) {
+                    throw new Exception("Database Connection Already In Use!");
+                }
+                await DatabaseConnection.OpenAsync();
+            }
+        }
+
+        /// <summary> Jangan Lupa Di Commit Atau Rollback Sebelum Menjalankan Ini </summary>
         public void CloseConnection(bool force = false) {
+            if (!Available) return;
             if (force) {
                 if (HasUnCommitRollbackSqlQuery) {
                     DatabaseTransaction.Dispose();
@@ -79,13 +91,13 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         }
 
         public async Task MarkBeforeCommitRollback() {
-            if (DatabaseConnection.State != ConnectionState.Open) {
-                await DatabaseConnection.OpenAsync();
-            }
+            if (!Available) return;
+            await OpenConnection();
             DatabaseTransaction = DatabaseConnection.BeginTransaction(IsolationLevel.ReadCommitted);
         }
 
         public void MarkSuccessCommitAndClose() {
+            if (!Available) return;
             if (HasUnCommitRollbackSqlQuery) {
                 DatabaseTransaction.Commit();
             }
@@ -93,19 +105,11 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         }
 
         public void MarkFailedRollbackAndClose() {
+            if (!Available) return;
             if (HasUnCommitRollbackSqlQuery) {
                 DatabaseTransaction.Rollback();
             }
             CloseConnection(true);
-        }
-
-        private async Task OpenConnection() {
-            if (!HasUnCommitRollbackSqlQuery) {
-                if (DatabaseConnection.State == ConnectionState.Open) {
-                    throw new Exception("Database Connection Already In Use!");
-                }
-                await DatabaseConnection.OpenAsync();
-            }
         }
 
         protected void LogQueryParameter(DbCommand databaseCommand) {
