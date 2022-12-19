@@ -55,7 +55,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                 DatabaseConnection = new NpgsqlConnection(DbConnectionString);
                 DatabaseCommand = new NpgsqlCommand("", (NpgsqlConnection) DatabaseConnection);
                 DatabaseAdapter = new NpgsqlDataAdapter(DatabaseCommand);
-                _logger.WriteLog(GetType().Name, DbConnectionString);
+                _logger.WriteInfo(GetType().Name, DbConnectionString);
             }
             catch {
                 //

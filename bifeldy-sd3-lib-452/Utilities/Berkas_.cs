@@ -85,7 +85,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                             DeleteOldFilesInFolder(fsi.FullName, maxOldDays);
                         }
                         if (fsi.LastWriteTime <= DateTime.Now.AddDays(-maxOldDays)) {
-                            _logger.WriteLog($"{GetType().Name}DelFileDir", fsi.FullName);
+                            _logger.WriteInfo($"{GetType().Name}DelFileDir", fsi.FullName);
                             fsi.Delete();
                         }
                     }
@@ -119,7 +119,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     }
                     writer.WriteLine(builder.ToString());
                 }
-                _logger.WriteLog($"{GetType().Name}Dt2Csv", path);
+                _logger.WriteInfo($"{GetType().Name}Dt2Csv", path);
                 res = true;
             }
             catch (Exception ex) {
@@ -143,11 +143,11 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     if (zipEntry != null) {
                         totalFileInZip++;
                     }
-                    _logger.WriteLog($"{GetType().Name}ZipAdd{(zipEntry == null ? "Fail" : "Ok")}", filePath);
+                    _logger.WriteInfo($"{GetType().Name}ZipAdd{(zipEntry == null ? "Fail" : "Ok")}", filePath);
                 }
                 string outputPath = Path.Combine(ZipFolderPath, zipFileName);
                 zip.Save(outputPath);
-                _logger.WriteLog($"{GetType().Name}ZipSave", outputPath);
+                _logger.WriteInfo($"{GetType().Name}ZipSave", outputPath);
             }
             catch (Exception ex) {
                 _logger.WriteError(ex.Message);
@@ -169,11 +169,11 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     if (zipEntry != null) {
                         totalFileInZip++;
                     }
-                    _logger.WriteLog($"{GetType().Name}ZipAdd{(zipEntry == null ? "Fail" : "Ok")}", fileInfo.FullName);
+                    _logger.WriteInfo($"{GetType().Name}ZipAdd{(zipEntry == null ? "Fail" : "Ok")}", fileInfo.FullName);
                 }
                 string outputPath = Path.Combine(ZipFolderPath, zipFileName);
                 zip.Save(outputPath);
-                _logger.WriteLog($"{GetType().Name}ZipSave", outputPath);
+                _logger.WriteInfo($"{GetType().Name}ZipSave", outputPath);
             }
             catch (Exception ex) {
                 _logger.WriteError(ex.Message);

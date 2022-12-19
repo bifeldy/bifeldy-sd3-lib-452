@@ -22,8 +22,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
     public interface ILogger {
         string LogInfoFolderPath { get; }
         string LogErrorFolderPath { get; }
-        void SetReportLogInfoTarget<T>(IProgress<T> reporter);
-        void WriteLog(string subject, string body, bool newLine = false);
+        void SetReportInfo(IProgress<string> infoReporter);
+        void WriteInfo(string subject, string body, bool newLine = false);
         void WriteError(string errorMessage, int skipFrame = 1);
         void WriteError(Exception errorException, int skipFrame = 2);
     }
@@ -36,7 +36,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public string LogErrorFolderPath { get; }
 
-        public IProgress<dynamic> LogInformation = null;
+        public IProgress<string> LogInfoReporter = null;
 
         public CLogger(IApplication app) {
             _app = app;
@@ -51,20 +51,20 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
-        public void SetReportLogInfoTarget<T>(IProgress<T> reporter) {
-            LogInformation = (IProgress<dynamic>) reporter;
+        public void SetReportInfo(IProgress<string> infoReporter) {
+            LogInfoReporter = infoReporter;
         }
 
-        public void WriteLog(string subject, string body, bool newLine = false) {
+        public void WriteInfo(string subject, string body, bool newLine = false) {
             try {
                 string content = $"[{DateTime.Now:HH:mm:ss tt zzz}] {subject} :: {body} {Environment.NewLine}";
                 if (newLine) {
                     content += Environment.NewLine;
                 }
-                if (LogInformation != null) {
-                    LogInformation.Report(content);
+                if (LogInfoReporter != null) {
+                    LogInfoReporter.Report(content);
                 }
-                StreamWriter sw = new StreamWriter($"{LogInfoFolderPath}/{DateTime.Now:dd-MM-yyyy}.txt", true);
+                StreamWriter sw = new StreamWriter($"{LogInfoFolderPath}/{DateTime.Now:dd-MM-yyyy}.log", true);
                 sw.WriteLine(content);
                 sw.Flush();
                 sw.Close();
@@ -77,7 +77,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public void WriteError(string errorMessage, int skipFrame = 1) {
             try {
                 StackFrame fromsub = new StackFrame(skipFrame, false);
-                StreamWriter sw = new StreamWriter($"{LogErrorFolderPath}/{DateTime.Now:dd-MM-yyyy}.txt", true);
+                StreamWriter sw = new StreamWriter($"{LogErrorFolderPath}/{DateTime.Now:dd-MM-yyyy}.log", true);
                 sw.WriteLine($"##");
                 sw.WriteLine($"#  ErrDate : {DateTime.Now:dd-MM-yyyy HH:mm:ss}");
                 sw.WriteLine($"#  ErrFunc : {fromsub.GetMethod().Name}");

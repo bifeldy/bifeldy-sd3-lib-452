@@ -52,7 +52,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                 DatabaseConnection = new SqlConnection(DbConnectionString);
                 DatabaseCommand = new SqlCommand("", (SqlConnection) DatabaseConnection);
                 DatabaseAdapter = new SqlDataAdapter(DatabaseCommand);
-                _logger.WriteLog(GetType().Name, DbConnectionString);
+                _logger.WriteInfo(GetType().Name, DbConnectionString);
             }
             catch {
                 //

@@ -123,7 +123,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             }
             sqlTextQueryParameters = sqlTextQueryParameters.Replace($"\r\n", " ");
             sqlTextQueryParameters = Regex.Replace(sqlTextQueryParameters, @"\s+", " ");
-            _logger.WriteLog(GetType().Name, sqlTextQueryParameters.Trim());
+            _logger.WriteInfo(GetType().Name, sqlTextQueryParameters.Trim());
         }
 
         protected virtual async Task<DataTable> GetDataTableAsync(DbDataAdapter dataAdapter) {

@@ -62,7 +62,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                 DatabaseCommand = new OracleCommand("", (OracleConnection) DatabaseConnection);
                 DatabaseCommand.BindByName = true;
                 DatabaseAdapter = new OracleDataAdapter(DatabaseCommand);
-                _logger.WriteLog(GetType().Name, DbConnectionString);
+                _logger.WriteInfo(GetType().Name, DbConnectionString);
             }
             catch {
                 //

@@ -84,7 +84,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     FtpStatusSendGet = ftpStatus,
                     FileInformation = fi
                 });
-                _logger.WriteLog($"{GetType().Name}Sent{fileSent}", fi.FullName);
+                _logger.WriteInfo($"{GetType().Name}Sent{fileSent}", fi.FullName);
             }
             if (ftpConnection.IsConnected) {
                 await ftpConnection.DisconnectAsync();
@@ -106,7 +106,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                         FtpStatusSendGet = (fr.IsSuccess) ? FtpStatus.Success : FtpStatus.Failed,
                         FileInformation = new FileInfo(Path.Combine(saveDownloadTo, fr.Name))
                     });
-                    _logger.WriteLog($"{GetType().Name}Get{fileGet}", fr.LocalPath);
+                    _logger.WriteInfo($"{GetType().Name}Get{fileGet}", fr.LocalPath);
                 }
             }
             else {
@@ -119,7 +119,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     FtpStatusSendGet = ftpStatus,
                     FileInformation = new FileInfo(saveDownloadTo)
                 });
-                _logger.WriteLog($"{GetType().Name}Get{fileGet}", saveDownloadTo);
+                _logger.WriteInfo($"{GetType().Name}Get{fileGet}", saveDownloadTo);
             }
             if (ftpConnection.IsConnected) {
                 await ftpConnection.DisconnectAsync();
