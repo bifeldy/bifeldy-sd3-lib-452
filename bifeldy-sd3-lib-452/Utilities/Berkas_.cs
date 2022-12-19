@@ -31,8 +31,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
         void CleanUp();
         void DeleteOldFilesInFolder(string folderPath, int maxOldDays = 14);
         bool DataTable2CSV(DataTable table, string filename, string separator, string outputFolderPath = null);
-        int ZipListFileInTempFolder(string zipFileName);
-        int ZipAllFileInFolder(string zipFileName, string folderPath);
+        int ZipListFileInFolder(string zipFileName, List<string> listFileName = null, string folderPath = null);
+        int ZipAllFileInFolder(string zipFileName, string folderPath = null);
     }
 
     public sealed class CBerkas : IBerkas {
@@ -133,12 +133,15 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return res;
         }
 
-        public int ZipListFileInTempFolder(string zipFileName) {
+        public int ZipListFileInFolder(string zipFileName, List<string> listFileName = null, string folderPath = null) {
             int totalFileInZip = 0;
+            if (listFileName == null) {
+                listFileName = ListFileForZip;
+            }
             try {
                 ZipFile zip = new ZipFile();
-                foreach (string targetFileName in ListFileForZip) {
-                    string filePath = Path.Combine(TempFolderPath, targetFileName);
+                foreach (string targetFileName in listFileName) {
+                    string filePath = Path.Combine(folderPath ?? TempFolderPath, targetFileName);
                     ZipEntry zipEntry = zip.AddFile(filePath, "");
                     if (zipEntry != null) {
                         totalFileInZip++;
@@ -153,16 +156,16 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 _logger.WriteError(ex.Message);
             }
             finally {
-                ListFileForZip.Clear();
+                listFileName.Clear();
             }
             return totalFileInZip;
         }
 
-        public int ZipAllFileInFolder(string zipFileName, string folderPath) {
+        public int ZipAllFileInFolder(string zipFileName, string folderPath = null) {
             int totalFileInZip = 0;
             try {
                 ZipFile zip = new ZipFile();
-                DirectoryInfo directoryInfo = new DirectoryInfo(folderPath);
+                DirectoryInfo directoryInfo = new DirectoryInfo(folderPath ?? TempFolderPath);
                 FileInfo[] fileInfos = directoryInfo.GetFiles();
                 foreach (FileInfo fileInfo in fileInfos) {
                     ZipEntry zipEntry = zip.AddFile(fileInfo.FullName, "");
