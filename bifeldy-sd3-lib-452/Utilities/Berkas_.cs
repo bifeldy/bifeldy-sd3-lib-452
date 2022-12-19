@@ -108,7 +108,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     builder.Append(sep).Append(col.ColumnName);
                     sep = separator;
                 }
-                writer.WriteLine(builder.ToString());
+                // Untuk Export *.CSV Di Buat NAMA_KOLOM Besar Semua Tanpa Petik "NAMA_KOLOM"
+                writer.WriteLine(builder.ToString().ToUpper());
                 foreach (DataRow row in table.Rows) {
                     sep = "";
                     builder = new StringBuilder();
