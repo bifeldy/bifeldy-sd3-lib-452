@@ -115,11 +115,13 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         protected void LogQueryParameter(DbCommand databaseCommand) {
             string sqlTextQueryParameters = databaseCommand.CommandText;
             for (int i = 0; i < databaseCommand.Parameters.Count; i++) {
-                object val = databaseCommand.Parameters[i].Value;
-                if (databaseCommand.Parameters[i].Value.GetType() == typeof(string) || databaseCommand.Parameters[i].Value.GetType() == typeof(DateTime)) {
-                    val = $"'{databaseCommand.Parameters[i].Value}'";
+                dynamic pVal = databaseCommand.Parameters[i].Value;
+                Type pValType = (pVal == null) ? typeof(string) : pVal.GetType();
+                if (pValType == typeof(string) || pValType == typeof(DateTime)) {
+                    pVal = $"'{pVal}'";
                 }
-                sqlTextQueryParameters = sqlTextQueryParameters.Replace($":{databaseCommand.Parameters[i].ParameterName}", val.ToString());
+                Regex regex = new Regex($":{databaseCommand.Parameters[i].ParameterName}");
+                sqlTextQueryParameters = regex.Replace(sqlTextQueryParameters, pVal.ToString(), 1);
             }
             sqlTextQueryParameters = sqlTextQueryParameters.Replace($"\r\n", " ");
             sqlTextQueryParameters = Regex.Replace(sqlTextQueryParameters, @"\s+", " ");

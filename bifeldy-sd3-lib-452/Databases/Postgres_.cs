@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using Npgsql;
@@ -68,26 +69,29 @@ namespace bifeldy_sd3_lib_452.Databases {
             DatabaseCommand.Parameters.Clear();
             if (parameters != null) {
                 for (int i = 0; i < parameters.Count; i++) {
-                    if (parameters[i].VALUE.GetType().IsArray) {
+                    dynamic pVal = parameters[i].VALUE;
+                    Type pValType = (pVal == null) ? typeof(DBNull) : pVal.GetType();
+                    if (pValType.IsArray) {
                         string bindStr = "";
                         int id = 1;
-                        foreach (dynamic data in parameters[i].VALUE) {
+                        foreach (dynamic data in pVal) {
                             if (!string.IsNullOrEmpty(bindStr)) {
                                 bindStr += ", ";
                             }
                             bindStr += $":{parameters[i].NAME}_{id}";
                             DatabaseCommand.Parameters.Add(new NpgsqlParameter {
                                 ParameterName = $"{parameters[i].NAME}_{id}",
-                                Value = data
+                                Value = data ?? DBNull.Value
                             });
                             id++;
                         }
-                        DatabaseCommand.CommandText = DatabaseCommand.CommandText.Replace($":{parameters[i].NAME}", bindStr);
+                        Regex regex = new Regex($":{parameters[i].NAME}");
+                        DatabaseCommand.CommandText = regex.Replace(DatabaseCommand.CommandText, bindStr, 1);
                     }
                     else {
                         NpgsqlParameter param = new NpgsqlParameter {
                             ParameterName = parameters[i].NAME,
-                            Value = parameters[i].VALUE
+                            Value = pVal ?? DBNull.Value
                         };
                         if (parameters[i].SIZE > 0) {
                             param.Size = parameters[i].SIZE;
