@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -37,6 +38,10 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         Task<string> CekVersi();
         Task<bool> LoginUser(string usernameNik, string password);
         Task<bool> CheckIpMac();
+        Task<bool> TruncateTableOraPg(string TableName);
+        Task<bool> TruncateTableMsSql(string TableName);
+        Task<bool> BulkInsertIntoOraPg(string tableName, DataTable dataTable);
+        Task<bool> BulkInsertIntoMsSql(string tableName, DataTable dataTable);
     }
 
     public abstract class CDbHandler : IDbHandler {
@@ -273,6 +278,27 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                 );
                 return (res == LoggedInUsername);
             }
+        }
+
+        /* Perlakuan Khusus */
+
+        public async Task<bool> TruncateTableOraPg(string TableName) {
+            return await OraPg.ExecQueryAsync($@"TRUNCATE TABLE {TableName}");
+        }
+
+        public async Task<bool> TruncateTableMsSql(string TableName) {
+            return await MsSql.ExecQueryAsync($@"TRUNCATE TABLE {TableName}");
+        }
+
+        public async Task<bool> BulkInsertIntoOraPg(string tableName, DataTable dataTable) {
+            if (_app.IsUsingPostgres) {
+                return await Postgres.BulkInsertInto(tableName, dataTable);
+            }
+            return await Oracle.BulkInsertInto(tableName, dataTable);
+        }
+
+        public async Task<bool> BulkInsertIntoMsSql(string tableName, DataTable dataTable) {
+            return await MsSql.BulkInsertInto(tableName, dataTable);
         }
 
     }

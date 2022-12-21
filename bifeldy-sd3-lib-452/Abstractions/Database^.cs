@@ -66,7 +66,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             _logger = logger;
         }
 
-        private async Task OpenConnection() {
+        protected async Task OpenConnection() {
             if (!Available) return;
             if (!HasUnCommitRollbackSqlQuery) {
                 if (DatabaseConnection.State == ConnectionState.Open) {

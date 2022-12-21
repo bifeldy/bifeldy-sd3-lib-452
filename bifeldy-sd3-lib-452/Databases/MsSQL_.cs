@@ -27,7 +27,9 @@ using bifeldy_sd3_lib_452.Utilities;
 
 namespace bifeldy_sd3_lib_452.Databases {
 
-    public interface IMsSQL : IDatabase { }
+    public interface IMsSQL : IDatabase {
+        Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
+    }
 
     public sealed class CMsSQL : CDatabase, IMsSQL {
 
@@ -36,6 +38,7 @@ namespace bifeldy_sd3_lib_452.Databases {
 
         private SqlCommand DatabaseCommand { get; set; }
         private SqlDataAdapter DatabaseAdapter { get; set; }
+        private SqlBulkCopy DatabaseBulkCopy { get; set; }
 
         public CMsSQL(IApplication app, ILogger logger) : base(logger) {
             _app = app;
@@ -54,6 +57,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                 DatabaseConnection = new SqlConnection(DbConnectionString);
                 DatabaseCommand = new SqlCommand("", (SqlConnection) DatabaseConnection);
                 DatabaseAdapter = new SqlDataAdapter(DatabaseCommand);
+                DatabaseBulkCopy = new SqlBulkCopy((SqlConnection) DatabaseConnection);
                 _logger.WriteInfo(GetType().Name, DbConnectionString);
             }
             catch {
@@ -137,6 +141,25 @@ namespace bifeldy_sd3_lib_452.Databases {
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
             return await UpdateTable(DatabaseAdapter, dataSet, dataSetTableName);
+        }
+
+        public async Task<bool> BulkInsertInto(string tableName, DataTable dataTable) {
+            bool result = false;
+            Exception exception = null;
+            try {
+                await OpenConnection();
+                DatabaseBulkCopy.DestinationTableName = tableName;
+                await DatabaseBulkCopy.WriteToServerAsync(dataTable);
+                result = true;
+            }
+            catch (Exception ex) {
+                _logger.WriteError(ex, 4);
+                exception = ex;
+            }
+            finally {
+                CloseConnection();
+            }
+            return (exception == null) ? result : throw exception;
         }
 
         /// <summary> Jangan Lupa Di Close Koneksinya (Wajib) </summary>
