@@ -71,12 +71,17 @@ namespace bifeldy_sd3_lib_452.Utilities {
             if (fileName != null) {
                 fileInfos = fileInfos.Where(f => f.Name.Contains(fileName)).ToArray();
             }
+            string cwd = await ftpConnection.GetWorkingDirectoryAsync();
             foreach (FileInfo fi in fileInfos) {
                 string fileSent = "Fail";
-                if (ftpConnection.FileExists(fi.Name)) {
-                    await ftpConnection.DeleteFileAsync(fi.Name);
+                string fn = fi.Name;
+                #if DEBUG
+                    fn = $"_SIMULASI__{fi.Name}";
+                #endif
+                if (ftpConnection.FileExists(fn)) {
+                    await ftpConnection.DeleteFileAsync(fn);
                 }
-                FtpStatus ftpStatus = await ftpConnection.UploadFileAsync(fi.FullName, fi.Name);
+                FtpStatus ftpStatus = await ftpConnection.UploadFileAsync(fi.FullName, fn);
                 if (ftpStatus == FtpStatus.Success) {
                     fileSent = "Ok";
                 }
@@ -84,7 +89,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     FtpStatusSendGet = ftpStatus,
                     FileInformation = fi
                 });
-                _logger.WriteInfo($"{GetType().Name}Sent{fileSent}", fi.FullName);
+                _logger.WriteInfo($"{GetType().Name}Sent{fileSent}", $"{cwd}{fn}");
             }
             if (ftpConnection.IsConnected) {
                 await ftpConnection.DisconnectAsync();
