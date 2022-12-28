@@ -55,13 +55,16 @@ namespace bifeldy_sd3_lib_452.Databases {
             try {
                 DbConnectionString = $"Data Source={DbIpAddrss};Initial Catalog={DbName};User ID={DbUsername};Password={DbPassword};";
                 DatabaseConnection = new SqlConnection(DbConnectionString);
-                DatabaseCommand = new SqlCommand("", (SqlConnection) DatabaseConnection);
+                DatabaseCommand = new SqlCommand {
+                    Connection = (SqlConnection) DatabaseConnection,
+                    CommandTimeout = 1800 // 30 menit
+                };
                 DatabaseAdapter = new SqlDataAdapter(DatabaseCommand);
                 DatabaseBulkCopy = new SqlBulkCopy((SqlConnection) DatabaseConnection);
                 _logger.WriteInfo(GetType().Name, DbConnectionString);
             }
-            catch {
-                //
+            catch (Exception ex) {
+                _logger.WriteError(ex);
             }
         }
 

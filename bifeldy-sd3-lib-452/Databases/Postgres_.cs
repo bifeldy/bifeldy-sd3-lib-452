@@ -60,12 +60,15 @@ namespace bifeldy_sd3_lib_452.Databases {
             try {
                 DbConnectionString = $"Host={DbIpAddrss};Port={DbPort};Username={DbUsername};Password={DbPassword};Database={DbName};";
                 DatabaseConnection = new NpgsqlConnection(DbConnectionString);
-                DatabaseCommand = new NpgsqlCommand("", (NpgsqlConnection) DatabaseConnection);
+                DatabaseCommand = new NpgsqlCommand {
+                    Connection = (NpgsqlConnection) DatabaseConnection,
+                    CommandTimeout = 1800 // 30 menit
+                };
                 DatabaseAdapter = new NpgsqlDataAdapter(DatabaseCommand);
                 _logger.WriteInfo(GetType().Name, DbConnectionString);
             }
-            catch {
-                //
+            catch (Exception ex) {
+                _logger.WriteError(ex);
             }
         }
 

@@ -62,14 +62,17 @@ namespace bifeldy_sd3_lib_452.Databases {
             try {
                 DbConnectionString = $"Data Source={DbTnsOdp};User ID={DbUsername};Password={DbPassword};";
                 DatabaseConnection = new OracleConnection(DbConnectionString);
-                DatabaseCommand = new OracleCommand("", (OracleConnection) DatabaseConnection);
-                DatabaseCommand.BindByName = true;
+                DatabaseCommand = new OracleCommand {
+                    Connection = (OracleConnection) DatabaseConnection,
+                    BindByName = true,
+                    CommandTimeout = 1800 // 30 menit
+                };
                 DatabaseAdapter = new OracleDataAdapter(DatabaseCommand);
                 DatabaseBulkCopy = new OracleBulkCopy((OracleConnection) DatabaseConnection);
                 _logger.WriteInfo(GetType().Name, DbConnectionString);
             }
-            catch {
-                //
+            catch (Exception ex) {
+                _logger.WriteError(ex);
             }
         }
 
