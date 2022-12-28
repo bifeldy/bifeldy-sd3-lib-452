@@ -29,6 +29,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         string DownloadFolderPath { get; set; }
         List<string> ListFileForZip { get; }
         void CleanUp();
+        void DeleteSingleFileInFolder(string fileName, string folderPath = null);
         void DeleteOldFilesInFolder(string folderPath, int maxOldDays = 14);
         bool DataTable2CSV(DataTable table, string filename, string separator, string outputFolderPath = null);
         int ZipListFileInFolder(string zipFileName, List<string> listFileName = null, string folderPath = null);
@@ -72,6 +73,19 @@ namespace bifeldy_sd3_lib_452.Utilities {
             DeleteOldFilesInFolder(TempFolderPath, MaxOldRetentionDay);
             DeleteOldFilesInFolder(ZipFolderPath, MaxOldRetentionDay);
             ListFileForZip.Clear();
+        }
+
+        public void DeleteSingleFileInFolder(string fileName, string folderPath = null) {
+            string path = folderPath ?? TempFolderPath;
+            try {
+                FileInfo fi = new FileInfo(Path.Combine(path, fileName));
+                if (fi.Exists) {
+                    fi.Delete();
+                }
+            }
+            catch (Exception ex) {
+                _logger.WriteError(ex.Message);
+            }
         }
 
         public void DeleteOldFilesInFolder(string folderPath, int maxOldDays = 0) {
@@ -135,12 +149,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public int ZipListFileInFolder(string zipFileName, List<string> listFileName = null, string folderPath = null) {
             int totalFileInZip = 0;
-            if (listFileName == null) {
-                listFileName = ListFileForZip;
-            }
+            List<string> ls = listFileName ?? ListFileForZip;
             try {
                 ZipFile zip = new ZipFile();
-                foreach (string targetFileName in listFileName) {
+                foreach (string targetFileName in ls) {
                     string filePath = Path.Combine(folderPath ?? TempFolderPath, targetFileName);
                     ZipEntry zipEntry = zip.AddFile(filePath, "");
                     if (zipEntry != null) {
@@ -156,7 +168,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 _logger.WriteError(ex.Message);
             }
             finally {
-                listFileName.Clear();
+                if (listFileName == null) {
+                    ls.Clear();
+                }
             }
             return totalFileInZip;
         }
