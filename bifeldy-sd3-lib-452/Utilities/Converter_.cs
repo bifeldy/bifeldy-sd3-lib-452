@@ -26,8 +26,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
     public interface IConverter {
         T JsonToObj<T>(string j2o);
         string ObjectToJson(object body);
-        List<T> ConvertDataTableToList<T>(DataTable dt);
-        DataTable ConvertListToDataTable<T>(string tableName, List<T> listData);
+        List<T> DataTableToList<T>(DataTable dt);
+        DataTable ListToDataTable<T>(List<T> listData, string tableName = null);
     }
 
     public sealed class CConverter : IConverter {
@@ -46,7 +46,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return JsonConvert.SerializeObject(o2j);
         }
 
-        public List<T> ConvertDataTableToList<T>(DataTable dt) {
+        public List<T> DataTableToList<T>(DataTable dt) {
             List<string> columnNames = dt.Columns.Cast<DataColumn>().Select(c => c.ColumnName.ToLower()).ToList();
             PropertyInfo[] properties = typeof(T).GetProperties();
             return dt.AsEnumerable().Select(row => {
@@ -65,7 +65,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }).ToList();
         }
 
-        public DataTable ConvertListToDataTable<T>(string tableName, List<T> listData) {
+        public DataTable ListToDataTable<T>(List<T> listData, string tableName = null) {
+            if (string.IsNullOrEmpty(tableName)) {
+                tableName = typeof(T).Name;
+            }
             DataTable table = new DataTable(tableName);
 
             // Special handling for value types and string
