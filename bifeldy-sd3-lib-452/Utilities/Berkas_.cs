@@ -30,7 +30,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         List<string> ListFileForZip { get; }
         void CleanUp();
         void DeleteSingleFileInFolder(string fileName, string folderPath = null);
-        void DeleteOldFilesInFolder(string folderPath, int maxOldDays = 14);
+        void DeleteOldFilesInFolder(string folderPath, int maxOldDays);
         bool DataTable2CSV(DataTable table, string filename, string separator, string outputFolderPath = null);
         int ZipListFileInFolder(string zipFileName, List<string> listFileName = null, string folderPath = null);
         int ZipAllFileInFolder(string zipFileName, string folderPath = null);
@@ -88,7 +88,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
-        public void DeleteOldFilesInFolder(string folderPath, int maxOldDays = 0) {
+        public void DeleteOldFilesInFolder(string folderPath, int maxOldDays) {
             string path = folderPath ?? TempFolderPath;
             try {
                 if (Directory.Exists(path)) {
