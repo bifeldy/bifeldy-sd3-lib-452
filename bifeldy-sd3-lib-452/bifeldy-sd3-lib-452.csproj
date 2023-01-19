@@ -92,12 +92,14 @@
     <Compile Include="Databases\Postgres_.cs" />
     <Compile Include="Models\DbExecProcResult_.cs" />
     <Compile Include="Models\DbQueryParamBind_.cs" />
+    <Compile Include="Models\DC_TABEL_V.cs" />
     <Compile Include="Models\FtpResultInfoSendGet_.cs" />
     <Compile Include="Models\IpMacAddress_.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\Api_.cs" />
     <Compile Include="Utilities\Application.cs" />
     <Compile Include="Utilities\Berkas_.cs" />
+    <Compile Include="Utilities\BranchCabang.cs" />
     <Compile Include="Utilities\Converter_.cs" />
     <Compile Include="Utilities\Ftp_.cs" />
     <Compile Include="Utilities\Logger_.cs" />
