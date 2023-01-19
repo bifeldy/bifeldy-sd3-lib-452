@@ -18,8 +18,8 @@ using FluentFTP;
 namespace bifeldy_sd3_lib_452.Models {
 
     public sealed class CFtpResultInfo {
-        public List<CFtpResultSendGet> Success { get; set; } = new List<CFtpResultSendGet>();
-        public List<CFtpResultSendGet> Fail { get; set; } = new List<CFtpResultSendGet>();
+        public List<CFtpResultSendGet> Success { get; } = new List<CFtpResultSendGet>();
+        public List<CFtpResultSendGet> Fail { get; } = new List<CFtpResultSendGet>();
     }
 
     public sealed class CFtpResultSendGet {
