@@ -92,7 +92,7 @@
     <Compile Include="Databases\Postgres_.cs" />
     <Compile Include="Models\DbExecProcResult_.cs" />
     <Compile Include="Models\DbQueryParamBind_.cs" />
-    <Compile Include="Models\FtpResultSendGet_.cs" />
+    <Compile Include="Models\FtpResultInfoSendGet_.cs" />
     <Compile Include="Models\IpMacAddress_.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\Api_.cs" />
