@@ -42,7 +42,8 @@ namespace bifeldy_sd3_lib_452 {
         }
 
         public Bifeldy(string[] args) : this() {
-            // bifeldy-sd3-wf-452.exe -arg0 arg1 --arg2 "a r g 3"
+            //            0             1     2     3       4       5
+            // bifeldy-sd3-wf-452.exe -arg0 arg1 --arg2 "a r g 3" .....
             for (int i = 0; i < args.Length; i++) {
                 Console.WriteLine($"arg[{i}] => {args[i]}");
             }
@@ -57,7 +58,8 @@ namespace bifeldy_sd3_lib_452 {
                 CClass,
                 ConcreteReflectionActivatorData,
                 SingleRegistrationStyle
-            > registrationBuilder = _builder.RegisterType<CClass>();
+            > registrationBuilder = _builder
+                                        .RegisterType<CClass>();
             if (singleton) {
                 registrationBuilder.SingleInstance();
             }
@@ -81,7 +83,9 @@ namespace bifeldy_sd3_lib_452 {
                 CClass,
                 ConcreteReflectionActivatorData,
                 SingleRegistrationStyle
-            > registrationBuilder = _builder.RegisterType<CClass>().Named<object>(typeof(CClass).Name);
+            > registrationBuilder = _builder
+                                        .RegisterType<CClass>()
+                                        .Named<object>(typeof(CClass).Name);
             if (singleton) {
                 registrationBuilder.SingleInstance();
             }
