@@ -27,7 +27,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         T JsonToObj<T>(string j2o);
         string ObjectToJson(object body);
         List<T> DataTableToList<T>(DataTable dt);
-        DataTable ListToDataTable<T>(List<T> listData, string tableName = null);
+        DataTable ListToDataTable<T>(List<T> listData, string tableName = null, string arrayListSingleValueColumnName = null);
     }
 
     public sealed class CConverter : IConverter {
@@ -49,6 +49,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public List<T> DataTableToList<T>(DataTable dt) {
             List<string> columnNames = dt.Columns.Cast<DataColumn>().Select(c => c.ColumnName.ToLower()).ToList();
             PropertyInfo[] properties = typeof(T).GetProperties();
+
             return dt.AsEnumerable().Select(row => {
                 T objT = Activator.CreateInstance<T>();
                 foreach (PropertyInfo pro in properties) {
@@ -65,15 +66,27 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }).ToList();
         }
 
-        public DataTable ListToDataTable<T>(List<T> listData, string tableName = null) {
+        public DataTable ListToDataTable<T>(List<T> listData, string tableName = null, string arrayListSingleValueColumnName = null) {
             if (string.IsNullOrEmpty(tableName)) {
                 tableName = typeof(T).Name;
             }
             DataTable table = new DataTable(tableName);
 
+            //
             // Special handling for value types and string
+            //
+            // Tabel hanya punya 1 kolom
+            // create table `tblNm` ( `tblCl` varchar(255) );
+            //
+            // List<string> ls = new List<string> { "Row1", "Row2", "Row3" };
+            // ListToDataTable(ls, "tblNm", "tblCl");
+            //
             if (typeof(T).IsValueType || typeof(T).Equals(typeof(string))) {
-                DataColumn dc = new DataColumn("Value", typeof(T));
+                if (string.IsNullOrEmpty(arrayListSingleValueColumnName)) {
+                    throw new Exception("Nama Kolom Tabel Wajib Di Isi");
+                }
+
+                DataColumn dc = new DataColumn(arrayListSingleValueColumnName, typeof(T));
                 table.Columns.Add(dc);
                 foreach (T item in listData) {
                     DataRow dr = table.NewRow();
@@ -86,6 +99,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 foreach (PropertyDescriptor prop in properties) {
                     table.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
                 }
+
                 foreach (T item in listData) {
                     DataRow row = table.NewRow();
                     foreach (PropertyDescriptor prop in properties) {
