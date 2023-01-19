@@ -44,7 +44,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public async Task<FtpClient> CreateFtpConnection(string ipDomainHost, int portNumber, string userName, string password, string remoteWorkDir) {
-            FtpClient ftpClient = null;
+            FtpClient ftpClient;
             try {
                 ftpClient = new FtpClient {
                     Host = ipDomainHost,

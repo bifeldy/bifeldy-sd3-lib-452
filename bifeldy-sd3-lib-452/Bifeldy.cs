@@ -22,8 +22,9 @@ namespace bifeldy_sd3_lib_452 {
 
     public class Bifeldy {
 
-        private IContainer _container = null;
-        private ContainerBuilder _builder = null;
+        private readonly ContainerBuilder _builder = null;
+
+        private IContainer container = null;
 
         public Bifeldy() {
             _builder = new ContainerBuilder();
@@ -42,6 +43,9 @@ namespace bifeldy_sd3_lib_452 {
 
         public Bifeldy(string[] args) : this() {
             // bifeldy-sd3-wf-452.exe -arg0 arg1 --arg2 "a r g 3"
+            for (int i = 0; i < args.Length; i++) {
+                Console.WriteLine($"arg[{i}] => {args[i]}");
+            }
         }
 
         /// <summary>Di Panggil Sebelum ResolveClass();</summary>
@@ -123,18 +127,18 @@ namespace bifeldy_sd3_lib_452 {
         }
 
         public CClass ResolveClass<CClass>() {
-            return _container.Resolve<CClass>();
+            return container.Resolve<CClass>();
         }
 
         public object ResolveNamed(string name) {
-            return _container.ResolveNamed<object>(name);
+            return container.ResolveNamed<object>(name);
         }
 
         public ILifetimeScope BeginLifetimeScope() {
-            if (_container == null) {
-                _container = _builder.Build();
+            if (container == null) {
+                container = _builder.Build();
             }
-            return _container.BeginLifetimeScope();
+            return container.BeginLifetimeScope();
         }
 
     }
