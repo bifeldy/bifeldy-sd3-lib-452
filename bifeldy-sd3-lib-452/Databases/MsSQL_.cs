@@ -29,9 +29,10 @@ namespace bifeldy_sd3_lib_452.Databases {
 
     public interface IMsSQL : IDatabase {
         Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
+        CMsSQL NewExternalConnection(string dbIpAddrss, string dbUsername, string dbPassword, string dbName);
     }
 
-    public sealed class CMsSQL : CDatabase, IMsSQL {
+    public sealed class CMsSQL : CDatabase, IMsSQL, ICloneable {
 
         private readonly IApplication _app;
         private readonly ILogger _logger;
@@ -45,13 +46,17 @@ namespace bifeldy_sd3_lib_452.Databases {
             _logger = logger;
 
             InitializeMsSqlDatabase();
+            SettingUpDatabase();
         }
 
-        private void InitializeMsSqlDatabase() {
-            DbIpAddrss = _app.GetVariabel("IPSql");
-            DbUsername = _app.GetVariabel("UserSql");
-            DbPassword = _app.GetVariabel("PasswordSql");
-            DbName = _app.GetVariabel("DatabaseSql");
+        private void InitializeMsSqlDatabase(string dbIpAddrss = null, string dbUsername = null, string dbPassword = null, string dbName = null) {
+            DbIpAddrss = dbIpAddrss ?? _app.GetVariabel("IPSql");
+            DbUsername = dbUsername ?? _app.GetVariabel("UserSql");
+            DbPassword = dbPassword ?? _app.GetVariabel("PasswordSql");
+            DbName = dbName ?? _app.GetVariabel("DatabaseSql");
+        }
+
+        private void SettingUpDatabase() {
             try {
                 DbConnectionString = $"Data Source={DbIpAddrss};Initial Catalog={DbName};User ID={DbUsername};Password={DbPassword};";
                 DatabaseConnection = new SqlConnection(DbConnectionString);
@@ -178,6 +183,17 @@ namespace bifeldy_sd3_lib_452.Databases {
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
             return await RetrieveBlob(DatabaseCommand, stringPathDownload, stringFileName);
+        }
+
+        public object Clone() {
+            return MemberwiseClone();
+        }
+
+        public CMsSQL NewExternalConnection(string dbIpAddrss, string dbUsername, string dbPassword, string dbName) {
+            CMsSQL mssql = (CMsSQL) Clone();
+            mssql.InitializeMsSqlDatabase(dbIpAddrss, dbUsername, dbPassword, dbName);
+            mssql.SettingUpDatabase();
+            return mssql;
         }
 
     }

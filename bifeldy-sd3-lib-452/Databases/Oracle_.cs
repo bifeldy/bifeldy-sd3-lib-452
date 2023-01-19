@@ -30,9 +30,10 @@ namespace bifeldy_sd3_lib_452.Databases {
 
     public interface IOracle : IDatabase {
         Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
+        COracle NewExternalConnection(string dbUsername, string dbPassword, string dbTnsOdp, string dbNameSid);
     }
 
-    public sealed class COracle : CDatabase, IOracle {
+    public sealed class COracle : CDatabase, IOracle, ICloneable {
 
         private readonly IApplication _app;
         private readonly ILogger _logger;
@@ -46,19 +47,23 @@ namespace bifeldy_sd3_lib_452.Databases {
             _logger = logger;
 
             InitializeOracleDatabase();
+            SettingUpDatabase();
         }
 
-        private void InitializeOracleDatabase() {
-            DbUsername = _app.GetVariabel("UserOrcl");
-            DbPassword = _app.GetVariabel("PasswordOrcl");
-            DbTnsOdp = Regex.Replace(_app.GetVariabel("ODPOrcl"), @"\s+", "");
-            DbName = DbTnsOdp.Split(
+        private void InitializeOracleDatabase(string dbUsername = null, string dbPassword = null, string dbTnsOdp = null, string dbNameSid = null) {
+            DbUsername = dbUsername ?? _app.GetVariabel("UserOrcl");
+            DbPassword = dbPassword ?? _app.GetVariabel("PasswordOrcl");
+            DbTnsOdp = dbTnsOdp ?? Regex.Replace(_app.GetVariabel("ODPOrcl"), @"\s+", "");
+            DbName = dbNameSid ?? DbTnsOdp.Split(
                 new string[] { "SERVICE_NAME=" },
                 StringSplitOptions.None
             )[1].Split(
                 new string[] { ")" },
                 StringSplitOptions.None
             )[0];
+        }
+
+        private void SettingUpDatabase() {
             try {
                 DbConnectionString = $"Data Source={DbTnsOdp};User ID={DbUsername};Password={DbPassword};";
                 DatabaseConnection = new OracleConnection(DbConnectionString);
@@ -186,6 +191,17 @@ namespace bifeldy_sd3_lib_452.Databases {
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
             return await RetrieveBlob(DatabaseCommand, stringPathDownload, stringFileName);
+        }
+
+        public object Clone() {
+            return MemberwiseClone();
+        }
+
+        public COracle NewExternalConnection(string dbUsername, string dbPassword, string dbTnsOdp, string dbNameSid) {
+            COracle oracle = (COracle) Clone();
+            oracle.InitializeOracleDatabase(dbUsername, dbPassword, dbTnsOdp, dbNameSid);
+            oracle.SettingUpDatabase();
+            return oracle;
         }
 
     }

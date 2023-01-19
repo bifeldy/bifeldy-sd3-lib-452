@@ -42,6 +42,9 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         Task<bool> TruncateTableMsSql(string TableName);
         Task<bool> BulkInsertIntoOraPg(string tableName, DataTable dataTable);
         Task<bool> BulkInsertIntoMsSql(string tableName, DataTable dataTable);
+        COracle NewExternalConnectionOra(string dbUsername, string dbPassword, string dbTnsOdp, string dbNameSid);
+        CPostgres NewExternalConnectionPg(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName);
+        CMsSQL NewExternalConnectionMsSql(string dbIpAddrss, string dbUsername, string dbPassword, string dbName);
     }
 
     public abstract class CDbHandler : IDbHandler {
@@ -299,6 +302,18 @@ namespace bifeldy_sd3_lib_452.Abstractions {
 
         public async Task<bool> BulkInsertIntoMsSql(string tableName, DataTable dataTable) {
             return await MsSql.BulkInsertInto(tableName, dataTable);
+        }
+
+        public COracle NewExternalConnectionOra(string dbUsername, string dbPassword, string dbTnsOdp, string dbNameSid) {
+            return Oracle.NewExternalConnection(dbUsername, dbPassword, dbTnsOdp, dbNameSid);
+        }
+
+        public CPostgres NewExternalConnectionPg(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName) {
+            return Postgres.NewExternalConnection(dbIpAddrss, dbPort, dbUsername, dbPassword, dbName);
+        }
+
+        public CMsSQL NewExternalConnectionMsSql(string dbIpAddrss, string dbUsername, string dbPassword, string dbName) {
+            return MsSql.NewExternalConnection(dbIpAddrss, dbUsername, dbPassword, dbName);
         }
 
     }

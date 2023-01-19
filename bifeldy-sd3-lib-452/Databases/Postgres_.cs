@@ -34,9 +34,10 @@ namespace bifeldy_sd3_lib_452.Databases {
 
     public interface IPostgres : IDatabase {
         Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
+        CPostgres NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName);
     }
 
-    public sealed class CPostgres : CDatabase, IPostgres {
+    public sealed class CPostgres : CDatabase, IPostgres, ICloneable {
 
         private readonly IApplication _app;
         private readonly ILogger _logger;
@@ -49,14 +50,18 @@ namespace bifeldy_sd3_lib_452.Databases {
             _logger = logger;
 
             InitializePostgresDatabase();
+            SettingUpDatabase();
         }
 
-        private void InitializePostgresDatabase() {
-            DbIpAddrss = _app.GetVariabel("IPPostgres");
-            DbPort = _app.GetVariabel("PortPostgres");
-            DbUsername = _app.GetVariabel("UserPostgres");
-            DbPassword = _app.GetVariabel("PasswordPostgres");
-            DbName = _app.GetVariabel("DatabasePostgres");
+        private void InitializePostgresDatabase(string dbIpAddrss = null, string dbPort = null, string dbUsername = null,  string dbPassword = null, string dbName = null) {
+            DbIpAddrss = dbIpAddrss ?? _app.GetVariabel("IPPostgres");
+            DbPort = dbPort ?? _app.GetVariabel("PortPostgres");
+            DbUsername = dbUsername ?? _app.GetVariabel("UserPostgres");
+            DbPassword = dbPassword ?? _app.GetVariabel("PasswordPostgres");
+            DbName = dbName ?? _app.GetVariabel("DatabasePostgres");
+        }
+
+        private void SettingUpDatabase() {
             try {
                 DbConnectionString = $"Host={DbIpAddrss};Port={DbPort};Username={DbUsername};Password={DbPassword};Database={DbName};";
                 DatabaseConnection = new NpgsqlConnection(DbConnectionString);
@@ -324,6 +329,17 @@ namespace bifeldy_sd3_lib_452.Databases {
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
             return await RetrieveBlob(DatabaseCommand, stringPathDownload, stringFileName);
+        }
+
+        public object Clone() {
+            return MemberwiseClone();
+        }
+
+        public CPostgres NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName) {
+            CPostgres postgres = (CPostgres) Clone();
+            postgres.InitializePostgresDatabase(dbIpAddrss, dbPort, dbUsername, dbPassword, dbName);
+            postgres.SettingUpDatabase();
+            return postgres;
         }
 
     }
