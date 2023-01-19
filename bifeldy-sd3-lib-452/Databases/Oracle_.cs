@@ -30,7 +30,7 @@ namespace bifeldy_sd3_lib_452.Databases {
 
     public interface IOracle : IDatabase {
         Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
-        COracle NewExternalConnection(string dbUsername, string dbPassword, string dbTnsOdp, string dbNameSid);
+        COracle NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid);
     }
 
     public sealed class COracle : CDatabase, IOracle, ICloneable {
@@ -50,20 +50,14 @@ namespace bifeldy_sd3_lib_452.Databases {
             SettingUpDatabase();
         }
 
-        private void InitializeOracleDatabase(string dbUsername = null, string dbPassword = null, string dbTnsOdp = null, string dbNameSid = null) {
+        private void InitializeOracleDatabase(string dbUsername = null, string dbPassword = null, string dbTnsOdp = null) {
             DbUsername = dbUsername ?? _app.GetVariabel("UserOrcl");
             DbPassword = dbPassword ?? _app.GetVariabel("PasswordOrcl");
             DbTnsOdp = dbTnsOdp ?? Regex.Replace(_app.GetVariabel("ODPOrcl"), @"\s+", "");
-            DbName = dbNameSid ?? DbTnsOdp.Split(
-                new string[] { "SERVICE_NAME=" },
-                StringSplitOptions.None
-            )[1].Split(
-                new string[] { ")" },
-                StringSplitOptions.None
-            )[0];
         }
 
         private void SettingUpDatabase() {
+            DbName = DbTnsOdp.Split(new string[] { "SERVICE_NAME=" }, StringSplitOptions.None)[1].Split(new string[] { ")" }, StringSplitOptions.None)[0];
             try {
                 DbConnectionString = $"Data Source={DbTnsOdp};User ID={DbUsername};Password={DbPassword};";
                 DatabaseConnection = new OracleConnection(DbConnectionString);
@@ -197,9 +191,10 @@ namespace bifeldy_sd3_lib_452.Databases {
             return MemberwiseClone();
         }
 
-        public COracle NewExternalConnection(string dbUsername, string dbPassword, string dbTnsOdp, string dbNameSid) {
+        public COracle NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid) {
             COracle oracle = (COracle) Clone();
-            oracle.InitializeOracleDatabase(dbUsername, dbPassword, dbTnsOdp, dbNameSid);
+            string dbTnsOdp = $"(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST={dbIpAddrss})(PORT={dbPort})))(CONNECT_DATA=(SERVICE_NAME={dbNameSid})))";
+            oracle.InitializeOracleDatabase(dbUsername, dbPassword, dbTnsOdp);
             oracle.SettingUpDatabase();
             return oracle;
         }

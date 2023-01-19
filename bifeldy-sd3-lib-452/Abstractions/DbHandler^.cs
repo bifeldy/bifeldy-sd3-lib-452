@@ -42,7 +42,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         Task<bool> TruncateTableMsSql(string TableName);
         Task<bool> BulkInsertIntoOraPg(string tableName, DataTable dataTable);
         Task<bool> BulkInsertIntoMsSql(string tableName, DataTable dataTable);
-        COracle NewExternalConnectionOra(string dbUsername, string dbPassword, string dbTnsOdp, string dbNameSid);
+        COracle NewExternalConnectionOra(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid);
         CPostgres NewExternalConnectionPg(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName);
         CMsSQL NewExternalConnectionMsSql(string dbIpAddrss, string dbUsername, string dbPassword, string dbName);
     }
@@ -304,8 +304,8 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             return await MsSql.BulkInsertInto(tableName, dataTable);
         }
 
-        public COracle NewExternalConnectionOra(string dbUsername, string dbPassword, string dbTnsOdp, string dbNameSid) {
-            return Oracle.NewExternalConnection(dbUsername, dbPassword, dbTnsOdp, dbNameSid);
+        public COracle NewExternalConnectionOra(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid) {
+            return Oracle.NewExternalConnection(dbIpAddrss, dbPort, dbUsername, dbPassword, dbNameSid);
         }
 
         public CPostgres NewExternalConnectionPg(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName) {
