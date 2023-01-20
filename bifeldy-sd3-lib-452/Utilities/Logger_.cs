@@ -64,7 +64,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 if (LogInfoReporter != null) {
                     LogInfoReporter.Report(content);
                 }
-                StreamWriter sw = new StreamWriter($"{LogInfoFolderPath}/{DateTime.Now:dd-MM-yyyy}.log", true);
+                StreamWriter sw = new StreamWriter($"{LogInfoFolderPath}/{DateTime.Now:yyyy-MM-dd}.log", true);
                 sw.WriteLine(content);
                 sw.Flush();
                 sw.Close();
@@ -77,7 +77,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public void WriteError(string errorMessage, int skipFrame = 1) {
             try {
                 StackFrame fromsub = new StackFrame(skipFrame, false);
-                StreamWriter sw = new StreamWriter($"{LogErrorFolderPath}/{DateTime.Now:dd-MM-yyyy}.log", true);
+                StreamWriter sw = new StreamWriter($"{LogErrorFolderPath}/{DateTime.Now:yyyy-MM-dd}.log", true);
                 sw.WriteLine($"##");
                 sw.WriteLine($"#  ErrDate : {DateTime.Now:dd-MM-yyyy HH:mm:ss}");
                 sw.WriteLine($"#  ErrFunc : {fromsub.GetMethod().Name}");

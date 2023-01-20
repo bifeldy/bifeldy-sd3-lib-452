@@ -64,6 +64,8 @@ namespace bifeldy_sd3_lib_452.Databases {
                 DatabaseCommand = new OracleCommand {
                     Connection = (OracleConnection) DatabaseConnection,
                     BindByName = true,
+                    InitialLOBFetchSize = -1,
+                    InitialLONGFetchSize = -1,
                     CommandTimeout = 1800 // 30 menit
                 };
                 DatabaseAdapter = new OracleDataAdapter(DatabaseCommand);
