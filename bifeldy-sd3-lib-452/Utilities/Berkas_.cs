@@ -30,10 +30,12 @@ namespace bifeldy_sd3_lib_452.Utilities {
         List<string> ListFileForZip { get; }
         void CleanUp();
         void DeleteSingleFileInFolder(string fileName, string folderPath = null);
-        void DeleteOldFilesInFolder(string folderPath, int maxOldDays);
+        void DeleteOldFilesInFolder(string folderPath, int maxOldDays, bool isInRecursive = false);
         bool DataTable2CSV(DataTable table, string filename, string separator, string outputFolderPath = null);
         int ZipListFileInFolder(string zipFileName, List<string> listFileName = null, string folderPath = null);
         int ZipAllFileInFolder(string zipFileName, string folderPath = null);
+        void BackupAllFilesInTempFolder();
+        void CopyAllFilesAndDirectories(DirectoryInfo source, DirectoryInfo target, bool isInRecursive = false);
     }
 
     public sealed class CBerkas : IBerkas {
@@ -41,7 +43,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private readonly IApplication _app;
         private readonly ILogger _logger;
 
+        private string BackupFolderPath { get; }
+
         public int MaxOldRetentionDay { get; set; }
+
         public string TempFolderPath { get; set; }
         public string ZipFolderPath { get; set; }
         public string DownloadFolderPath { get; set; }
@@ -53,15 +58,24 @@ namespace bifeldy_sd3_lib_452.Utilities {
             _logger = logger;
 
             ListFileForZip = new List<string>();
+
+            BackupFolderPath = Path.Combine(_app.AppLocation, "Backup_Files");
+            if (!Directory.Exists(BackupFolderPath)) {
+                Directory.CreateDirectory(BackupFolderPath);
+            }
+
             MaxOldRetentionDay = 14;
+
             TempFolderPath = Path.Combine(_app.AppLocation, "Temp_Files");
             if (!Directory.Exists(TempFolderPath)) {
                 Directory.CreateDirectory(TempFolderPath);
             }
+
             ZipFolderPath = Path.Combine(_app.AppLocation, "Zip_Files");
             if (!Directory.Exists(ZipFolderPath)) {
                 Directory.CreateDirectory(ZipFolderPath);
             }
+
             DownloadFolderPath = Path.Combine(_app.AppLocation, "Download_Files");
             if (!Directory.Exists(DownloadFolderPath)) {
                 Directory.CreateDirectory(DownloadFolderPath);
@@ -69,9 +83,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public void CleanUp() {
+            BackupAllFilesInTempFolder();
+            DeleteOldFilesInFolder(_logger.LogInfoFolderPath, MaxOldRetentionDay);
             DeleteOldFilesInFolder(_logger.LogErrorFolderPath, MaxOldRetentionDay);
             DeleteOldFilesInFolder(TempFolderPath, MaxOldRetentionDay);
-            DeleteOldFilesInFolder(ZipFolderPath, MaxOldRetentionDay);
             ListFileForZip.Clear();
         }
 
@@ -88,15 +103,18 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
-        public void DeleteOldFilesInFolder(string folderPath, int maxOldDays) {
+        public void DeleteOldFilesInFolder(string folderPath, int maxOldDays, bool isInRecursive = false) {
             string path = folderPath ?? TempFolderPath;
+            if (!isInRecursive && path == TempFolderPath) {
+                BackupAllFilesInTempFolder();
+            }
             try {
                 if (Directory.Exists(path)) {
                     DirectoryInfo di = new DirectoryInfo(path);
                     FileSystemInfo[] fsis = di.GetFileSystemInfos();
                     foreach (FileSystemInfo fsi in fsis) {
                         if (fsi.Attributes == FileAttributes.Directory) {
-                            DeleteOldFilesInFolder(fsi.FullName, maxOldDays);
+                            DeleteOldFilesInFolder(fsi.FullName, maxOldDays, true);
                         }
                         if (fsi.LastWriteTime <= DateTime.Now.AddDays(-maxOldDays)) {
                             _logger.WriteInfo($"{GetType().Name}DelFileDir", fsi.FullName);
@@ -145,6 +163,24 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 }
             }
             return res;
+        }
+
+        public void CopyAllFilesAndDirectories(DirectoryInfo source, DirectoryInfo target, bool isInRecursive = false) {
+            Directory.CreateDirectory(target.FullName);
+            foreach (FileInfo fi in source.GetFiles()) {
+                FileInfo res = fi.CopyTo(Path.Combine(target.FullName, fi.Name), true);
+                _logger.WriteInfo($"{GetType().Name}CopyAndReplace", $"{fi.FullName} => {res.FullName}");
+            }
+            foreach (DirectoryInfo diSourceSubDir in source.GetDirectories()) {
+                DirectoryInfo nextTargetSubDir = target.CreateSubdirectory(diSourceSubDir.Name);
+                CopyAllFilesAndDirectories(diSourceSubDir, nextTargetSubDir);
+            }
+        }
+
+        public void BackupAllFilesInTempFolder() {
+            DirectoryInfo diSource = new DirectoryInfo(TempFolderPath);
+            DirectoryInfo diTarget = new DirectoryInfo(BackupFolderPath);
+            CopyAllFilesAndDirectories(diSource, diTarget);
         }
 
         public int ZipListFileInFolder(string zipFileName, List<string> listFileName = null, string folderPath = null) {
