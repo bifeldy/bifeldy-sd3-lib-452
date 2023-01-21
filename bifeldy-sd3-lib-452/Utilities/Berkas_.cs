@@ -83,10 +83,11 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public void CleanUp() {
-            BackupAllFilesInTempFolder();
             DeleteOldFilesInFolder(_logger.LogInfoFolderPath, MaxOldRetentionDay);
             DeleteOldFilesInFolder(_logger.LogErrorFolderPath, MaxOldRetentionDay);
+            DeleteOldFilesInFolder(BackupFolderPath, MaxOldRetentionDay);
             DeleteOldFilesInFolder(TempFolderPath, MaxOldRetentionDay);
+            DeleteOldFilesInFolder(ZipFolderPath, MaxOldRetentionDay);
             ListFileForZip.Clear();
         }
 
@@ -173,7 +174,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
             foreach (DirectoryInfo diSourceSubDir in source.GetDirectories()) {
                 DirectoryInfo nextTargetSubDir = target.CreateSubdirectory(diSourceSubDir.Name);
-                CopyAllFilesAndDirectories(diSourceSubDir, nextTargetSubDir);
+                CopyAllFilesAndDirectories(diSourceSubDir, nextTargetSubDir, true);
             }
         }
 
