@@ -35,10 +35,12 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
     public sealed class CFtp : IFtp {
 
+        private readonly IApplication _app;
         private readonly ILogger _logger;
         private readonly IBerkas _berkas;
 
-        public CFtp(ILogger logger, IBerkas fileManager) {
+        public CFtp(IApplication app, ILogger logger, IBerkas fileManager) {
+            _app = app;
             _logger = logger;
             _berkas = fileManager;
         }
@@ -75,9 +77,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
             foreach (FileInfo fi in fileInfos) {
                 string fileSent = "Fail";
                 string fn = fi.Name;
-                #if DEBUG
+                if (_app.DebugMode) {
                     fn = $"_SIMULASI__{fi.Name}";
-                #endif
+                }
                 if (ftpConnection.FileExists(fn)) {
                     await ftpConnection.DeleteFileAsync(fn);
                 }

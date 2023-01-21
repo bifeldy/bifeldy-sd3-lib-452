@@ -158,11 +158,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         }
 
         public async Task<string> CekVersi() {
-            bool debug = false;
-            #if DEBUG
-                debug = true;
-            #endif
-            if (debug) {
+            if (_app.DebugMode) {
                 return "OKE";
             }
             else {
@@ -249,11 +245,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         }
 
         public async Task<bool> CheckIpMac() {
-            bool debug = false;
-            #if DEBUG
-                debug = true;
-            #endif
-            if (debug) {
+            if (_app.DebugMode) {
                 return true;
             }
             else {
