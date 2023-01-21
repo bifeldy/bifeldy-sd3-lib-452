@@ -143,9 +143,11 @@ namespace bifeldy_sd3_lib_452.Databases {
 
         public override async Task<CDbExecProcResult> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null) {
             string sqlTextQueryParameters = "(";
-            for (int i = 0; i < bindParam.Count; i++) {
-                sqlTextQueryParameters += $":{bindParam[i].NAME}";
-                if (i + 1 < bindParam.Count) sqlTextQueryParameters += ",";
+            if (bindParam != null) {
+                for (int i = 0; i < bindParam.Count; i++) {
+                    sqlTextQueryParameters += $":{bindParam[i].NAME}";
+                    if (i + 1 < bindParam.Count) sqlTextQueryParameters += ",";
+                }
             }
             sqlTextQueryParameters += ")";
             DatabaseCommand.CommandText = $"CALL {procedureName} {sqlTextQueryParameters}";
