@@ -35,7 +35,8 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         Task<int> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null);
         Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         Task<string> RetrieveBlob(string stringPathDownload, string stringFileName, string queryString, List<CDbQueryParamBind> bindParam = null);
-        string DbName { get; set; }
+        string DbName { get; } // Hanya Expose Get Saja
+        string DbConnectionString { get; } // Hanya Expose Get Saja
         bool Available { get; }
         bool HasUnCommitRollbackSqlQuery { get; }
         void CloseConnection(bool force = false);

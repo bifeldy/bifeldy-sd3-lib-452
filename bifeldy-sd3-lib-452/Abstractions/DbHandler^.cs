@@ -28,6 +28,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
     public interface IDbHandler {
         string LoggedInUsername { get; set; }
         string DbName { get; }
+        string GetAllAvailableDbConnectionsString();
         void CloseAllConnection(bool force = false);
         Task MarkBeforeCommitRollback();
         void MarkSuccessCommitAndClose();
@@ -111,6 +112,10 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         /** Custom Queries */
 
         public string DbName => $"{OraPg?.DbName} / {MsSql?.DbName}";
+
+        public string GetAllAvailableDbConnectionsString() {
+            return $"Oracle :: {Oracle.DbName}\r\n\r\n{Oracle.DbConnectionString}\r\n\r\n\r\nPostgres :: {Postgres.DbName}\r\n\r\n{Postgres.DbConnectionString}\r\n\r\n\r\nMsSQL :: {MsSql.DbName}\r\n\r\n{MsSql.DbConnectionString}";
+        }
 
         public void CloseAllConnection(bool force = false) {
             _oracle.CloseConnection(force);
