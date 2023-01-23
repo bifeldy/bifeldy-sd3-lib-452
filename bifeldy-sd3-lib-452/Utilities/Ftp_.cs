@@ -95,7 +95,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 else {
                     ftpResultInfo.Fail.Add(resultSend);
                 }
-                _logger.WriteInfo($"{GetType().Name}Sent{fileSent}", $"{cwd}{fn}");
+                _logger.WriteInfo($"{GetType().Name}Sent{fileSent}", $"{cwd}/{fn}");
             }
             if (ftpConnection.IsConnected) {
                 await ftpConnection.DisconnectAsync();
