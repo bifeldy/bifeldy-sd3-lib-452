@@ -129,18 +129,24 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             _logger.WriteInfo(GetType().Name, sqlTextQueryParameters.Trim());
         }
 
-        protected virtual async Task<DataTable> GetDataTableAsync(DbDataAdapter dataAdapter) {
+        protected virtual async Task<DataTable> GetDataTableAsync(DbCommand databaseCommand) {
             DataTable result = new DataTable();
+            DbDataReader dr = null;
             Exception exception = null;
             try {
-                await OpenConnection();
-                dataAdapter.Fill(result);
+                // await OpenConnection();
+                // dataAdapter.Fill(result);
+                dr = await ExecReaderAsync(databaseCommand);
+                result.Load(dr);
             }
             catch (Exception ex) {
                 _logger.WriteError(ex, 4);
                 exception = ex;
             }
             finally {
+                if (dr != null) {
+                    dr.Close();
+                }
                 CloseConnection();
             }
             return (exception == null) ? result : throw exception;

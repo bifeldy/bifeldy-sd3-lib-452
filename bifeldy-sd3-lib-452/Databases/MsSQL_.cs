@@ -120,7 +120,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
-            return await GetDataTableAsync(DatabaseAdapter);
+            return await GetDataTableAsync(DatabaseCommand);
         }
 
         public override async Task<T> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null) {
