@@ -135,7 +135,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             StreamWriter writer = null;
             try {
                 writer = new StreamWriter(path);
-                string sep = "";
+                string sep = string.Empty;
                 StringBuilder builder = new StringBuilder();
                 foreach (DataColumn col in table.Columns) {
                     builder.Append(sep).Append(col.ColumnName);
@@ -144,7 +144,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 // Untuk Export *.CSV Di Buat NAMA_KOLOM Besar Semua Tanpa Petik "NAMA_KOLOM"
                 writer.WriteLine(builder.ToString().ToUpper());
                 foreach (DataRow row in table.Rows) {
-                    sep = "";
+                    sep = string.Empty;
                     builder = new StringBuilder();
                     foreach (DataColumn col in table.Columns) {
                         builder.Append(sep).Append(row[col.ColumnName]);

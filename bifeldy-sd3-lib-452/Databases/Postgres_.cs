@@ -86,7 +86,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                     dynamic pVal = parameters[i].VALUE;
                     Type pValType = (pVal == null) ? typeof(DBNull) : pVal.GetType();
                     if (pValType.IsArray) {
-                        string bindStr = "";
+                        string bindStr = string.Empty;
                         int id = 1;
                         foreach (dynamic data in pVal) {
                             if (!string.IsNullOrEmpty(bindStr)) {
