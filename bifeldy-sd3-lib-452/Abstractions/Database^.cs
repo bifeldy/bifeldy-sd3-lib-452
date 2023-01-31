@@ -35,6 +35,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         Task<int> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null);
         Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         Task<string> RetrieveBlob(string stringPathDownload, string stringFileName, string queryString, List<CDbQueryParamBind> bindParam = null);
+        Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
         string DbName { get; } // Hanya Expose Get Saja
         string DbConnectionString { get; } // Hanya Expose Get Saja
         bool Available { get; }
@@ -321,6 +322,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         public abstract Task<int> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null);
         public abstract Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         public abstract Task<string> RetrieveBlob(string stringPathDownload, string stringFileName, string queryString, List<CDbQueryParamBind> bindParam = null);
+        public abstract Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
 
     }
 

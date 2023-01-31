@@ -28,7 +28,6 @@ using bifeldy_sd3_lib_452.Utilities;
 namespace bifeldy_sd3_lib_452.Databases {
 
     public interface IMsSQL : IDatabase {
-        Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
         CMsSQL NewExternalConnection(string dbIpAddrss, string dbUsername, string dbPassword, string dbName);
     }
 
@@ -39,7 +38,6 @@ namespace bifeldy_sd3_lib_452.Databases {
 
         private SqlCommand DatabaseCommand { get; set; }
         private SqlDataAdapter DatabaseAdapter { get; set; }
-        private SqlBulkCopy DatabaseBulkCopy { get; set; }
 
         public CMsSQL(IApplication app, ILogger logger) : base(logger) {
             _app = app;
@@ -65,7 +63,6 @@ namespace bifeldy_sd3_lib_452.Databases {
                     CommandTimeout = 1800 // 30 menit
                 };
                 DatabaseAdapter = new SqlDataAdapter(DatabaseCommand);
-                DatabaseBulkCopy = new SqlBulkCopy((SqlConnection) DatabaseConnection);
                 _logger.WriteInfo(GetType().Name, DbConnectionString);
             }
             catch (Exception ex) {
@@ -151,13 +148,16 @@ namespace bifeldy_sd3_lib_452.Databases {
             return await UpdateTable(DatabaseAdapter, dataSet, dataSetTableName);
         }
 
-        public async Task<bool> BulkInsertInto(string tableName, DataTable dataTable) {
+        public override async Task<bool> BulkInsertInto(string tableName, DataTable dataTable) {
             bool result = false;
             Exception exception = null;
+            SqlBulkCopy dbBulkCopy = null;
             try {
                 await OpenConnection();
-                DatabaseBulkCopy.DestinationTableName = tableName;
-                await DatabaseBulkCopy.WriteToServerAsync(dataTable);
+                dbBulkCopy = new SqlBulkCopy((SqlConnection) DatabaseConnection) {
+                    DestinationTableName = tableName
+                };
+                await dbBulkCopy.WriteToServerAsync(dataTable);
                 result = true;
             }
             catch (Exception ex) {
@@ -165,6 +165,9 @@ namespace bifeldy_sd3_lib_452.Databases {
                 exception = ex;
             }
             finally {
+                if (dbBulkCopy != null) {
+                    dbBulkCopy.Close();
+                }
                 CloseConnection();
             }
             return (exception == null) ? result : throw exception;

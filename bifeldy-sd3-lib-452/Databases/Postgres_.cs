@@ -33,7 +33,6 @@ using bifeldy_sd3_lib_452.Utilities;
 namespace bifeldy_sd3_lib_452.Databases {
 
     public interface IPostgres : IDatabase {
-        Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
         CPostgres NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName);
     }
 
@@ -164,7 +163,7 @@ namespace bifeldy_sd3_lib_452.Databases {
         }
 
         // https://stackoverflow.com/questions/65687071/bulk-insert-copy-ienumerable-into-table-with-npgsql
-        public async Task<bool> BulkInsertInto(string tableName, DataTable dataTable) {
+        public override async Task<bool> BulkInsertInto(string tableName, DataTable dataTable) {
             bool result = false;
             Exception exception = null;
             try {
