@@ -28,6 +28,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         string ObjectToJson(object body);
         List<T> DataTableToList<T>(DataTable dt);
         DataTable ListToDataTable<T>(List<T> listData, string tableName = null, string arrayListSingleValueColumnName = null);
+        T GetDefaultValueT<T>();
     }
 
     public sealed class CConverter : IConverter {
@@ -116,6 +117,31 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
 
             return table;
+        }
+
+        public T GetDefaultValueT<T>() {
+            dynamic x = null;
+            switch (Type.GetTypeCode(typeof(T))) {
+                case TypeCode.DateTime:
+                    x = DateTime.MinValue;
+                    break;
+                case TypeCode.Byte:
+                case TypeCode.SByte:
+                case TypeCode.Int16:
+                case TypeCode.UInt16:
+                case TypeCode.Int32:
+                case TypeCode.UInt32:
+                case TypeCode.Int64:
+                case TypeCode.UInt64:
+                case TypeCode.Decimal:
+                case TypeCode.Double:
+                    x = 0;
+                    break;
+                case TypeCode.Boolean:
+                    x = false;
+                    break;
+            }
+            return (T) Convert.ChangeType(x, typeof(T));
         }
 
     }

@@ -40,7 +40,7 @@ namespace bifeldy_sd3_lib_452.Databases {
         private OracleCommand DatabaseCommand { get; set; }
         private OracleDataAdapter DatabaseAdapter { get; set; }
 
-        public COracle(IApplication app, ILogger logger) : base(logger) {
+        public COracle(IApplication app, ILogger logger, IConverter converter) : base(logger, converter) {
             _app = app;
             _logger = logger;
 

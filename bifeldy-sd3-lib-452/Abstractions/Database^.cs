@@ -49,6 +49,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
     public abstract class CDatabase : IDatabase {
 
         private readonly ILogger _logger;
+        private readonly IConverter _converter;
 
         protected DbConnection DatabaseConnection { get; set; }
         protected DbTransaction DatabaseTransaction { get; set; }
@@ -64,8 +65,9 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         public bool Available => DatabaseConnection != null;
         public bool HasUnCommitRollbackSqlQuery => DatabaseTransaction != null;
 
-        public CDatabase(ILogger logger) {
+        public CDatabase(ILogger logger, IConverter converter) {
             _logger = logger;
+            _converter = converter;
         }
 
         protected async Task OpenConnection() {
@@ -154,28 +156,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         }
 
         protected virtual async Task<T> ExecScalarAsync<T>(DbCommand databaseCommand) {
-            dynamic x = null;
-            switch (Type.GetTypeCode(typeof(T))) {
-                case TypeCode.DateTime:
-                    x = DateTime.MinValue;
-                    break;
-                case TypeCode.Byte:
-                case TypeCode.SByte:
-                case TypeCode.Int16:
-                case TypeCode.UInt16:
-                case TypeCode.Int32:
-                case TypeCode.UInt32:
-                case TypeCode.Int64:
-                case TypeCode.UInt64:
-                case TypeCode.Decimal:
-                case TypeCode.Double:
-                    x = 0;
-                    break;
-                case TypeCode.Boolean:
-                    x = false;
-                    break;
-            }
-            T result = (T) Convert.ChangeType(x, typeof(T));
+            T result = _converter.GetDefaultValueT<T>();
             Exception exception = null;
             try {
                 await OpenConnection();

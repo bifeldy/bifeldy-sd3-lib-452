@@ -24,9 +24,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IBerkas {
         int MaxOldRetentionDay { get; set; }
-        string TempFolderPath { get; set; }
-        string ZipFolderPath { get; set; }
-        string DownloadFolderPath { get; set; }
+        string BackupFolderPath { get; }
+        string TempFolderPath { get; }
+        string ZipFolderPath { get; }
+        string DownloadFolderPath { get; }
         List<string> ListFileForZip { get; }
         void CleanUp();
         void DeleteSingleFileInFolder(string fileName, string folderPath = null);
@@ -42,20 +43,21 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         private readonly IApplication _app;
         private readonly ILogger _logger;
-
-        private string BackupFolderPath { get; }
+        private readonly IConfig _config;
 
         public int MaxOldRetentionDay { get; set; }
 
-        public string TempFolderPath { get; set; }
-        public string ZipFolderPath { get; set; }
-        public string DownloadFolderPath { get; set; }
+        public string BackupFolderPath { get; }
+        public string TempFolderPath { get; }
+        public string ZipFolderPath { get; }
+        public string DownloadFolderPath { get; }
 
         public List<string> ListFileForZip { get; }
 
-        public CBerkas(IApplication app, ILogger logger) {
+        public CBerkas(IApplication app, ILogger logger, IConfig config) {
             _app = app;
             _logger = logger;
+            _config = config;
 
             ListFileForZip = new List<string>();
 
@@ -64,19 +66,19 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 Directory.CreateDirectory(BackupFolderPath);
             }
 
-            MaxOldRetentionDay = 14;
+            MaxOldRetentionDay = _config.Get<int>("MaxOldRetentionDay", 14);
 
-            TempFolderPath = Path.Combine(_app.AppLocation, "Temp_Files");
+            TempFolderPath = _config.Get<string>("TempFolderPath", Path.Combine(_app.AppLocation, "Temp_Files"));
             if (!Directory.Exists(TempFolderPath)) {
                 Directory.CreateDirectory(TempFolderPath);
             }
 
-            ZipFolderPath = Path.Combine(_app.AppLocation, "Zip_Files");
+            ZipFolderPath = _config.Get<string>("ZipFolderPath", Path.Combine(_app.AppLocation, "Zip_Files"));
             if (!Directory.Exists(ZipFolderPath)) {
                 Directory.CreateDirectory(ZipFolderPath);
             }
 
-            DownloadFolderPath = Path.Combine(_app.AppLocation, "Download_Files");
+            DownloadFolderPath = _config.Get<string>("DownloadFolderPath", Path.Combine(_app.AppLocation, "Download_Files"));
             if (!Directory.Exists(DownloadFolderPath)) {
                 Directory.CreateDirectory(DownloadFolderPath);
             }

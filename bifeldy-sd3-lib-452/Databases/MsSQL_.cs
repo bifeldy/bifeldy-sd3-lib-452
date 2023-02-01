@@ -39,7 +39,7 @@ namespace bifeldy_sd3_lib_452.Databases {
         private SqlCommand DatabaseCommand { get; set; }
         private SqlDataAdapter DatabaseAdapter { get; set; }
 
-        public CMsSQL(IApplication app, ILogger logger) : base(logger) {
+        public CMsSQL(IApplication app, ILogger logger, IConverter converter) : base(logger, converter) {
             _app = app;
             _logger = logger;
 
