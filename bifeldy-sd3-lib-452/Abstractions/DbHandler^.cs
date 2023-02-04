@@ -291,10 +291,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         }
 
         public async Task<bool> BulkInsertIntoOraPg(string tableName, DataTable dataTable) {
-            if (_app.IsUsingPostgres) {
-                return await Postgres.BulkInsertInto(tableName, dataTable);
-            }
-            return await Oracle.BulkInsertInto(tableName, dataTable);
+            return await OraPg.BulkInsertInto(tableName, dataTable);
         }
 
         public async Task<bool> BulkInsertIntoMsSql(string tableName, DataTable dataTable) {
