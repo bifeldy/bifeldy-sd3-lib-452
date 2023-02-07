@@ -76,10 +76,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             string cwd = await ftpConnection.GetWorkingDirectoryAsync();
             foreach (FileInfo fi in fileInfos) {
                 string fileSent = "Fail";
-                string fn = fi.Name;
-                if (_app.DebugMode) {
-                    fn = $"_SIMULASI__{fi.Name}";
-                }
+                string fn = _app.DebugMode ? $"_SIMULASI__{fi.Name}" : fi.Name;
                 if (ftpConnection.FileExists(fn)) {
                     await ftpConnection.DeleteFileAsync(fn);
                 }

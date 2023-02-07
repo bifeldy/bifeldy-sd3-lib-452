@@ -53,9 +53,11 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 Transfer.Connect(port);
                 Transfer.Put(localFile, remotePath);
                 Transfer.Close();
+                _logger.WriteInfo($"{GetType().Name}SentOk", remotePath);
                 return true;
             }
             catch (Exception ex) {
+                _logger.WriteInfo($"{GetType().Name}SentFail", remotePath);
                 _logger.WriteError(ex, 3);
                 return false;
             }
