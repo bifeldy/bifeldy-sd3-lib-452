@@ -51,11 +51,19 @@ namespace bifeldy_sd3_lib_452.Databases {
         private void InitializeOracleDatabase(string dbUsername = null, string dbPassword = null, string dbTnsOdp = null) {
             DbUsername = dbUsername ?? _app.GetVariabel("UserOrcl");
             DbPassword = dbPassword ?? _app.GetVariabel("PasswordOrcl");
-            DbTnsOdp = dbTnsOdp ?? Regex.Replace(_app.GetVariabel("ODPOrcl"), @"\s+", "");
+            string _dbTnsOdp = dbTnsOdp ?? _app.GetVariabel("ODPOrcl");
+            if (!string.IsNullOrEmpty(_dbTnsOdp)) {
+                _dbTnsOdp = Regex.Replace(_dbTnsOdp, @"\s+", "");
+            }
+            DbTnsOdp = dbTnsOdp ?? _dbTnsOdp;
         }
 
         private void SettingUpDatabase() {
-            DbName = DbTnsOdp.Split(new string[] { "SERVICE_NAME=" }, StringSplitOptions.None)[1].Split(new string[] { ")" }, StringSplitOptions.None)[0];
+            string _dbName = null;
+            if (!string.IsNullOrEmpty(DbTnsOdp)) {
+                _dbName = DbTnsOdp.Split(new string[] { "SERVICE_NAME=" }, StringSplitOptions.None)[1].Split(new string[] { ")" }, StringSplitOptions.None)[0];
+            }
+            DbName = _dbName;
             try {
                 DbConnectionString = $"Data Source={DbTnsOdp};User ID={DbUsername};Password={DbPassword};";
                 DatabaseConnection = new OracleConnection(DbConnectionString);
