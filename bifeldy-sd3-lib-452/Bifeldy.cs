@@ -14,6 +14,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 using Autofac;
 using Autofac.Builder;
@@ -21,6 +22,9 @@ using Autofac.Builder;
 namespace bifeldy_sd3_lib_452 {
 
     public class Bifeldy {
+
+        // Class Name & Interface Only Start With "Alphabet" And Can Be Combined With Number And Symbol _ Only
+        private readonly string _acceptableIndentifierName = "^[a-zA-Z0-9_]+$";
 
         private readonly ContainerBuilder _builder = null;
 
@@ -34,11 +38,11 @@ namespace bifeldy_sd3_lib_452 {
             //     .Where(vsSln => vsSln.Namespace.Contains("nama_namespace_yang_mau_di_import"))
             //     .As(c => c.GetInterfaces().FirstOrDefault(i => i.Name == "I" + c.Name);
 
-            // Array Of Namespace For DI
-            string[] namespaceForDependencyInjection = { "Databases", "Utilities" };
-
-            // Inject CClass As IInterface
-            RegisterDiClassAsInterfaceByNamespace(Assembly.GetExecutingAssembly(), namespaceForDependencyInjection);
+            // Inject CClass As IInterface Using Namespace
+            RegisterDiClassAsInterfaceByNamespace(Assembly.GetExecutingAssembly(), new string[] {
+                "bifeldy_sd3_lib_452.Databases",
+                "bifeldy_sd3_lib_452.Utilities"
+            });
         }
 
         public Bifeldy(string[] args) : this() {
@@ -72,7 +76,9 @@ namespace bifeldy_sd3_lib_452 {
                 DynamicRegistrationStyle
             > registrationBuilder = _builder
                                         .RegisterAssemblyTypes(assembly)
-                                        .Where(type => namespaces.Any(type.Namespace.Contains) && type.IsClass);
+                                        .Where(type => namespaces.Any(type.Namespace.Contains)
+                                                        && type.IsClass
+                                                        && Regex.IsMatch(type.Name, _acceptableIndentifierName));
             if (singleton) {
                 registrationBuilder.SingleInstance();
             }
@@ -98,7 +104,9 @@ namespace bifeldy_sd3_lib_452 {
                 DynamicRegistrationStyle
             > registrationBuilder = _builder
                                         .RegisterAssemblyTypes(assembly)
-                                        .Where(type => namespaces.Any(type.Namespace.Contains) && type.IsClass)
+                                        .Where(type => namespaces.Any(type.Namespace.Contains)
+                                                        && type.IsClass
+                                                        && Regex.IsMatch(type.Name, _acceptableIndentifierName))
                                         .Named<object>(c => c.Name);
             if (singleton) {
                 registrationBuilder.SingleInstance();
@@ -123,8 +131,10 @@ namespace bifeldy_sd3_lib_452 {
                 DynamicRegistrationStyle
             > registrationBuilder = _builder
                                         .RegisterAssemblyTypes(assembly)
-                                        .Where(type => namespaces.Any(type.Namespace.Contains) && type.IsClass)
-                                        .As(c => c.GetInterfaces().FirstOrDefault(i => i.Name == "I" + c.Name.Substring(1)));
+                                        .Where(type => namespaces.Any(type.Namespace.Contains)
+                                                        && type.IsClass
+                                                        && Regex.IsMatch(type.Name, _acceptableIndentifierName))
+                                        .As(c => c.GetInterfaces().Where(i => i.Name == "I" + c.Name.Substring(1)).First());
             if (singleton) {
                 registrationBuilder.SingleInstance();
             }
@@ -134,8 +144,8 @@ namespace bifeldy_sd3_lib_452 {
             return container.Resolve<CClass>();
         }
 
-        public object ResolveNamed(string name) {
-            return container.ResolveNamed<object>(name);
+        public CClass ResolveNamed<CClass>(string name) {
+            return (CClass) container.ResolveNamed<object>(name);
         }
 
         public ILifetimeScope BeginLifetimeScope() {
