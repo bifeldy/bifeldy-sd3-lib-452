@@ -26,6 +26,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
     public interface IApplication {
         Process CurrentProcess { get; }
         bool DebugMode { get; set; }
+        bool IsIdle { get; set; }
         string AppName { get; }
         string AppLocation { get; }
         string AppVersion { get; }
@@ -39,6 +40,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
     public class CApplication : IApplication {
         public Process CurrentProcess { get; }
         public bool DebugMode { get; set; } = false;
+        public bool IsIdle { get; set; } = false;
 
         private readonly SettingLib.Class1 _SettingLib;
         private readonly SettingLibRest.Class1 _SettingLibRest;
