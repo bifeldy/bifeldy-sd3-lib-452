@@ -21,7 +21,7 @@ using Autofac.Builder;
 
 namespace bifeldy_sd3_lib_452 {
 
-    public class Bifeldy {
+    public sealed class Bifeldy {
 
         // Class Name & Interface Only Start With "Alphabet" And Can Be Combined With Number And Symbol _ Only
         private readonly string _acceptableIndentifierName = "^[a-zA-Z0-9_]+$";
