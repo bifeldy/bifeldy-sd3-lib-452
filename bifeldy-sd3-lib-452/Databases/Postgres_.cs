@@ -76,8 +76,6 @@ namespace bifeldy_sd3_lib_452.Databases {
             }
         }
 
-        /** Bagian Ini Mirip :: Oracle - Ms. Sql Server - PostgreSQL */
-
         private void BindQueryParameter(List<CDbQueryParamBind> parameters) {
             DatabaseCommand.Parameters.Clear();
             if (parameters != null) {
@@ -118,6 +116,8 @@ namespace bifeldy_sd3_lib_452.Databases {
             }
             LogQueryParameter(DatabaseCommand);
         }
+
+        /** Bagian Ini Mirip :: Oracle - Ms. Sql Server - PostgreSQL */
 
         public override async Task<DataTable> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
             DatabaseCommand.CommandText = queryString;
