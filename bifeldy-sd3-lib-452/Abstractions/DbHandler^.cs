@@ -142,6 +142,9 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         }
 
         public async Task<string> GetJenisDc() {
+            if (OraPg.DbUsername.ToUpper().Contains("DCHO")) {
+                return "HO";
+            }
             if (string.IsNullOrEmpty(DcJenis)) {
                 DcJenis = await OraPg.ExecScalarAsync<string>("SELECT TBL_JENIS_DC FROM DC_TABEL_DC_T");
             }
@@ -149,6 +152,9 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         }
 
         public async Task<string> GetKodeDc() {
+            if (OraPg.DbUsername.ToUpper().Contains("DCHO")) {
+                return "DCHO";
+            }
             if (string.IsNullOrEmpty(DcCode)) {
                 DcCode = await OraPg.ExecScalarAsync<string>("SELECT TBL_DC_KODE FROM DC_TABEL_DC_T");
             }
@@ -156,6 +162,9 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         }
 
         public async Task<string> GetNamaDc() {
+            if (OraPg.DbUsername.ToUpper().Contains("DCHO")) {
+                return "DC HEAD OFFICE";
+            }
             if (string.IsNullOrEmpty(DcName)) {
                 DcName = await OraPg.ExecScalarAsync<string>("SELECT TBL_DC_NAMA FROM DC_TABEL_DC_T");
             }

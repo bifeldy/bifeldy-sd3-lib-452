@@ -36,6 +36,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         Task<string> RetrieveBlob(string stringPathDownload, string stringFileName, string queryString, List<CDbQueryParamBind> bindParam = null);
         Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
+        string DbUsername { get; } // Hanya Expose Get Saja
         string DbName { get; } // Hanya Expose Get Saja
         string DbConnectionString { get; } // Hanya Expose Get Saja
         bool Available { get; }
