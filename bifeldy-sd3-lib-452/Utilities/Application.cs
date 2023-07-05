@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Reflection;
@@ -62,7 +63,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             //
             AppName = Process.GetCurrentProcess().MainModule.ModuleName.ToUpper();
             AppLocation = AppDomain.CurrentDomain.BaseDirectory;
-            AppVersion = string.Join("", Assembly.GetExecutingAssembly().GetName().Version.ToString().Split('.'));
+            AppVersion = string.Join("", Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion.ToString().Split('.'));
         }
 
         public string GetVariabel(string key) {
