@@ -31,7 +31,7 @@ namespace bifeldy_sd3_lib_452.Databases {
         CMsSQL NewExternalConnection(string dbIpAddrss, string dbUsername, string dbPassword, string dbName);
     }
 
-    public sealed class CMsSQL : CDatabase, IMsSQL, ICloneable {
+    public sealed class CMsSQL : CDatabase, IMsSQL {
 
         private readonly IApplication _app;
         private readonly ILogger _logger;
@@ -186,10 +186,6 @@ namespace bifeldy_sd3_lib_452.Databases {
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
             return await RetrieveBlob(DatabaseCommand, stringPathDownload, stringFileName);
-        }
-
-        public object Clone() {
-            return MemberwiseClone();
         }
 
         public CMsSQL NewExternalConnection(string dbIpAddrss, string dbUsername, string dbPassword, string dbName) {

@@ -47,7 +47,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         void MarkFailedRollbackAndClose();
     }
 
-    public abstract class CDatabase : IDatabase {
+    public abstract class CDatabase : IDatabase, ICloneable {
 
         private readonly ILogger _logger;
         private readonly IConverter _converter;
@@ -69,6 +69,10 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         public CDatabase(ILogger logger, IConverter converter) {
             _logger = logger;
             _converter = converter;
+        }
+
+        public object Clone() {
+            return MemberwiseClone();
         }
 
         protected async Task OpenConnection() {

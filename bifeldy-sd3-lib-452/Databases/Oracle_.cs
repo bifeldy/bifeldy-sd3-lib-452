@@ -32,7 +32,7 @@ namespace bifeldy_sd3_lib_452.Databases {
         COracle NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid);
     }
 
-    public sealed class COracle : CDatabase, IOracle, ICloneable {
+    public sealed class COracle : CDatabase, IOracle {
 
         private readonly IApplication _app;
         private readonly ILogger _logger;
@@ -198,10 +198,6 @@ namespace bifeldy_sd3_lib_452.Databases {
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
             return await RetrieveBlob(DatabaseCommand, stringPathDownload, stringFileName);
-        }
-
-        public object Clone() {
-            return MemberwiseClone();
         }
 
         public COracle NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid) {

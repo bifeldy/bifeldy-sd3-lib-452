@@ -36,7 +36,7 @@ namespace bifeldy_sd3_lib_452.Databases {
         CPostgres NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName);
     }
 
-    public sealed class CPostgres : CDatabase, IPostgres, ICloneable {
+    public sealed class CPostgres : CDatabase, IPostgres {
 
         private readonly IApplication _app;
         private readonly ILogger _logger;
@@ -330,10 +330,6 @@ namespace bifeldy_sd3_lib_452.Databases {
             DatabaseCommand.CommandType = CommandType.Text;
             BindQueryParameter(bindParam);
             return await RetrieveBlob(DatabaseCommand, stringPathDownload, stringFileName);
-        }
-
-        public object Clone() {
-            return MemberwiseClone();
         }
 
         public CPostgres NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName) {
