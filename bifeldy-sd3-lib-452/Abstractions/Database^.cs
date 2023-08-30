@@ -28,6 +28,7 @@ using bifeldy_sd3_lib_452.Utilities;
 namespace bifeldy_sd3_lib_452.Abstractions {
 
     public interface IDatabase {
+        Task<DataColumnCollection> GetAllColumnTableAsync(string tableName);
         Task<DataTable> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         Task<T> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null);
         Task<bool> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
@@ -135,6 +136,11 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             sqlTextQueryParameters = sqlTextQueryParameters.Replace($"\r\n", " ");
             sqlTextQueryParameters = Regex.Replace(sqlTextQueryParameters, @"\s+", " ");
             _logger.WriteInfo(GetType().Name, sqlTextQueryParameters.Trim());
+        }
+
+        protected virtual async Task<DataColumnCollection> GetAllColumnTableAsync(string tableName, DbCommand databaseCommand) {
+            DataTable dt = await GetDataTableAsync(databaseCommand);
+            return dt.Columns;
         }
 
         protected virtual async Task<DataTable> GetDataTableAsync(DbCommand databaseCommand) {
@@ -301,6 +307,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
 
         /** Wajib di Override */
 
+        public abstract Task<DataColumnCollection> GetAllColumnTableAsync(string tableName);
         public abstract Task<DataTable> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         public abstract Task<T> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null);
         public abstract Task<bool> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null);

@@ -39,13 +39,18 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         Task<string> CekVersi();
         Task<bool> LoginUser(string usernameNik, string password);
         Task<bool> CheckIpMac();
-        Task<bool> TruncateTableOraPg(string TableName);
-        Task<bool> TruncateTableMsSql(string TableName);
-        Task<bool> BulkInsertIntoOraPg(string tableName, DataTable dataTable);
-        Task<bool> BulkInsertIntoMsSql(string tableName, DataTable dataTable);
         COracle NewExternalConnectionOra(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid);
         CPostgres NewExternalConnectionPg(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName);
         CMsSQL NewExternalConnectionMsSql(string dbIpAddrss, string dbUsername, string dbPassword, string dbName);
+        Task<bool> OraPg_TruncateTable(string TableName);
+        Task<bool> OraPg_BulkInsertInto(string tableName, DataTable dataTable);
+        Task<List<string>> OraPg_GetAllColumnTable(string tableName);
+        Task<DateTime> OraPg_GetYesterdayDate(int lastDay);
+        Task<DateTime> OraPg_GetLastMonth(int lastMonth);
+        Task<DateTime> OraPg_GetCurrentTimestamp();
+        Task<DateTime> OraPg_GetCurrentDate();
+        Task<DataTable> OraPg_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
+        Task<CDbExecProcResult> OraPg_CALL_(string procName, List<CDbQueryParamBind> bindParam = null);
     }
 
     public abstract class CDbHandler : IDbHandler {
@@ -291,22 +296,6 @@ namespace bifeldy_sd3_lib_452.Abstractions {
 
         /* Perlakuan Khusus */
 
-        public async Task<bool> TruncateTableOraPg(string TableName) {
-            return await OraPg.ExecQueryAsync($@"TRUNCATE TABLE {TableName}");
-        }
-
-        public async Task<bool> TruncateTableMsSql(string TableName) {
-            return await MsSql.ExecQueryAsync($@"TRUNCATE TABLE {TableName}");
-        }
-
-        public async Task<bool> BulkInsertIntoOraPg(string tableName, DataTable dataTable) {
-            return await OraPg.BulkInsertInto(tableName, dataTable);
-        }
-
-        public async Task<bool> BulkInsertIntoMsSql(string tableName, DataTable dataTable) {
-            return await MsSql.BulkInsertInto(tableName, dataTable);
-        }
-
         public COracle NewExternalConnectionOra(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid) {
             return Oracle.NewExternalConnection(dbIpAddrss, dbPort, dbUsername, dbPassword, dbNameSid);
         }
@@ -317,6 +306,70 @@ namespace bifeldy_sd3_lib_452.Abstractions {
 
         public CMsSQL NewExternalConnectionMsSql(string dbIpAddrss, string dbUsername, string dbPassword, string dbName) {
             return MsSql.NewExternalConnection(dbIpAddrss, dbUsername, dbPassword, dbName);
+        }
+
+        /* ** */
+
+        public async Task<bool> OraPg_TruncateTable(string TableName) {
+            return await OraPg.ExecQueryAsync($@"TRUNCATE TABLE {TableName}");
+        }
+
+        public async Task<bool> OraPg_BulkInsertInto(string tableName, DataTable dataTable) {
+            return await OraPg.BulkInsertInto(tableName, dataTable);
+        }
+
+        // Bisa Kena SQL Injection
+        public async Task<List<string>> OraPg_GetAllColumnTable(string tableName) {
+            List<string> cols = new List<string>();
+            DataColumnCollection columns = await OraPg.GetAllColumnTableAsync(tableName);
+            foreach (DataColumn col in columns) {
+                cols.Add(col.ColumnName.ToUpper());
+            }
+            return cols;
+        }
+
+        public async Task<DateTime> OraPg_GetYesterdayDate(int lastDay) {
+            return await OraPg.ExecScalarAsync<DateTime>(
+                $@"
+                    SELECT {(_app.IsUsingPostgres ? "CURRENT_DATE" : "TRUNC(SYSDATE)")} - :last_day
+                    {(_app.IsUsingPostgres ? "" : "FROM DUAL")}
+                ",
+                new List<CDbQueryParamBind> {
+                    new CDbQueryParamBind { NAME = "last_day", VALUE = lastDay }
+                }
+            );
+        }
+
+        public async Task<DateTime> OraPg_GetLastMonth(int lastMonth) {
+            return await OraPg.ExecScalarAsync<DateTime>(
+                $@"
+                    SELECT TRUNC(add_months({(_app.IsUsingPostgres ? "CURRENT_DATE" : "SYSDATE")}, - :last_month))
+                    {(_app.IsUsingPostgres ? "" : "FROM DUAL")}
+                ",
+                new List<CDbQueryParamBind> {
+                    new CDbQueryParamBind { NAME = "last_month", VALUE = lastMonth }
+                }
+            );
+        }
+
+        public async Task<DateTime> OraPg_GetCurrentTimestamp() {
+            return await OraPg.ExecScalarAsync<DateTime>($@"
+                SELECT {(_app.IsUsingPostgres ? "CURRENT_TIMESTAMP" : "SYSDATE FROM DUAL")}
+            ");
+        }
+
+        public async Task<DateTime> OraPg_GetCurrentDate() {
+            return await OraPg.ExecScalarAsync<DateTime>($@"
+                SELECT {(_app.IsUsingPostgres ? "CURRENT_DATE" : "TRUNC(SYSDATE) FROM DUAL")}
+            ");
+        }
+
+        public async Task<DataTable> OraPg_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
+            return await OraPg.GetDataTableAsync(sqlQuery, bindParam);
+        }
+
+        public async Task<CDbExecProcResult> OraPg_CALL_(string procedureName, List<CDbQueryParamBind> bindParam = null) {
+            return await OraPg.ExecProcedureAsync(procedureName, bindParam);
         }
 
     }

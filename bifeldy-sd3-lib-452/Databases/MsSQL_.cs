@@ -113,6 +113,12 @@ namespace bifeldy_sd3_lib_452.Databases {
 
         /** Bagian Ini Mirip :: Oracle - Ms. Sql Server - PostgreSQL */
 
+        public override async Task<DataColumnCollection> GetAllColumnTableAsync(string tableName) {
+            DatabaseCommand.CommandText = $@"SELECT * FROM {tableName} LIMIT 1";
+            DatabaseCommand.CommandType = CommandType.Text;
+            return await GetAllColumnTableAsync(tableName, DatabaseCommand);
+        }
+
         public override async Task<DataTable> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
             DatabaseCommand.CommandText = queryString;
             DatabaseCommand.CommandType = CommandType.Text;
