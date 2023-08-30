@@ -26,9 +26,12 @@ namespace bifeldy_sd3_lib_452.Utilities {
     public interface IConverter {
         T JsonToObj<T>(string j2o);
         string ObjectToJson(object body);
+        string ByteToString(byte[] bytes, bool removeHypens = true);
+        byte[] StringToByte(string hex, string separator = null);
         List<T> DataTableToList<T>(DataTable dt);
         DataTable ListToDataTable<T>(List<T> listData, string tableName = null, string arrayListSingleValueColumnName = null);
         T GetDefaultValueT<T>();
+
     }
 
     public sealed class CConverter : IConverter {
@@ -47,14 +50,41 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return JsonConvert.SerializeObject(o2j);
         }
 
+        public string ByteToString(byte[] bytes, bool removeHypens = true) {
+            string hex = BitConverter.ToString(bytes);
+            if (removeHypens) {
+                return hex.Replace("-", "");
+            }
+            return hex;
+        }
+
+        public byte[] StringToByte(string hex, string separator = null) {
+            byte[] array = null;
+            if (string.IsNullOrEmpty(separator)) {
+                int length = (hex.Length + 1) / 3;
+                array = new byte[length];
+                for (int i = 0; i < length; i++) {
+                    array[i] = Convert.ToByte(hex.Substring(3 * i, 2), 16);
+                }
+            }
+            else {
+                string[] arr = hex.Split('-');
+                array = new byte[arr.Length];
+                for (int i = 0; i < arr.Length; i++) {
+                    array[i] = Convert.ToByte(arr[i], 16);
+                }
+            }
+            return array;
+        }
+
         public List<T> DataTableToList<T>(DataTable dt) {
-            List<string> columnNames = dt.Columns.Cast<DataColumn>().Select(c => c.ColumnName.ToLower()).ToList();
+            List<string> columnNames = dt.Columns.Cast<DataColumn>().Select(c => c.ColumnName.ToUpper()).ToList();
             PropertyInfo[] properties = typeof(T).GetProperties();
 
             return dt.AsEnumerable().Select(row => {
                 T objT = Activator.CreateInstance<T>();
                 foreach (PropertyInfo pro in properties) {
-                    if (columnNames.Contains(pro.Name.ToLower())) {
+                    if (columnNames.Contains(pro.Name.ToUpper())) {
                         try {
                             pro.SetValue(objT, row[pro.Name]);
                         }

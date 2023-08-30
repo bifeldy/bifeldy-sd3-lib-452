@@ -20,8 +20,9 @@ using System.Text;
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IStream {
-        string DecompressG(byte[] byteData);
-        byte[] MemStream(string jString);
+        string GZipDecompressString(byte[] byteData, int maxChunk = 2048);
+        byte[] GZipCompressString(string text);
+        MemoryStream ReadFileAsBinaryByte(string filePath, int maxChunk = 2048);
     }
 
     public sealed class CStream : IStream {
@@ -30,9 +31,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
             //
         }
 
-        public string DecompressG(byte[] byteData) {
-            int size = 4096;
-            byte[] buffer = new byte[size - 1];
+        public string GZipDecompressString(byte[] byteData, int maxChunk = 2048) {
+            byte[] buffer = new byte[maxChunk - 1];
             GZipStream stream = new GZipStream(new MemoryStream(byteData), CompressionMode.Decompress);
             MemoryStream memoryStream = new MemoryStream();
             int count = 0;
@@ -46,12 +46,24 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return Encoding.UTF8.GetString(memoryStream.ToArray());
         }
 
-        public byte[] MemStream(string jString) {
-            byte[] tempByte = Encoding.UTF8.GetBytes(jString);
+        public byte[] GZipCompressString(string text) {
+            byte[] tempByte = Encoding.UTF8.GetBytes(text);
             MemoryStream memory = new MemoryStream();
             GZipStream gzip = new GZipStream(memory, CompressionMode.Compress, true);
             gzip.Write(tempByte, 0, tempByte.Length);
             return memory.ToArray();
+        }
+
+        public MemoryStream ReadFileAsBinaryByte(string filePath, int maxChunk = 2048) {
+            MemoryStream dest = new MemoryStream();
+            using (Stream source = File.OpenRead(filePath)) {
+                byte[] buffer = new byte[maxChunk];
+                int bytesRead = 0;
+                while ((bytesRead = source.Read(buffer, 0, buffer.Length)) > 0) {
+                    dest.Write(buffer, 0, bytesRead);
+                }
+            }
+            return dest;
         }
 
     }
