@@ -19,6 +19,7 @@ using System.IO;
 using System.Text;
 
 using Ionic.Zip;
+using Ionic.Zlib;
 
 namespace bifeldy_sd3_lib_452.Utilities {
 
@@ -33,8 +34,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
         void DeleteSingleFileInFolder(string fileName, string folderPath = null);
         void DeleteOldFilesInFolder(string folderPath, int maxOldDays, bool isInRecursive = false);
         bool DataTable2CSV(DataTable table, string filename, string separator, string outputFolderPath = null);
-        int ZipListFileInFolder(string zipFileName, List<string> listFileName = null, string folderPath = null);
-        int ZipAllFileInFolder(string zipFileName, string folderPath = null);
+        int ZipListFileInFolder(string zipFileName, List<string> listFileName = null, string folderPath = null, string password = null);
+        int ZipAllFileInFolder(string zipFileName, string folderPath = null, string password = null);
         void BackupAllFilesInTempFolder();
         void CopyAllFilesAndDirectories(DirectoryInfo source, DirectoryInfo target, bool isInRecursive = false);
     }
@@ -186,11 +187,15 @@ namespace bifeldy_sd3_lib_452.Utilities {
             CopyAllFilesAndDirectories(diSource, diTarget);
         }
 
-        public int ZipListFileInFolder(string zipFileName, List<string> listFileName = null, string folderPath = null) {
+        public int ZipListFileInFolder(string zipFileName, List<string> listFileName = null, string folderPath = null, string password = null) {
             int totalFileInZip = 0;
             List<string> ls = listFileName ?? ListFileForZip;
             try {
                 ZipFile zip = new ZipFile();
+                if (!string.IsNullOrEmpty(password)) {
+                    zip.Password = password;
+                    zip.CompressionLevel = CompressionLevel.BestCompression;
+                }
                 foreach (string targetFileName in ls) {
                     string filePath = Path.Combine(folderPath ?? TempFolderPath, targetFileName);
                     ZipEntry zipEntry = zip.AddFile(filePath, "");
@@ -214,10 +219,14 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return totalFileInZip;
         }
 
-        public int ZipAllFileInFolder(string zipFileName, string folderPath = null) {
+        public int ZipAllFileInFolder(string zipFileName, string folderPath = null, string password = null) {
             int totalFileInZip = 0;
             try {
                 ZipFile zip = new ZipFile();
+                if (!string.IsNullOrEmpty(password)) {
+                    zip.Password = password;
+                    zip.CompressionLevel = CompressionLevel.BestCompression;
+                }
                 DirectoryInfo directoryInfo = new DirectoryInfo(folderPath ?? TempFolderPath);
                 FileInfo[] fileInfos = directoryInfo.GetFiles();
                 foreach (FileInfo fileInfo in fileInfos) {
