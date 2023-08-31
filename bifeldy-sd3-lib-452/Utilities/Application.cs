@@ -1,7 +1,6 @@
 ﻿/**
  * 
  * Author       :: Basilius Bias Astho Christyono
- * Mail         :: bias@indomaret.co.id
  * Phone        :: (+62) 889 236 6466
  * 
  * Department   :: IT SD 03
