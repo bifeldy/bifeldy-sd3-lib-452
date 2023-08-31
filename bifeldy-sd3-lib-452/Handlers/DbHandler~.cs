@@ -70,7 +70,6 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         public CDbHandler(IApplication app, IOracle oracle, IPostgres postgres, IMsSQL mssql) {
             _app = app;
-
             _oracle = oracle;
             _postgres = postgres;
             _mssql = mssql;
