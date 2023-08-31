@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Drawing;
 using System.Linq;
 using System.Reflection;
 
@@ -24,6 +25,8 @@ using Newtonsoft.Json;
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IConverter {
+        byte[] ImageToByte(Image x);
+        Image ByteToImage(byte[] byteArray);
         T JsonToObj<T>(string j2o);
         string ObjectToJson(object body);
         string ByteToString(byte[] bytes, bool removeHypens = true);
@@ -40,6 +43,14 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public CConverter(ILogger logger) {
             _logger = logger;
+        }
+
+        public byte[] ImageToByte(Image image) {
+            return (byte[]) new ImageConverter().ConvertTo(image, typeof(byte[]));
+        }
+
+        public Image ByteToImage(byte[] byteArray) {
+            return (Bitmap) new ImageConverter().ConvertFrom(byteArray);
         }
 
         public T JsonToObj<T>(string j2o) {

@@ -41,6 +41,7 @@ namespace bifeldy_sd3_lib_452 {
             // Inject CClass As IInterface Using Namespace
             RegisterDiClassAsInterfaceByNamespace(Assembly.GetExecutingAssembly(), new string[] {
                 "bifeldy_sd3_lib_452.Databases",
+                "bifeldy_sd3_lib_452.Handlers",
                 "bifeldy_sd3_lib_452.Utilities"
             });
         }
