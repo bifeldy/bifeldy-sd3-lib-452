@@ -39,7 +39,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<bool> LoginUser(string usernameNik, string password);
         Task<bool> CheckIpMac();
         Task<string> GetURLWebService(string webType);
-        Task<bool> OraPg_AlterTable(string tableName, string columnName, string columnType);
+        Task<bool> OraPg_AlterTable_AddColumnIfNotExist(string tableName, string columnName, string columnType);
         COracle NewExternalConnectionOra(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid);
         CPostgres NewExternalConnectionPg(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName);
         CMsSQL NewExternalConnectionMsSql(string dbIpAddrss, string dbUsername, string dbPassword, string dbName);
@@ -320,7 +320,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         /* ** */
 
-        public async Task<bool> OraPg_AlterTable(string tableName, string columnName, string columnType) {
+        public async Task<bool> OraPg_AlterTable_AddColumnIfNotExist(string tableName, string columnName, string columnType) {
             var cols_dc_npbtoko_log = await OraPg_GetAllColumnTable(tableName);
             if (!cols_dc_npbtoko_log.Contains(columnName.ToUpper())) {
                 return await OraPg.ExecQueryAsync($@"
