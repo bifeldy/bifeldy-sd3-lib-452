@@ -66,13 +66,22 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public string GetConfig(string key) {
-            return ConfigurationManager.AppSettings[key];
+            try {
+                return ConfigurationManager.AppSettings[key];
+            }
+            catch {
+                return null;
+            }
         }
 
         public string GetVariabel(string key) {
+            string id = string.Empty;
+            if (DebugMode) {
+                id = GetConfig("setting_debug");
+            }
             try {
                 // http://xxx.xxx.xxx.xxx/KunciGxxx/Service.asmx
-                string result = _SettingLib.GetVariabel(key);
+                string result = _SettingLib.GetVariabel(key, id);
                 if (result.ToUpper().Contains("ERROR")) {
                     throw new Exception("SettingLib Gagal");
                 }
