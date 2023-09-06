@@ -55,7 +55,7 @@ namespace bifeldy_sd3_lib_452.Databases {
 
         private void SettingUpDatabase() {
             try {
-                DbConnectionString = $"Data Source={DbIpAddrss};Initial Catalog={DbName};User ID={DbUsername};Password={DbPassword};";
+                DbConnectionString = $"Data Source={DbIpAddrss};Initial Catalog={DbName};User ID={DbUsername};Password={DbPassword};Connection Timeout=180;"; // 3 menit
                 DatabaseConnection = new SqlConnection(DbConnectionString);
                 DatabaseCommand = new SqlCommand {
                     Connection = (SqlConnection) DatabaseConnection,

@@ -61,7 +61,7 @@ namespace bifeldy_sd3_lib_452.Databases {
 
         private void SettingUpDatabase() {
             try {
-                DbConnectionString = $"Host={DbIpAddrss};Port={DbPort};Username={DbUsername};Password={DbPassword};Database={DbName};";
+                DbConnectionString = $"Host={DbIpAddrss};Port={DbPort};Username={DbUsername};Password={DbPassword};Database={DbName};Timeout=180;"; // 3 menit
                 DatabaseConnection = new NpgsqlConnection(DbConnectionString);
                 DatabaseCommand = new NpgsqlCommand {
                     Connection = (NpgsqlConnection) DatabaseConnection,
