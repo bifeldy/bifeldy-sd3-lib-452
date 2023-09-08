@@ -24,7 +24,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
     public interface IQrBar {
         Image Generate128BarCode(string text, int widthPx = 512, int heightPx = 256);
         Image GenerateQrCode(string text, int sizePx = 512, int version = 25);
-        Image AddBackground(string qrImagePath, string backgroundImagePath);
+        Image GenerateQrCode(string content, string backgroundImagePath, int sizePx = 512, int version = 25);
         Image AddQrLogo(Image qrImage, Image overlayImage, double logoScale = 0.25);
         Image AddQrCaption(Image qrImage, string caption);
         string ReadTextFromQrBarCode(Image bitmapImage);
@@ -32,8 +32,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
     public class CQrBar : IQrBar {
 
-        public CQrBar() {
-            //
+        private readonly IConverter _converter;
+
+        public CQrBar(IConverter converter) {
+            _converter = converter;
         }
 
         public Image Generate128BarCode(string content, int widthPx = 512, int heightPx = 256) {
@@ -63,24 +65,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return writer.Write(content);
         }
 
-        private Bitmap ReplaceColor(Bitmap srcImage, Color clr) {
-            for (int row = 0; row < srcImage.Height; row++) {
-                for (int col = 0; col < srcImage.Width; col++) {
-                    Color px = srcImage.GetPixel(col, row);
-                    if (px == Color.Black) {
-                        srcImage.SetPixel(col, row, clr);
-                    }
-                    else {
-                        srcImage.SetPixel(col, row, Color.FromArgb(clr.A, px));
-                    }
-                }
-            }
-            return srcImage;
-        }
-
-        public Image AddBackground(string qrImagePath, string backgroundImagePath) {
+        public Image GenerateQrCode(string content, string backgroundImagePath, int sizePx = 512, int version = 25) {
             // TODO :: https://github.com/chinuno-usami/CuteR/blob/master/CuteR/CuteR.py
-            return Image.FromFile(qrImagePath);
+            return _converter.ResizeImage(Image.FromFile(backgroundImagePath), sizePx, sizePx);
         }
 
         public Image AddQrLogo(Image qrImage, Image overlayImage, double logoScale = 0.25) {
