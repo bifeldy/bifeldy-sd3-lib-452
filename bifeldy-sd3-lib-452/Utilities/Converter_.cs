@@ -99,7 +99,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                             pro.SetValue(objT, row[pro.Name]);
                         }
                         catch (Exception ex) {
-                            _logger.WriteError(ex, 3);
+                            // _logger.WriteError(ex, 3);
                         }
                     }
                 }
@@ -148,7 +148,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                             row[prop.Name] = prop.GetValue(item) ?? DBNull.Value;
                         }
                         catch (Exception ex) {
-                            _logger.WriteError(ex, 3);
+                            // _logger.WriteError(ex, 3);
                             row[prop.Name] = DBNull.Value;
                         }
                     }
