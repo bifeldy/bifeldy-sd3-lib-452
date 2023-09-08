@@ -13,6 +13,10 @@
 
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
+
+using ImageProcessor;
+using ImageProcessor.Imaging;
 
 using ZXing;
 using ZXing.Common;
@@ -24,7 +28,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
     public interface IQrBar {
         Image Generate128BarCode(string text, int widthPx = 512, int heightPx = 256);
         Image GenerateQrCode(string text, int sizePx = 512, int version = 25);
-        Image GenerateQrCode(string content, string backgroundImagePath, int sizePx = 512, int version = 25);
+        Image AddBackground(Image qrImage, Image bgImage);
         Image AddQrLogo(Image qrImage, Image overlayImage, double logoScale = 0.25);
         Image AddQrCaption(Image qrImage, string caption);
         string ReadTextFromQrBarCode(Image bitmapImage);
@@ -59,42 +63,59 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     Width = sizePx,
                     Height = sizePx,
                     ErrorCorrection = ErrorCorrectionLevel.L,
-                    NoPadding = true
+                    NoPadding = true,
+                    Margin = 10
                 }
             };
             return writer.Write(content);
         }
 
-        public Image GenerateQrCode(string content, string backgroundImagePath, int sizePx = 512, int version = 25) {
-            // TODO :: https://github.com/chinuno-usami/CuteR/blob/master/CuteR/CuteR.py
-            return _converter.ResizeImage(Image.FromFile(backgroundImagePath), sizePx, sizePx);
+        public Image AddBackground(Image qrImage, Image bgImage) {
+            Image qrBackground = null;
+            using (MemoryStream outStream = new MemoryStream()) {
+                using (ImageFactory imageFactory = new ImageFactory(true)) {
+                    imageFactory.Load(bgImage);
+                    Size size = new Size(qrImage.Width, qrImage.Height);
+                    ResizeLayer resizeLayer = new ResizeLayer(size, ResizeMode.Crop, AnchorPosition.TopLeft);
+                    imageFactory.Resize(resizeLayer).Alpha(50).Save(outStream);
+                    qrBackground = Image.FromStream(outStream);
+                    ((Bitmap) qrImage).MakeTransparent(Color.White);
+                    using (Graphics g = Graphics.FromImage(qrBackground)) {
+                        g.DrawImage(qrImage, new Point(0, 0));
+                    }
+                }
+            }
+            return qrBackground;
         }
 
         public Image AddQrLogo(Image qrImage, Image overlayImage, double logoScale = 0.25) {
             Bitmap logoImage = new Bitmap(overlayImage, new Size((int)(qrImage.Width * logoScale), (int)(qrImage.Height * logoScale)));
-            logoImage.MakeTransparent();
             int deltaHeigth = qrImage.Height - logoImage.Height;
             int deltaWidth = qrImage.Width - logoImage.Width;
-            Graphics g = Graphics.FromImage(qrImage);
-            g.DrawImage(logoImage, new Point(deltaWidth / 2, deltaHeigth / 2));
+            using (Graphics g = Graphics.FromImage(qrImage)) {
+                g.DrawImage(logoImage, new Point(deltaWidth / 2, deltaHeigth / 2));
+            }
             return qrImage;
         }
 
         public Image AddQrCaption(Image qrImage, string caption) {
             int margin = 20, textHeight = 20;
             Bitmap qrImageExtended = new Bitmap(qrImage.Width, qrImage.Height + margin + textHeight);
-            qrImageExtended.MakeTransparent();
-            Graphics g = Graphics.FromImage(qrImageExtended);
-            Font font = new Font(FontFamily.GenericMonospace, 10);
-            SolidBrush frBrush = new SolidBrush(Color.Black);
-            SolidBrush bgBrush = new SolidBrush(Color.White);
-            StringFormat format = new StringFormat() {
-                Alignment = StringAlignment.Center
-            };
-            g.FillRectangle(bgBrush, 0, 0, qrImageExtended.Width, qrImageExtended.Height);
-            g.DrawImage(qrImage, new Point(0, 0));
-            RectangleF rect = new RectangleF(margin / 2, qrImageExtended.Height - textHeight - (margin / 2), qrImageExtended.Width - margin, textHeight);
-            g.DrawString(caption, font, frBrush, rect, format);
+            using (Graphics g = Graphics.FromImage(qrImageExtended)) {
+                using (Font font = new Font(FontFamily.GenericMonospace, 10)) {
+                    using (SolidBrush frBrush = new SolidBrush(Color.Black)) {
+                        using (SolidBrush bgBrush = new SolidBrush(Color.White)) {
+                            using (StringFormat format = new StringFormat()) {
+                                format.Alignment = StringAlignment.Center;
+                                g.FillRectangle(bgBrush, 0, 0, qrImageExtended.Width, qrImageExtended.Height);
+                                g.DrawImage(qrImage, new Point(0, 0));
+                                RectangleF rect = new RectangleF(margin / 2, qrImageExtended.Height - textHeight - (margin / 2), qrImageExtended.Width - margin, textHeight);
+                                g.DrawString(caption, font, frBrush, rect, format);
+                            }
+                        }
+                    }
+                }
+            }
             return qrImageExtended;
         }
 
