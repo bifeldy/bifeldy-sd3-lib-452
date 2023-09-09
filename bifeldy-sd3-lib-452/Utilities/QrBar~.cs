@@ -26,7 +26,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IQrBar {
         Image Generate128BarCode(string text, int widthPx = 512, int heightPx = 256);
-        Image GenerateQrCode(string text, int version = -1);
+        Image GenerateQrCodeSquare(string content, int version, int sizePx = 512);
+        Image GenerateQrCodeDots(string content, int version = -1);
         Image AddBackground(Image qrImage, Image bgImage);
         Image AddQrLogo(Image qrImage, Image overlayImage, double logoScale = 0.25);
         Image AddQrCaption(Image qrImage, string caption);
@@ -54,11 +55,27 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return writer.Write(content);
         }
 
-        public Image GenerateQrCode(string content, int version = -1) {
+        public Image GenerateQrCodeSquare(string content, int version, int sizePx = 512) {
+            ZXing.BarcodeWriter writer = new ZXing.BarcodeWriter() {
+                Format = ZXing.BarcodeFormat.QR_CODE,
+                Options = new ZXing.QrCode.QrCodeEncodingOptions() {
+                    QrVersion = version,
+                    Width = sizePx,
+                    Height = sizePx,
+                    ErrorCorrection = ZXing.QrCode.Internal.ErrorCorrectionLevel.L,
+                    NoPadding = true,
+                    Margin = 10
+                }
+            };
+            return writer.Write(content);
+        }
+
+        public Image GenerateQrCodeDots(string content, int version = -1) {
             QRCoder.QRCodeGenerator qrGenerator = new QRCoder.QRCodeGenerator();
             QRCoder.QRCodeData qrCodeData = qrGenerator.CreateQrCode(
                 content,
-                QRCoder.QRCodeGenerator.ECCLevel.L
+                QRCoder.QRCodeGenerator.ECCLevel.L,
+                requestedVersion: version
             );
             QRCoder.ArtQRCode qrCode = new QRCoder.ArtQRCode(qrCodeData);
             return qrCode.GetGraphic();
