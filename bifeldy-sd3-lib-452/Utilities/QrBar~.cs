@@ -13,21 +13,20 @@
 
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
-
+using bifeldy_sd3_lib_452.Models;
 using ImageProcessor;
 using ImageProcessor.Imaging;
 
-using ZXing;
-using ZXing.Common;
-using ZXing.QrCode;
-using ZXing.QrCode.Internal;
+// using QRCoder;
+// using ZXing;
 
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IQrBar {
         Image Generate128BarCode(string text, int widthPx = 512, int heightPx = 256);
-        Image GenerateQrCode(string text, int sizePx = 512, int version = 25);
+        Image GenerateQrCode(string text, int version = -1);
         Image AddBackground(Image qrImage, Image bgImage);
         Image AddQrLogo(Image qrImage, Image overlayImage, double logoScale = 0.25);
         Image AddQrCaption(Image qrImage, string caption);
@@ -43,9 +42,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public Image Generate128BarCode(string content, int widthPx = 512, int heightPx = 256) {
-            BarcodeWriter writer = new BarcodeWriter() {
-                Format = BarcodeFormat.CODE_128,
-                Options = new EncodingOptions {
+            ZXing.BarcodeWriter writer = new ZXing.BarcodeWriter() {
+                Format = ZXing.BarcodeFormat.CODE_128,
+                Options = new ZXing.Common.EncodingOptions {
                     Width = widthPx,
                     Height = heightPx,
                     PureBarcode = false,
@@ -55,19 +54,14 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return writer.Write(content);
         }
 
-        public Image GenerateQrCode(string content, int sizePx = 512, int version = 25) {
-            BarcodeWriter writer = new BarcodeWriter() {
-                Format = BarcodeFormat.QR_CODE,
-                Options = new QrCodeEncodingOptions() {
-                    QrVersion = version,
-                    Width = sizePx,
-                    Height = sizePx,
-                    ErrorCorrection = ErrorCorrectionLevel.L,
-                    NoPadding = true,
-                    Margin = 10
-                }
-            };
-            return writer.Write(content);
+        public Image GenerateQrCode(string content, int version = -1) {
+            QRCoder.QRCodeGenerator qrGenerator = new QRCoder.QRCodeGenerator();
+            QRCoder.QRCodeData qrCodeData = qrGenerator.CreateQrCode(
+                content,
+                QRCoder.QRCodeGenerator.ECCLevel.L
+            );
+            QRCoder.ArtQRCode qrCode = new QRCoder.ArtQRCode(qrCodeData);
+            return qrCode.GetGraphic();
         }
 
         public Image AddBackground(Image qrImage, Image bgImage) {
@@ -77,7 +71,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     imageFactory.Load(bgImage);
                     Size size = new Size(qrImage.Width, qrImage.Height);
                     ResizeLayer resizeLayer = new ResizeLayer(size, ResizeMode.Crop, AnchorPosition.TopLeft);
-                    imageFactory.Resize(resizeLayer).Alpha(50).Save(outStream);
+                    imageFactory.Resize(resizeLayer).Brightness(25).Alpha(75).Save(outStream);
                     qrBackground = Image.FromStream(outStream);
                     ((Bitmap) qrImage).MakeTransparent(Color.White);
                     using (Graphics g = Graphics.FromImage(qrBackground)) {
@@ -120,17 +114,17 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public string ReadTextFromQrBarCode(Image bitmapImage) {
-            IBarcodeReader reader = new BarcodeReader() {
+            ZXing.IBarcodeReader reader = new ZXing.BarcodeReader() {
                 AutoRotate = true,
-                Options = new DecodingOptions {
-                    PossibleFormats = new List<BarcodeFormat> {
-                        BarcodeFormat.QR_CODE,
-                        BarcodeFormat.CODE_128
+                Options = new ZXing.Common.DecodingOptions {
+                    PossibleFormats = new List<ZXing.BarcodeFormat> {
+                        ZXing.BarcodeFormat.QR_CODE,
+                        ZXing.BarcodeFormat.CODE_128
                     },
                     TryHarder = true
                 }
             };
-            Result result = reader.Decode((Bitmap) bitmapImage);
+            ZXing.Result result = reader.Decode((Bitmap) bitmapImage);
             return result.Text;
         }
 
