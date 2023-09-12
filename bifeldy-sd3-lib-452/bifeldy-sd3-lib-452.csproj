@@ -118,7 +118,6 @@
     <Compile Include="Models\DbQueryParamBind_.cs" />
     <Compile Include="Models\DC_TABEL_V.cs" />
     <Compile Include="Models\FtpResultInfoSendGet_.cs" />
-    <Compile Include="Models\GifImage.cs" />
     <Compile Include="Models\IpMacAddress_.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\Api_.cs" />
