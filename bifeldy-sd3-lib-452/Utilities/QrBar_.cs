@@ -13,9 +13,8 @@
 
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
-using bifeldy_sd3_lib_452.Models;
+
 using ImageProcessor;
 using ImageProcessor.Imaging;
 
@@ -34,12 +33,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
         string ReadTextFromQrBarCode(Image bitmapImage);
     }
 
-    public class CQrBar : IQrBar {
+    public sealed class CQrBar : IQrBar {
 
-        private readonly IConverter _converter;
-
-        public CQrBar(IConverter converter) {
-            _converter = converter;
+        public CQrBar() {
+            //
         }
 
         public Image Generate128BarCode(string content, int widthPx = 512, int heightPx = 256) {
