@@ -71,7 +71,6 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 int currentPid = Process.GetCurrentProcess().Id;
                 Process updater = Process.Start(localUpdaterPath, $"\"{_app.AppName}\" {currentPid}");
                 updater.WaitForExit();
-                result = updater.ExitCode == 0;
             }
             catch (Exception ex) {
                 _logger.WriteError(ex);
