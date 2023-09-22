@@ -37,7 +37,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             _app = app;
             _converter = converter;
 
-            ConfigPath = Path.Combine(_app.AppLocation, "configuration.json");
+            ConfigPath = Path.Combine(_app.AppLocation, "_data", "configuration.json");
             Load();
         }
 

@@ -17,12 +17,14 @@ using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Windows;
 
 using bifeldy_sd3_lib_452.Models;
 
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IApplication {
+        void Shutdown();
         Process CurrentProcess { get; }
         bool DebugMode { get; set; }
         bool IsIdle { get; set; }
@@ -62,8 +64,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
             //
             AppName = Process.GetCurrentProcess().MainModule.ModuleName.ToUpper();
             AppLocation = AppDomain.CurrentDomain.BaseDirectory;
-            AppVersion = string.Join("", Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion.ToString().Split('.'));
+            AppVersion = string.Join("", Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion.Split('.'));
         }
+
+        public void Shutdown() => Application.Current.Shutdown();
 
         public string GetConfig(string key) {
             try {
@@ -134,8 +138,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public string[] GetAllIpAddress() {
-            string[] iv4 = GetIpMacAddress().Where(d => !string.IsNullOrEmpty(d.IP_V4_ADDRESS)).Select(d => d.IP_V4_ADDRESS).ToArray();
-            string[] iv6 = GetIpMacAddress().Where(d => !string.IsNullOrEmpty(d.IP_V6_ADDRESS)).Select(d => d.IP_V6_ADDRESS).ToArray();
+            string[] iv4 = GetIpMacAddress().Where(d => !string.IsNullOrEmpty(d.IP_V4_ADDRESS)).Select(d => d.IP_V4_ADDRESS.ToUpper()).ToArray();
+            string[] iv6 = GetIpMacAddress().Where(d => !string.IsNullOrEmpty(d.IP_V6_ADDRESS)).Select(d => d.IP_V6_ADDRESS.ToUpper()).ToArray();
             string[] ip = new string[iv4.Length + iv6.Length];
             iv4.CopyTo(ip, 0);
             iv6.CopyTo(ip, iv4.Length);
@@ -143,7 +147,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public string[] GetAllMacAddress() {
-            return GetIpMacAddress().Where(d => !string.IsNullOrEmpty(d.MAC_ADDRESS)).Select(d => d.MAC_ADDRESS).ToArray();
+            return GetIpMacAddress().Where(d => !string.IsNullOrEmpty(d.MAC_ADDRESS)).Select(d => d.MAC_ADDRESS.ToUpper()).ToArray();
         }
 
     }

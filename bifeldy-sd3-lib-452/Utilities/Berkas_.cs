@@ -61,24 +61,24 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
             ListFileForZip = new List<string>();
 
-            BackupFolderPath = Path.Combine(_app.AppLocation, "Backup_Files");
+            BackupFolderPath = Path.Combine(_app.AppLocation, "_data", "Backup_Files");
             if (!Directory.Exists(BackupFolderPath)) {
                 Directory.CreateDirectory(BackupFolderPath);
             }
 
             MaxOldRetentionDay = _config.Get<int>("MaxOldRetentionDay", 14);
 
-            TempFolderPath = _config.Get<string>("TempFolderPath", Path.Combine(_app.AppLocation, "Temp_Files"));
+            TempFolderPath = _config.Get<string>("TempFolderPath", Path.Combine(_app.AppLocation, "_data", "Temp_Files"));
             if (!Directory.Exists(TempFolderPath)) {
                 Directory.CreateDirectory(TempFolderPath);
             }
 
-            ZipFolderPath = _config.Get<string>("ZipFolderPath", Path.Combine(_app.AppLocation, "Zip_Files"));
+            ZipFolderPath = _config.Get<string>("ZipFolderPath", Path.Combine(_app.AppLocation, "_data", "Zip_Files"));
             if (!Directory.Exists(ZipFolderPath)) {
                 Directory.CreateDirectory(ZipFolderPath);
             }
 
-            DownloadFolderPath = _config.Get<string>("DownloadFolderPath", Path.Combine(_app.AppLocation, "Download_Files"));
+            DownloadFolderPath = _config.Get<string>("DownloadFolderPath", Path.Combine(_app.AppLocation, "_data", "Download_Files"));
             if (!Directory.Exists(DownloadFolderPath)) {
                 Directory.CreateDirectory(DownloadFolderPath);
             }

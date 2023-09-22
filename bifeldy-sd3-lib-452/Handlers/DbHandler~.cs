@@ -153,7 +153,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
             if (string.IsNullOrEmpty(DcJenis)) {
                 DcJenis = await OraPg.ExecScalarAsync<string>("SELECT TBL_JENIS_DC FROM DC_TABEL_DC_T");
             }
-            return DcJenis;
+            return DcJenis.ToUpper();
         }
 
         public async Task<string> GetKodeDc() {
@@ -163,7 +163,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
             if (string.IsNullOrEmpty(DcCode)) {
                 DcCode = await OraPg.ExecScalarAsync<string>("SELECT TBL_DC_KODE FROM DC_TABEL_DC_T");
             }
-            return DcCode;
+            return DcCode.ToUpper();
         }
 
         public async Task<string> GetNamaDc() {
@@ -173,7 +173,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
             if (string.IsNullOrEmpty(DcName)) {
                 DcName = await OraPg.ExecScalarAsync<string>("SELECT TBL_DC_NAMA FROM DC_TABEL_DC_T");
             }
-            return DcName;
+            return DcName.ToUpper();
         }
 
         public async Task<string> CekVersi() {
@@ -200,7 +200,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
                             FROM
                                 dc_program_vbdtl_t
                             WHERE
-                                dc_kode = :dc_kode
+                                UPPER(dc_kode) = :dc_kode
                                 AND UPPER(nama_prog) LIKE :nama_prog
                         ",
                         new List<CDbQueryParamBind> {
@@ -279,8 +279,8 @@ namespace bifeldy_sd3_lib_452.Handlers {
                         WHERE
                             a.user_name = b.ip_fk_user_name AND
                             a.user_name = c.fk_user_name AND
-                            a.user_name = :user_name AND
-                            (b.ip_addr IN (:ip_v4_v6) OR b.ip_addr IN (:mac_addr)) AND
+                            UPPER(a.user_name) = UPPER(:user_name) AND
+                            (UPPER(b.ip_addr) IN (:ip_v4_v6) OR UPPER(b.ip_addr) IN (:mac_addr)) AND
                             UPPER(c.sec_app_name) LIKE :app_name
                     ",
                     new List<CDbQueryParamBind> {

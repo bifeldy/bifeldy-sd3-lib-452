@@ -44,11 +44,11 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         private SmtpClient CreateSmtpClient() {
             return new SmtpClient() {
-                Host = _config.Get<string>("smtpServerIpDomain", _app.GetConfig("smtp_server_ip_domain")),
-                Port = _config.Get<int>("smtpServerPort", _app.GetConfig("smtp_server_port")),
+                Host = _config.Get<string>("SmtpServerIpDomain", _app.GetConfig("smtp_server_ip_domain")),
+                Port = _config.Get<int>("SmtpServerPort", _app.GetConfig("smtp_server_port")),
                 Credentials = new NetworkCredential(
-                    _config.Get<string>("smtpServerUsername", _app.GetConfig("smtp_server_username")),
-                    _config.Get<string>("smtpServerPassword", _app.GetConfig("smtp_server_password"))
+                    _config.Get<string>("SmtpServerUsername", _app.GetConfig("smtp_server_username")),
+                    _config.Get<string>("SmtpServerPassword", _app.GetConfig("smtp_server_password"))
                 )
             };
         }
