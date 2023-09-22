@@ -131,6 +131,7 @@
     <Compile Include="Utilities\Sftp_.cs" />
     <Compile Include="Utilities\Stream_.cs" />
     <Compile Include="Utilities\Surel_.cs" />
+    <Compile Include="Utilities\Updater_.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
