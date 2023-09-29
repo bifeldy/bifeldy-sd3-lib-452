@@ -26,7 +26,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
     public interface IConverter {
         byte[] ImageToByte(Image x);
         Image ByteToImage(byte[] byteArray);
-        T JsonToObj<T>(string j2o);
+        T JsonToObject<T>(string j2o);
         string ObjectToJson(object body);
         string ByteToString(byte[] bytes, bool removeHypens = true);
         byte[] StringToByte(string hex, string separator = null);
@@ -51,7 +51,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return (Bitmap) new ImageConverter().ConvertFrom(byteArray);
         }
 
-        public T JsonToObj<T>(string j2o) {
+        public T JsonToObject<T>(string j2o) {
             return JsonConvert.DeserializeObject<T>(j2o);
         }
 

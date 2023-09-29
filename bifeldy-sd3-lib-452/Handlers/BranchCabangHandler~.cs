@@ -62,7 +62,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
             HttpResponseMessage httpResponse = await _api.PostData(url, null);
             string httpResString = await httpResponse.Content.ReadAsStringAsync();
 
-            return _converter.JsonToObj<List<DC_TABEL_V>>(httpResString);
+            return _converter.JsonToObject<List<DC_TABEL_V>>(httpResString);
         }
 
         //

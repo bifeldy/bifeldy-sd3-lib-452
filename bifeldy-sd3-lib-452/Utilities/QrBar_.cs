@@ -11,6 +11,7 @@
  * 
  */
 
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -26,7 +27,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
     public interface IQrBar {
         Image Generate128BarCode(string text, int widthPx = 512, int heightPx = 256);
         Image GenerateQrCodeSquare(string content, int version, int sizePx = 512);
-        Image GenerateQrCodeDots(string content, int version = -1);
+        Image GenerateQrCodeDots(string content, int version = -1, int sizePx = 512);
         Image AddBackground(Image qrImage, Image bgImage);
         Image AddQrLogo(Image qrImage, Image overlayImage, double logoScale = 0.25);
         Image AddQrCaption(Image qrImage, string caption);
@@ -34,6 +35,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
     }
 
     public sealed class CQrBar : IQrBar {
+
+        private readonly int margin = 20;
 
         public CQrBar() {
             //
@@ -59,15 +62,13 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     QrVersion = version,
                     Width = sizePx,
                     Height = sizePx,
-                    ErrorCorrection = ZXing.QrCode.Internal.ErrorCorrectionLevel.L,
-                    NoPadding = true,
-                    Margin = 10
+                    ErrorCorrection = ZXing.QrCode.Internal.ErrorCorrectionLevel.L
                 }
             };
             return writer.Write(content);
         }
 
-        public Image GenerateQrCodeDots(string content, int version = -1) {
+        public Image GenerateQrCodeDots(string content, int version = -1, int sizePx = 512) {
             QRCoder.QRCodeGenerator qrGenerator = new QRCoder.QRCodeGenerator();
             QRCoder.QRCodeData qrCodeData = qrGenerator.CreateQrCode(
                 content,
@@ -75,7 +76,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 requestedVersion: version
             );
             QRCoder.ArtQRCode qrCode = new QRCoder.ArtQRCode(qrCodeData);
-            return qrCode.GetGraphic();
+            Bitmap qrImage = qrCode.GetGraphic();
+            qrImage.MakeTransparent(Color.White);
+            return new Bitmap(qrImage, new Size(sizePx, sizePx));
         }
 
         public Image AddBackground(Image qrImage, Image bgImage) {
@@ -107,17 +110,17 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public Image AddQrCaption(Image qrImage, string caption) {
-            int margin = 20, textHeight = 20;
-            Bitmap qrImageExtended = new Bitmap(qrImage.Width, qrImage.Height + margin + textHeight);
-            using (Graphics g = Graphics.FromImage(qrImageExtended)) {
-                using (Font font = new Font(FontFamily.GenericMonospace, 10)) {
+            Bitmap qrImageExtended = (Bitmap) qrImage;
+            using (Font font = new Font(FontFamily.GenericMonospace, (float) qrImage.Width / Math.Max(caption.Length, 45))) {
+                qrImageExtended = new Bitmap(qrImage.Width, qrImage.Height + font.Height + (2 * margin));
+                using (Graphics g = Graphics.FromImage(qrImageExtended)) {
                     using (SolidBrush frBrush = new SolidBrush(Color.Black)) {
                         using (SolidBrush bgBrush = new SolidBrush(Color.White)) {
                             using (StringFormat format = new StringFormat()) {
                                 format.Alignment = StringAlignment.Center;
                                 g.FillRectangle(bgBrush, 0, 0, qrImageExtended.Width, qrImageExtended.Height);
                                 g.DrawImage(qrImage, new Point(0, 0));
-                                RectangleF rect = new RectangleF(margin / 2, qrImageExtended.Height - textHeight - (margin / 2), qrImageExtended.Width - margin, textHeight);
+                                RectangleF rect = new RectangleF(margin / 2, qrImageExtended.Height - font.Height - margin, qrImageExtended.Width - margin, font.Height);
                                 g.DrawString(caption, font, frBrush, rect, format);
                             }
                         }
