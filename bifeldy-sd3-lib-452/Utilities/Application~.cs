@@ -62,7 +62,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             _SettingLib = new SettingLib.Class1();
             _SettingLibRest = new SettingLibRest.Class1();
             //
-            AppName = Process.GetCurrentProcess().MainModule.ModuleName.ToUpper();
+            AppName = Process.GetCurrentProcess().MainModule.ModuleName.ToUpper().Split('.').First();
             AppLocation = AppDomain.CurrentDomain.BaseDirectory;
             AppVersion = string.Join("", Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion.Split('.'));
         }
