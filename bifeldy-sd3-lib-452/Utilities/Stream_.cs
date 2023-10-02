@@ -19,6 +19,7 @@ using System.Text;
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IStream {
+        void CopyTo(Stream src, Stream dest);
         string GZipDecompressString(byte[] byteData);
         byte[] GZipCompressString(string text);
         MemoryStream ReadFileAsBinaryByte(string filePath, int maxChunk = 2048);
@@ -30,33 +31,35 @@ namespace bifeldy_sd3_lib_452.Utilities {
             //
         }
 
+        public void CopyTo(Stream src, Stream dest) {
+            byte[] bytes = new byte[4096];
+            int cnt;
+            while ((cnt = src.Read(bytes, 0, bytes.Length)) != 0) {
+                dest.Write(bytes, 0, cnt);
+            }
+        }
+
         public string GZipDecompressString(byte[] byteData) {
-            byte[] gZipBuffer = byteData;
-            using (var memoryStream = new MemoryStream()) {
-                int dataLength = BitConverter.ToInt32(gZipBuffer, 0);
-                memoryStream.Write(gZipBuffer, 4, gZipBuffer.Length - 4);
-                var buffer = new byte[dataLength];
-                memoryStream.Position = 0;
-                using (var gZipStream = new GZipStream(memoryStream, CompressionMode.Decompress)) {
-                    gZipStream.Read(buffer, 0, buffer.Length);
+            using (MemoryStream msi = new MemoryStream(byteData)) {
+                using (MemoryStream mso = new MemoryStream()) {
+                    using (GZipStream gs = new GZipStream(msi, CompressionMode.Decompress)) {
+                        CopyTo(gs, mso);
+                    }
+                    return Encoding.UTF8.GetString(mso.ToArray());
                 }
-                return Encoding.UTF8.GetString(buffer);
             }
         }
 
         public byte[] GZipCompressString(string text) {
-            byte[] buffer = Encoding.UTF8.GetBytes(text);
-            var memoryStream = new MemoryStream();
-            using (var gZipStream = new GZipStream(memoryStream, CompressionMode.Compress, true)) {
-                gZipStream.Write(buffer, 0, buffer.Length);
+            byte[] bytes = Encoding.UTF8.GetBytes(text);
+            using (MemoryStream msi = new MemoryStream(bytes)) {
+                using (MemoryStream mso = new MemoryStream()) {
+                    using (GZipStream gs = new GZipStream(mso, CompressionMode.Compress)) {
+                        CopyTo(msi, gs);
+                    }
+                    return mso.ToArray();
+                }
             }
-            memoryStream.Position = 0;
-            var compressedData = new byte[memoryStream.Length];
-            memoryStream.Read(compressedData, 0, compressedData.Length);
-            var gZipBuffer = new byte[compressedData.Length + 4];
-            Buffer.BlockCopy(compressedData, 0, gZipBuffer, 4, compressedData.Length);
-            Buffer.BlockCopy(BitConverter.GetBytes(buffer.Length), 0, gZipBuffer, 0, 4);
-            return gZipBuffer;
         }
 
         public MemoryStream ReadFileAsBinaryByte(string filePath, int maxChunk = 2048) {
