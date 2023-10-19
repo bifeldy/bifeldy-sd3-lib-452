@@ -21,7 +21,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
     public interface ILogger {
         string LogInfoFolderPath { get; }
         string LogErrorFolderPath { get; }
-        void SetReportInfo(IProgress<string> infoReporter);
+        void SetReporter(IProgress<string> infoReporter);
         void WriteInfo(string subject, string body, bool newLine = false);
         void WriteError(string errorMessage, int skipFrame = 1);
         void WriteError(Exception errorException, int skipFrame = 2);
@@ -35,7 +35,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public string LogErrorFolderPath { get; }
 
-        public IProgress<string> LogInfoReporter = null;
+        public IProgress<string> LogInfoErrorReporter = null;
 
         public CLogger(IApplication app) {
             _app = app;
@@ -50,23 +50,25 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
-        public void SetReportInfo(IProgress<string> infoReporter) {
-            LogInfoReporter = infoReporter;
+        public void SetReporter(IProgress<string> reporter) {
+            LogInfoErrorReporter = reporter;
         }
 
         public void WriteInfo(string subject, string body, bool newLine = false) {
             try {
-                string content = $"[{DateTime.Now:HH:mm:ss tt zzz}] {subject} :: {body} {Environment.NewLine}";
-                if (newLine) {
-                    content += Environment.NewLine;
+                if (_app.DebugMode) {
+                    string content = $"[{DateTime.Now:HH:mm:ss tt zzz}] {subject} :: {body} {Environment.NewLine}";
+                    if (newLine) {
+                        content += Environment.NewLine;
+                    }
+                    if (LogInfoErrorReporter != null) {
+                        LogInfoErrorReporter.Report(content);
+                    }
+                    StreamWriter sw = new StreamWriter($"{LogInfoFolderPath}/{DateTime.Now:yyyy-MM-dd}.log", true);
+                    sw.WriteLine(content);
+                    sw.Flush();
+                    sw.Close();
                 }
-                if (LogInfoReporter != null) {
-                    LogInfoReporter.Report(content);
-                }
-                StreamWriter sw = new StreamWriter($"{LogInfoFolderPath}/{DateTime.Now:yyyy-MM-dd}.log", true);
-                sw.WriteLine(content);
-                sw.Flush();
-                sw.Close();
             }
             catch (Exception ex) {
                 WriteError(ex);
@@ -76,12 +78,17 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public void WriteError(string errorMessage, int skipFrame = 1) {
             try {
                 StackFrame fromsub = new StackFrame(skipFrame, false);
+                string content = string.Empty;
+                content += $"##" + Environment.NewLine;
+                content += $"#  ErrDate : {DateTime.Now:dd-MM-yyyy HH:mm:ss}" + Environment.NewLine;
+                content += $"#  ErrFunc : {fromsub.GetMethod().Name}" + Environment.NewLine;
+                content += $"#  ErrInfo : {errorMessage}" + Environment.NewLine;
+                content += $"##";
+                if (LogInfoErrorReporter != null) {
+                    LogInfoErrorReporter.Report(content);
+                }
                 StreamWriter sw = new StreamWriter($"{LogErrorFolderPath}/{DateTime.Now:yyyy-MM-dd}.log", true);
-                sw.WriteLine($"##");
-                sw.WriteLine($"#  ErrDate : {DateTime.Now:dd-MM-yyyy HH:mm:ss}");
-                sw.WriteLine($"#  ErrFunc : {fromsub.GetMethod().Name}");
-                sw.WriteLine($"#  ErrInfo : {errorMessage}");
-                sw.WriteLine($"##");
+                sw.WriteLine(content);
                 sw.Flush();
                 sw.Close();
             }
