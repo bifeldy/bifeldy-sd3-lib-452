@@ -12,7 +12,6 @@
  */
 
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 
@@ -21,7 +20,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
     public interface ILogger {
         string LogInfoFolderPath { get; }
         string LogErrorFolderPath { get; }
-        void SetReporter(IProgress<string> infoReporter);
+        void SeLogtReporter(IProgress<string> infoReporter);
         void WriteInfo(string subject, string body, bool newLine = false);
         void WriteError(string errorMessage, int skipFrame = 1);
         void WriteError(Exception errorException, int skipFrame = 2);
@@ -35,7 +34,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public string LogErrorFolderPath { get; }
 
-        public IProgress<string> LogInfoErrorReporter = null;
+        public IProgress<string> LogReporter = null;
 
         public CLogger(IApplication app) {
             _app = app;
@@ -50,8 +49,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
-        public void SetReporter(IProgress<string> reporter) {
-            LogInfoErrorReporter = reporter;
+        public void SeLogtReporter(IProgress<string> logReporter) {
+            LogReporter = logReporter;
         }
 
         public void WriteInfo(string subject, string body, bool newLine = false) {
@@ -61,8 +60,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     if (newLine) {
                         content += Environment.NewLine;
                     }
-                    if (LogInfoErrorReporter != null) {
-                        LogInfoErrorReporter.Report(content);
+                    if (LogReporter != null) {
+                        LogReporter.Report(content);
                     }
                     StreamWriter sw = new StreamWriter($"{LogInfoFolderPath}/{DateTime.Now:yyyy-MM-dd}.log", true);
                     sw.WriteLine(content);
@@ -84,8 +83,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 content += $"#  ErrFunc : {fromsub.GetMethod().Name}" + Environment.NewLine;
                 content += $"#  ErrInfo : {errorMessage}" + Environment.NewLine;
                 content += $"##";
-                if (LogInfoErrorReporter != null) {
-                    LogInfoErrorReporter.Report(content);
+                if (LogReporter != null) {
+                    LogReporter.Report(content);
                 }
                 StreamWriter sw = new StreamWriter($"{LogErrorFolderPath}/{DateTime.Now:yyyy-MM-dd}.log", true);
                 sw.WriteLine(content);
