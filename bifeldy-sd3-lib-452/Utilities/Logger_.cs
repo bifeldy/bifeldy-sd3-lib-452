@@ -20,7 +20,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
     public interface ILogger {
         string LogInfoFolderPath { get; }
         string LogErrorFolderPath { get; }
-        void SeLogtReporter(IProgress<string> infoReporter);
+        void SeLogReporter(IProgress<string> infoReporter);
         void WriteInfo(string subject, string body, bool newLine = false);
         void WriteError(string errorMessage, int skipFrame = 1);
         void WriteError(Exception errorException, int skipFrame = 2);
@@ -49,7 +49,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
-        public void SeLogtReporter(IProgress<string> logReporter) {
+        public void SeLogReporter(IProgress<string> logReporter) {
             LogReporter = logReporter;
         }
 
