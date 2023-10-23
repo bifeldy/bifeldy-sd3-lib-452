@@ -55,14 +55,14 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public void WriteInfo(string subject, string body, bool newLine = false) {
             try {
+                string content = $"[{DateTime.Now:HH:mm:ss tt zzz}] {subject} :: {body} {Environment.NewLine}";
+                if (newLine) {
+                    content += Environment.NewLine;
+                }
+                if (LogReporter != null) {
+                    LogReporter.Report(content);
+                }
                 if (_app.DebugMode) {
-                    string content = $"[{DateTime.Now:HH:mm:ss tt zzz}] {subject} :: {body} {Environment.NewLine}";
-                    if (newLine) {
-                        content += Environment.NewLine;
-                    }
-                    if (LogReporter != null) {
-                        LogReporter.Report(content);
-                    }
                     StreamWriter sw = new StreamWriter($"{LogInfoFolderPath}/{DateTime.Now:yyyy-MM-dd}.log", true);
                     sw.WriteLine(content);
                     sw.Flush();
