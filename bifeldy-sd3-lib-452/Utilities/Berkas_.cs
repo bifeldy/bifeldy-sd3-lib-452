@@ -66,7 +66,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 Directory.CreateDirectory(BackupFolderPath);
             }
 
-            MaxOldRetentionDay = _config.Get<int>("MaxOldRetentionDay", 14);
+            MaxOldRetentionDay = _config.Get<int>("MaxOldRetentionDay", long.Parse(_app.GetConfig("max_old_retention_day")));
 
             TempFolderPath = _config.Get<string>("TempFolderPath", Path.Combine(_app.AppLocation, "_data", "Temp_Files"));
             if (!Directory.Exists(TempFolderPath)) {
