@@ -21,7 +21,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         string LogInfoFolderPath { get; }
         string LogErrorFolderPath { get; }
         void SetLogReporter(IProgress<string> infoReporter);
-        void WriteInfo(string subject, string body, bool newLine = false);
+        void WriteInfo(string subject, string body, bool newLine = false, bool force = false);
         void WriteError(string errorMessage, int skipFrame = 1);
         void WriteError(Exception errorException, int skipFrame = 2);
     }
@@ -53,7 +53,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             LogReporter = logReporter;
         }
 
-        public void WriteInfo(string subject, string body, bool newLine = false) {
+        public void WriteInfo(string subject, string body, bool newLine = false, bool force = false) {
             try {
                 string content = $"[{DateTime.Now:HH:mm:ss tt zzz}] {subject} :: {body} {Environment.NewLine}";
                 if (newLine) {
@@ -62,7 +62,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 if (LogReporter != null) {
                     LogReporter.Report(content);
                 }
-                if (_app.DebugMode) {
+                if (_app.DebugMode || force) {
                     StreamWriter sw = new StreamWriter($"{LogInfoFolderPath}/{DateTime.Now:yyyy-MM-dd}.log", true);
                     sw.WriteLine(content);
                     sw.Flush();
