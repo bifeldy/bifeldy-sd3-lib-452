@@ -132,6 +132,7 @@
     <Compile Include="Utilities\Stream_.cs" />
     <Compile Include="Utilities\Surel_.cs" />
     <Compile Include="Utilities\Updater_.cs" />
+    <Compile Include="Utilities\WinReg_.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
