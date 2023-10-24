@@ -17,9 +17,11 @@ using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Security.AccessControl;
 using System.Windows;
 
 using bifeldy_sd3_lib_452.Models;
+using Microsoft.Win32;
 
 namespace bifeldy_sd3_lib_452.Utilities {
 
@@ -28,6 +30,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         Process CurrentProcess { get; }
         bool DebugMode { get; set; }
         bool IsIdle { get; set; }
+        string AppPath { get; }
         string AppName { get; }
         string AppLocation { get; }
         string AppVersion { get; }
@@ -37,6 +40,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         string[] GetAllIpAddress();
         string[] GetAllMacAddress();
         bool IsUsingPostgres { get; set; }
+        void SetWindowsStartup(bool startAtBoot = false);
     }
 
     public class CApplication : IApplication {
@@ -47,6 +51,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private readonly SettingLib.Class1 _SettingLib;
         private readonly SettingLibRest.Class1 _SettingLibRest;
 
+        public string AppPath { get; }
         public string AppName { get; }
         public string AppLocation { get; }
         public string AppVersion { get; }
@@ -62,6 +67,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             _SettingLib = new SettingLib.Class1();
             _SettingLibRest = new SettingLibRest.Class1();
             //
+            AppPath = Process.GetCurrentProcess().MainModule.FileName;
             AppName = Process.GetCurrentProcess().MainModule.ModuleName.ToUpper().Split('.').First();
             AppLocation = AppDomain.CurrentDomain.BaseDirectory;
             AppVersion = string.Join("", Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion.Split('.'));
@@ -148,6 +154,27 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public string[] GetAllMacAddress() {
             return GetIpMacAddress().Where(d => !string.IsNullOrEmpty(d.MAC_ADDRESS)).Select(d => d.MAC_ADDRESS.ToUpper()).ToArray();
+        }
+
+        public void SetWindowsStartup(bool startAtBoot = false) {
+            string registryKeyPath = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
+            RegistryHive rh = RegistryHive.CurrentUser;
+            RegistryView rv = Environment.Is64BitProcess ? RegistryView.Registry64 : RegistryView.Registry32;
+            RegistryKeyPermissionCheck rkpc = RegistryKeyPermissionCheck.ReadWriteSubTree;
+            RegistryRights rr = RegistryRights.FullControl;
+            RegistryValueKind rvk = RegistryValueKind.String;
+            using (RegistryKey bk = RegistryKey.OpenBaseKey(rh, rv)) {
+                using (RegistryKey sk = bk.OpenSubKey(registryKeyPath, rkpc, rr)) {
+                    if (sk != null) {
+                        if (sk.GetValue(AppName) != null) {
+                            sk.DeleteValue(AppName, false);
+                        }
+                        if (startAtBoot) {
+                            sk.SetValue(AppName, AppPath, rvk);
+                        }
+                    }
+                }
+            }
         }
 
     }
