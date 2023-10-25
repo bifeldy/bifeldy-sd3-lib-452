@@ -28,6 +28,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         Process CurrentProcess { get; }
         bool DebugMode { get; set; }
         bool IsIdle { get; set; }
+        bool IsSkipUpdate { get; }
         string AppPath { get; }
         string AppName { get; }
         string AppLocation { get; }
@@ -44,6 +45,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public Process CurrentProcess { get; }
         public bool DebugMode { get; set; } = false;
         public bool IsIdle { get; set; } = false;
+        public bool IsSkipUpdate { get; } = false;
 
         private readonly SettingLib.Class1 _SettingLib;
         private readonly SettingLibRest.Class1 _SettingLibRest;
@@ -57,6 +59,12 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public CApplication() {
             CurrentProcess = Process.GetCurrentProcess();
+            string[] args = Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length; i++) {
+                if (args[i].ToUpper() == "--SKIP-UPDATE") {
+                    IsSkipUpdate = true;
+                }
+            }
             #if DEBUG
                 DebugMode = true;
             #endif

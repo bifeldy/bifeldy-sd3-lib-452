@@ -19,7 +19,7 @@ using System.Net;
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IUpdater {
-        bool CheckUpdater();
+        bool CheckUpdater(int newVersionTargetRequested = 0);
     }
 
     public sealed class CUpdater : IUpdater {
@@ -38,7 +38,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             _config = config;
         }
 
-        public bool CheckUpdater() {
+        public bool CheckUpdater(int newVersionTargetRequested = 0) {
             bool result = false;
             string updaterFtpIpDomain = _config.Get<string>("UpdaterFtpIpDomain", _app.GetConfig("updater_ftp_ip_domain"));
             string updaterFtpPort = _config.Get<string>("UpdaterFtpPort", _app.GetConfig("updater_ftp_port"));
@@ -65,7 +65,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 }
                 while (retry < 3);
                 int currentPid = Process.GetCurrentProcess().Id;
-                Process updater = Process.Start(localUpdaterPath, $"\"{_app.AppName}\" {currentPid}");
+                Process updater = Process.Start(localUpdaterPath, $"--name \"{_app.AppName}\" --version {newVersionTargetRequested} --pid {currentPid}");
                 updater.WaitForExit();
             }
             catch (Exception ex) {
