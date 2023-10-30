@@ -50,6 +50,8 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<DateTime> OraPg_GetLastMonth(int lastMonth);
         Task<DateTime> OraPg_GetCurrentTimestamp();
         Task<DateTime> OraPg_GetCurrentDate();
+        Task<T> OraPg_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
+        Task<bool> OraPg_ExecQuery(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<DataTable> OraPg_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<CDbExecProcResult> OraPg_CALL_(string procName, List<CDbQueryParamBind> bindParam = null);
     }
@@ -384,6 +386,14 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return await OraPg.ExecScalarAsync<DateTime>($@"
                 SELECT {(_app.IsUsingPostgres ? "CURRENT_DATE" : "TRUNC(SYSDATE) FROM DUAL")}
             ");
+        }
+
+        public async Task<T> OraPg_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
+            return await OraPg.ExecScalarAsync<T>(sqlQuery, bindParam);
+        }
+
+        public async Task<bool> OraPg_ExecQuery(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
+            return await OraPg.ExecQueryAsync(sqlQuery, bindParam);
         }
 
         public async Task<DataTable> OraPg_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {

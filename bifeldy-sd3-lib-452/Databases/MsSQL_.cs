@@ -56,9 +56,17 @@ namespace bifeldy_sd3_lib_452.Databases {
         private void SettingUpDatabase() {
             try {
                 DbConnectionString = $"Data Source={DbIpAddrss};Initial Catalog={DbName};User ID={DbUsername};Password={DbPassword};Connection Timeout=180;"; // 3 menit
+                if (
+                    string.IsNullOrEmpty(DbIpAddrss) ||
+                    string.IsNullOrEmpty(DbName) ||
+                    string.IsNullOrEmpty(DbUsername) ||
+                    string.IsNullOrEmpty(DbPassword)
+                ) {
+                    throw new Exception("Database Not Available!");
+                }
                 DatabaseConnection = new SqlConnection(DbConnectionString);
                 DatabaseCommand = new SqlCommand {
-                    Connection = (SqlConnection) DatabaseConnection,
+                    Connection = (SqlConnection)DatabaseConnection,
                     CommandTimeout = 1800 // 30 menit
                 };
                 DatabaseAdapter = new SqlDataAdapter(DatabaseCommand);

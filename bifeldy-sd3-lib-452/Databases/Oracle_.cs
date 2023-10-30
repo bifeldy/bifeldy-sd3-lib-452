@@ -65,9 +65,16 @@ namespace bifeldy_sd3_lib_452.Databases {
             DbName = _dbName;
             try {
                 DbConnectionString = $"Data Source={DbTnsOdp};User ID={DbUsername};Password={DbPassword};Connection Timeout=180;"; // 3 menit
+                if (
+                    string.IsNullOrEmpty(DbTnsOdp) ||
+                    string.IsNullOrEmpty(DbUsername) ||
+                    string.IsNullOrEmpty(DbPassword)
+                ) {
+                    throw new Exception("Database Not Available!");
+                }
                 DatabaseConnection = new OracleConnection(DbConnectionString);
                 DatabaseCommand = new OracleCommand {
-                    Connection = (OracleConnection) DatabaseConnection,
+                    Connection = (OracleConnection)DatabaseConnection,
                     BindByName = true,
                     InitialLOBFetchSize = -1,
                     InitialLONGFetchSize = -1,

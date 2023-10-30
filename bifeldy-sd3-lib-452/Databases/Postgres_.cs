@@ -62,9 +62,18 @@ namespace bifeldy_sd3_lib_452.Databases {
         private void SettingUpDatabase() {
             try {
                 DbConnectionString = $"Host={DbIpAddrss};Port={DbPort};Username={DbUsername};Password={DbPassword};Database={DbName};Timeout=180;"; // 3 menit
+                if (
+                    string.IsNullOrEmpty(DbIpAddrss) ||
+                    string.IsNullOrEmpty(DbPort) ||
+                    string.IsNullOrEmpty(DbUsername) ||
+                    string.IsNullOrEmpty(DbPassword) ||
+                    string.IsNullOrEmpty(DbName)
+                ) {
+                    throw new Exception("Database Not Available!");
+                }
                 DatabaseConnection = new NpgsqlConnection(DbConnectionString);
                 DatabaseCommand = new NpgsqlCommand {
-                    Connection = (NpgsqlConnection) DatabaseConnection,
+                    Connection = (NpgsqlConnection)DatabaseConnection,
                     CommandTimeout = 1800 // 30 menit
                 };
                 DatabaseAdapter = new NpgsqlDataAdapter(DatabaseCommand);
