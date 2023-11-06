@@ -108,6 +108,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Abstractions\Database^.cs" />
+    <Compile Include="Extensions\DateTimeExtensions.cs" />
+    <Compile Include="Extensions\TimeSpanExtensions.cs" />
     <Compile Include="Handlers\DbHandler~.cs" />
     <Compile Include="Bifeldy.cs" />
     <Compile Include="Databases\MsSQL_.cs" />
