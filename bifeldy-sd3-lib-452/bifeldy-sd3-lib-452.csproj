@@ -116,6 +116,7 @@
     <Compile Include="Databases\Oracle_.cs" />
     <Compile Include="Databases\Postgres_.cs" />
     <Compile Include="Handlers\BranchCabangHandler~.cs" />
+    <Compile Include="Libraries\DefaultIcons.cs" />
     <Compile Include="Models\DbExecProcResult_.cs" />
     <Compile Include="Models\DbQueryParamBind_.cs" />
     <Compile Include="Models\DC_TABEL_V.cs" />
@@ -140,6 +141,5 @@
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
