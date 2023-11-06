@@ -38,10 +38,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private readonly ILogger _logger;
         private readonly IBerkas _berkas;
 
-        public CFtp(IApplication app, ILogger logger, IBerkas fileManager) {
+        public CFtp(IApplication app, ILogger logger, IBerkas berkas) {
             _app = app;
             _logger = logger;
-            _berkas = fileManager;
+            _berkas = berkas;
         }
 
         public async Task<FtpClient> CreateFtpConnection(string ipDomainHost, int portNumber, string userName, string password, string remoteWorkDir) {
