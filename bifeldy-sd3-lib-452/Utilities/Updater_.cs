@@ -39,7 +39,6 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public bool CheckUpdater(int newVersionTargetRequested = 0) {
-            bool result = false;
             string updaterFtpIpDomain = _config.Get<string>("UpdaterFtpIpDomain", _app.GetConfig("updater_ftp_ip_domain"));
             string updaterFtpPort = _config.Get<string>("UpdaterFtpPort", _app.GetConfig("updater_ftp_port"));
             string updaterFtpUsername = _config.Get<string>("UpdaterFtpUsername", _app.GetConfig("updater_ftp_username"));
@@ -71,7 +70,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             catch (Exception ex) {
                 _logger.WriteError(ex);
             }
-            return result;
+            return false;
         }
 
     }
