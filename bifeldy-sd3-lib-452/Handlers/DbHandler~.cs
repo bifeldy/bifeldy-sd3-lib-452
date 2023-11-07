@@ -118,7 +118,25 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         /** Custom Queries */
 
-        public string DbName => $"{OraPg?.DbName} / {MsSql?.DbName}";
+        public string DbName {
+            get {
+                string FullDbName = string.Empty;
+                try {
+                    FullDbName += OraPg.DbName;
+                }
+                catch (Exception ex) {
+                    FullDbName += "-";
+                }
+                FullDbName += " / ";
+                try {
+                    FullDbName += MsSql.DbName;
+                }
+                catch (Exception ex) {
+                    FullDbName += "-";
+                }
+                return FullDbName;
+            }
+        }
 
         public string GetAllAvailableDbConnectionsString() {
             // Bypass Check DB Availablility ~
@@ -151,6 +169,22 @@ namespace bifeldy_sd3_lib_452.Handlers {
             _postgres.MarkFailedRollbackAndClose();
             _mssql.MarkFailedRollbackAndClose();
         }
+
+        /* Perlakuan Khusus */
+
+        public COracle NewExternalConnectionOra(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid) {
+            return _oracle.NewExternalConnection(dbIpAddrss, dbPort, dbUsername, dbPassword, dbNameSid);
+        }
+
+        public CPostgres NewExternalConnectionPg(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName) {
+            return _postgres.NewExternalConnection(dbIpAddrss, dbPort, dbUsername, dbPassword, dbName);
+        }
+
+        public CMsSQL NewExternalConnectionMsSql(string dbIpAddrss, string dbUsername, string dbPassword, string dbName) {
+            return _mssql.NewExternalConnection(dbIpAddrss, dbUsername, dbPassword, dbName);
+        }
+
+        /* ** */
 
         public async Task<string> GetJenisDc() {
             if (OraPg.DbUsername.ToUpper().Contains("DCHO")) {
@@ -307,20 +341,6 @@ namespace bifeldy_sd3_lib_452.Handlers {
                     new CDbQueryParamBind { NAME = "web_type", VALUE = webType }
                 }
             );
-        }
-
-        /* Perlakuan Khusus */
-
-        public COracle NewExternalConnectionOra(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid) {
-            return Oracle.NewExternalConnection(dbIpAddrss, dbPort, dbUsername, dbPassword, dbNameSid);
-        }
-
-        public CPostgres NewExternalConnectionPg(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName) {
-            return Postgres.NewExternalConnection(dbIpAddrss, dbPort, dbUsername, dbPassword, dbName);
-        }
-
-        public CMsSQL NewExternalConnectionMsSql(string dbIpAddrss, string dbUsername, string dbPassword, string dbName) {
-            return MsSql.NewExternalConnection(dbIpAddrss, dbUsername, dbPassword, dbName);
         }
 
         /* ** */
