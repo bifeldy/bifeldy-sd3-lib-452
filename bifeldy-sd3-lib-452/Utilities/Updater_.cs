@@ -6,7 +6,7 @@
  * Department   :: IT SD 03
  * Mail         :: bias@indomaret.co.id
  * 
- * Catatan      :: Kirim Email
+ * Catatan      :: Updater
  *              :: Harap Didaftarkan Ke DI Container
  * 
  */
