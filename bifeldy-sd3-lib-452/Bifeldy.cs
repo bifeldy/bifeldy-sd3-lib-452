@@ -67,6 +67,9 @@ namespace bifeldy_sd3_lib_452 {
             if (singleton) {
                 registrationBuilder.SingleInstance();
             }
+            else {
+                registrationBuilder.InstancePerDependency();
+            }
         }
 
         public void RegisterDiClassByNamespace(Assembly assembly, string[] namespaces, bool singleton = true) {
@@ -82,6 +85,9 @@ namespace bifeldy_sd3_lib_452 {
             if (singleton) {
                 registrationBuilder.SingleInstance();
             }
+            else {
+                registrationBuilder.InstancePerDependency();
+            }
         }
 
         public void RegisterDiClassNamed<CClass>(bool singleton = true) {
@@ -94,6 +100,9 @@ namespace bifeldy_sd3_lib_452 {
                                         .Named<object>(typeof(CClass).Name);
             if (singleton) {
                 registrationBuilder.SingleInstance();
+            }
+            else {
+                registrationBuilder.InstancePerDependency();
             }
         }
 
@@ -111,6 +120,9 @@ namespace bifeldy_sd3_lib_452 {
             if (singleton) {
                 registrationBuilder.SingleInstance();
             }
+            else {
+                registrationBuilder.InstancePerDependency();
+            }
         }
 
         public void RegisterDiClassAsInterface<CClass, IInterface>(bool singleton = true) {
@@ -121,6 +133,9 @@ namespace bifeldy_sd3_lib_452 {
             > registrationBuilder = _builder.RegisterType<CClass>().As<IInterface>();
             if (singleton) {
                 registrationBuilder.SingleInstance();
+            }
+            else {
+                registrationBuilder.InstancePerDependency();
             }
         }
 
@@ -137,6 +152,9 @@ namespace bifeldy_sd3_lib_452 {
                                         .As(c => c.GetInterfaces().Where(i => i.Name == "I" + c.Name.Substring(1)).First());
             if (singleton) {
                 registrationBuilder.SingleInstance();
+            }
+            else {
+                registrationBuilder.InstancePerDependency();
             }
         }
 
