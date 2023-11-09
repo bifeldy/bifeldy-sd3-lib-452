@@ -18,6 +18,8 @@ using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 
+using bifeldy_sd3_lib_452.Handlers;
+
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface ISurel {
@@ -35,20 +37,23 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private readonly IApplication _app;
         private readonly ILogger _logger;
         private readonly IConfig _config;
+        private readonly IDbHandler _db;
 
-        public CSurel(IApplication app, ILogger logger, IConfig config) {
+        public CSurel(IApplication app, ILogger logger, IConfig config, IDbHandler db) {
             _app = app;
             _logger = logger;
             _config = config;
+            _db = db;
         }
 
-        private SmtpClient CreateSmtpClient() {
+        private async Task<SmtpClient> CreateSmtpClient() {
+            int port = int.Parse(await _db.GetMailInfo<string>("MAIL_PORT"));
             return new SmtpClient() {
-                Host = _config.Get<string>("SmtpServerIpDomain", _app.GetConfig("smtp_server_ip_domain")),
-                Port = _config.Get<int>("SmtpServerPort", _app.GetConfig("smtp_server_port")),
+                Host = await _db.GetMailInfo<string>("MAIL_IP") ?? _config.Get<string>("SmtpServerIpDomain", _app.GetConfig("smtp_server_ip_domain")),
+                Port = (port > 0) ? port : _config.Get<int>("SmtpServerPort", int.Parse(_app.GetConfig("smtp_server_port"))),
                 Credentials = new NetworkCredential(
-                    _config.Get<string>("SmtpServerUsername", _app.GetConfig("smtp_server_username")),
-                    _config.Get<string>("SmtpServerPassword", _app.GetConfig("smtp_server_password"))
+                    await _db.GetMailInfo<string>("MAIL_USERNAME") ?? _config.Get<string>("SmtpServerUsername", _app.GetConfig("smtp_server_username"), true),
+                    await _db.GetMailInfo<string>("MAIL_PASSWORD") ?? _config.Get<string>("SmtpServerPassword", _app.GetConfig("smtp_server_password"), true)
                 )
             };
         }
@@ -119,7 +124,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public async Task SendEmailMessage(MailMessage mailMessage) {
-            SmtpClient smtpClient = CreateSmtpClient();
+            SmtpClient smtpClient = await CreateSmtpClient();
             await smtpClient.SendMailAsync(mailMessage);
         }
 

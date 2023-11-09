@@ -40,9 +40,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public bool CheckUpdater(int newVersionTargetRequested = 0) {
             string updaterFtpIpDomain = _config.Get<string>("UpdaterFtpIpDomain", _app.GetConfig("updater_ftp_ip_domain"));
-            string updaterFtpPort = _config.Get<string>("UpdaterFtpPort", _app.GetConfig("updater_ftp_port"));
-            string updaterFtpUsername = _config.Get<string>("UpdaterFtpUsername", _app.GetConfig("updater_ftp_username"));
-            string updaterFtpPassword = _config.Get<string>("UpdaterFtpPassword", _app.GetConfig("updater_ftp_password"));
+            int updaterFtpPort = _config.Get<int>("UpdaterFtpPort", int.Parse(_app.GetConfig("updater_ftp_port")));
+            string updaterFtpUsername = _config.Get<string>("UpdaterFtpUsername", _app.GetConfig("updater_ftp_username"), true);
+            string updaterFtpPassword = _config.Get<string>("UpdaterFtpPassword", _app.GetConfig("updater_ftp_password"), true);
             try {
                 string connectionString = $"ftp://{updaterFtpUsername}:{updaterFtpPassword}@{updaterFtpIpDomain}:{updaterFtpPort}/{UpdaterWorkDir}";
                 string localUpdaterPath = Path.Combine(_app.AppLocation, UpdaterExeName);

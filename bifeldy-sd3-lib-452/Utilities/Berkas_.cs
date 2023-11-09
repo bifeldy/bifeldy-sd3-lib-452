@@ -61,7 +61,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
             ListFileForZip = new List<string>();
 
-            MaxOldRetentionDay = _config.Get<int>("MaxOldRetentionDay", long.Parse(_app.GetConfig("max_old_retention_day")));
+            MaxOldRetentionDay = _config.Get<int>("MaxOldRetentionDay", int.Parse(_app.GetConfig("max_old_retention_day")));
 
             BackupFolderPath = _config.Get<string>("BackupFolderPath", Path.Combine(_app.AppLocation, "_data", "Backup_Files"));
             if (!Directory.Exists(BackupFolderPath)) {

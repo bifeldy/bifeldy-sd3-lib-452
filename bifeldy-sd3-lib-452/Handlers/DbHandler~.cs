@@ -39,6 +39,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<bool> LoginUser(string usernameNik, string password);
         Task<bool> CheckIpMac();
         Task<string> GetURLWebService(string webType);
+        Task<T> GetMailInfo<T>(string kolom);
         Task<bool> OraPg_AlterTable_AddColumnIfNotExist(string tableName, string columnName, string columnType);
         COracle NewExternalConnectionOra(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid);
         CPostgres NewExternalConnectionPg(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName);
@@ -339,6 +340,15 @@ namespace bifeldy_sd3_lib_452.Handlers {
                 $@"SELECT WEB_URL FROM DC_WEBSERVICE_T WHERE WEB_TYPE = :web_type",
                 new List<CDbQueryParamBind> {
                     new CDbQueryParamBind { NAME = "web_type", VALUE = webType }
+                }
+            );
+        }
+
+        public async Task<T> GetMailInfo<T>(string kolom) {
+            return await OraPg.ExecScalarAsync<T>(
+                $@"SELECT {kolom} FROM DC_LISTMAILSERVER_T WHERE MAIL_DCKODE = :mail_dckode",
+                new List<CDbQueryParamBind> {
+                    new CDbQueryParamBind { NAME = "mail_dckode", VALUE = await GetKodeDc() }
                 }
             );
         }
