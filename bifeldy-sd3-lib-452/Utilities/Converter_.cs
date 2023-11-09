@@ -37,10 +37,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
     public sealed class CConverter : IConverter {
 
-        private readonly ILogger _logger;
-
-        public CConverter(ILogger logger) {
-            _logger = logger;
+        public CConverter() {
+            //
         }
 
         public byte[] ImageToByte(Image image) {
@@ -68,7 +66,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public byte[] StringToByte(string hex, string separator = null) {
-            byte[] array = null;
+            byte[] array;
             if (string.IsNullOrEmpty(separator)) {
                 int length = (hex.Length + 1) / 3;
                 array = new byte[length];
@@ -97,8 +95,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
                         try {
                             pro.SetValue(objT, row[pro.Name]);
                         }
-                        catch (Exception ex) {
-                            // _logger.WriteError(ex, 3);
+                        catch {
+                            //
                         }
                     }
                 }
@@ -116,7 +114,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             // Special handling for value types and string
             //
             // Tabel hanya punya 1 kolom
-            // create table `tblNm` ( `tblCl` varchar(255) );
+            // create table `tblNm` ( `tblClmn` varchar(255) );
             //
             // List<string> ls = new List<string> { "Row1", "Row2", "Row3" };
             // ListToDataTable(ls, "tblNm", "tblCl");
@@ -146,8 +144,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                         try {
                             row[prop.Name] = prop.GetValue(item) ?? DBNull.Value;
                         }
-                        catch (Exception ex) {
-                            // _logger.WriteError(ex, 3);
+                        catch {
                             row[prop.Name] = DBNull.Value;
                         }
                     }

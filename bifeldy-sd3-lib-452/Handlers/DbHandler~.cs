@@ -125,14 +125,14 @@ namespace bifeldy_sd3_lib_452.Handlers {
                 try {
                     FullDbName += OraPg.DbName;
                 }
-                catch (Exception ex) {
+                catch {
                     FullDbName += "-";
                 }
                 FullDbName += " / ";
                 try {
                     FullDbName += MsSql.DbName;
                 }
-                catch (Exception ex) {
+                catch {
                     FullDbName += "-";
                 }
                 return FullDbName;
