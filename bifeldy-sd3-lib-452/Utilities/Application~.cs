@@ -79,7 +79,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
             _SettingLibRest = new SettingLibRest.Class1();
 
             AppPath = Process.GetCurrentProcess().MainModule.FileName;
-            AppName = Process.GetCurrentProcess().MainModule.ModuleName.ToUpper().Split('.').First();
+            string appName = Process.GetCurrentProcess().MainModule.ModuleName.ToUpper();
+            AppName = appName.Substring(0, appName.LastIndexOf(".EXE"));
             AppLocation = AppDomain.CurrentDomain.BaseDirectory;
             AppVersion = string.Join("", Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion.Split('.'));
         }

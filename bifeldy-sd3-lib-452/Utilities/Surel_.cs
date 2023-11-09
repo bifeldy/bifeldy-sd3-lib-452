@@ -27,9 +27,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
         List<MailAddress> CreateEmailAddress(string[] address);
         Attachment CreateEmailAttachment(string filePath);
         List<Attachment> CreateEmailAttachment(string[] filePath);
-        MailMessage CreateEmailMessage(string subject, string body, MailAddress from, List<MailAddress> to, List<MailAddress> cc = null, List<MailAddress> bcc = null, List<Attachment> attachments = null);
+        MailMessage CreateEmailMessage(string subject, string body, List<MailAddress> to, List<MailAddress> cc = null, List<MailAddress> bcc = null, List<Attachment> attachments = null, MailAddress from = null);
         Task SendEmailMessage(MailMessage mailMessage);
-        Task CreateAndSend(string subject, string body, MailAddress from, List<MailAddress> to, List<MailAddress> cc = null, List<MailAddress> bcc = null, List<Attachment> attachments = null);
+        MailAddress GetDefaultBotSenderFromAddress();
+        Task CreateAndSend(string subject, string body, List<MailAddress> to, List<MailAddress> cc = null, List<MailAddress> bcc = null, List<Attachment> attachments = null, MailAddress from = null);
     }
 
     public sealed class CSurel : ISurel {
@@ -85,21 +86,25 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return attachments;
         }
 
+        public MailAddress GetDefaultBotSenderFromAddress() {
+            return CreateEmailAddress("sd3@indomaret.co.id", $"[SD3_BOT] 📧 {_app.AppName} v{_app.AppVersion}");
+        }
+
         public MailMessage CreateEmailMessage(
             string subject,
             string body,
-            MailAddress from,
             List<MailAddress> to,
             List<MailAddress> cc = null,
             List<MailAddress> bcc = null,
-            List<Attachment> attachments = null
+            List<Attachment> attachments = null,
+            MailAddress from = null
         ) {
             MailMessage mailMessage = new MailMessage() {
                 Subject = subject,
                 SubjectEncoding = Encoding.UTF8,
                 Body = body,
                 BodyEncoding = Encoding.UTF8,
-                From = from,
+                From = from ?? GetDefaultBotSenderFromAddress(),
                 IsBodyHtml = true
             };
             foreach (MailAddress t in to) {
@@ -131,11 +136,11 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public async Task CreateAndSend(
             string subject,
             string body,
-            MailAddress from,
             List<MailAddress> to,
             List<MailAddress> cc = null,
             List<MailAddress> bcc = null,
-            List<Attachment> attachments = null
+            List<Attachment> attachments = null,
+            MailAddress from = null
         ) {
             Exception e = null;
             try {
@@ -143,11 +148,11 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     CreateEmailMessage(
                         subject,
                         body,
-                        from,
                         to,
                         cc,
                         bcc,
-                        attachments
+                        attachments,
+                        from ?? GetDefaultBotSenderFromAddress()
                     )
                 );
             }
