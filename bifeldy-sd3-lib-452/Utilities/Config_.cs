@@ -19,22 +19,24 @@ using System.IO;
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IConfig {
-        T Get<T>(string keyName, dynamic defaultValue = null);
-        void Set(string keyName, dynamic value);
+        T Get<T>(string keyName, dynamic defaultValue = null, bool encrypted = false);
+        void Set(string keyName, dynamic value, bool encrypted = false);
     }
 
     public sealed class CConfig : IConfig {
 
         private readonly IApplication _app;
         private readonly IConverter _converter;
+        private readonly IChiper _chiper;
 
         private string ConfigPath = null;
 
         private IDictionary<string, dynamic> AppConfig = null;
 
-        public CConfig(IApplication app, IConverter converter) {
+        public CConfig(IApplication app, IConverter converter, IChiper chiper) {
             _app = app;
             _converter = converter;
+            _chiper = chiper;
 
             ConfigPath = Path.Combine(_app.AppLocation, "_data", "configuration.json");
             Load();
@@ -60,19 +62,23 @@ namespace bifeldy_sd3_lib_452.Utilities {
             File.WriteAllText(ConfigPath, json);
         }
 
-        public T Get<T>(string keyName, dynamic defaultValue = null) {
+        public T Get<T>(string keyName, dynamic defaultValue = null, bool encrypted = false) {
             Load();
             try {
-                return (T) Convert.ChangeType(AppConfig[keyName], typeof(T));
+                dynamic value = AppConfig[keyName];
+                if (value.GetType() == typeof(string) && encrypted) {
+                    value = _chiper.Decrypt((string) value);
+                }
+                return (T) Convert.ChangeType(value, typeof(T));
             }
             catch {
-                Set(keyName, defaultValue);
+                Set(keyName, defaultValue, encrypted);
                 return Get<T>(keyName);
             }
         }
 
-        public void Set(string keyName, dynamic value) {
-            AppConfig[keyName] = value;
+        public void Set(string keyName, dynamic value, bool encrypted = false) {
+            AppConfig[keyName] = (value.GetType() == typeof(string) && encrypted) ? _chiper.Encrypt(value) : value;
             Save();
         }
 
