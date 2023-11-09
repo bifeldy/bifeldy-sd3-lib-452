@@ -15,8 +15,10 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Reflection;
 using System.Windows;
 
 using bifeldy_sd3_lib_452.Models;
@@ -42,6 +44,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
     }
 
     public class CApplication : IApplication {
+
         public Process CurrentProcess { get; }
         public bool DebugMode { get; set; } = false;
         public bool IsIdle { get; set; } = false;
@@ -57,6 +60,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public bool IsUsingPostgres { get; set; }
 
+        private AppSettingsSection AppSettings = null;
+
         public CApplication() {
             CurrentProcess = Process.GetCurrentProcess();
             string[] args = Environment.GetCommandLineArgs();
@@ -65,13 +70,14 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     IsSkipUpdate = true;
                 }
             }
+
             #if DEBUG
                 DebugMode = true;
             #endif
-            //
+
             _SettingLib = new SettingLib.Class1();
             _SettingLibRest = new SettingLibRest.Class1();
-            //
+
             AppPath = Process.GetCurrentProcess().MainModule.FileName;
             AppName = Process.GetCurrentProcess().MainModule.ModuleName.ToUpper().Split('.').First();
             AppLocation = AppDomain.CurrentDomain.BaseDirectory;
@@ -82,7 +88,19 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public string GetConfig(string key) {
             try {
-                return ConfigurationManager.AppSettings[key];
+                // App.config -- Build Action: Embedded Resource
+                if (AppSettings == null) {
+                    Assembly asm = Assembly.LoadFile(AppPath);
+                    string ns = asm.GetManifestResourceNames().FirstOrDefault(n => n.EndsWith(".App.config"));
+                    using (Stream strm = asm.GetManifestResourceStream(ns)) {
+                        using (StreamReader sr = new StreamReader(strm)) {
+                            File.WriteAllText($"{AppPath}.config", sr.ReadToEnd());
+                            AppSettings = ConfigurationManager.OpenExeConfiguration(AppPath).AppSettings;
+                            File.Delete($"{AppPath}.config");
+                        }
+                    }
+                }
+                return AppSettings.Settings[key].Value;
             }
             catch {
                 return null;

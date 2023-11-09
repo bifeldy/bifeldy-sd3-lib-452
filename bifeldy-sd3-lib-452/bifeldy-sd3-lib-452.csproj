@@ -126,6 +126,7 @@
     <Compile Include="Utilities\Api_.cs" />
     <Compile Include="Utilities\Application~.cs" />
     <Compile Include="Utilities\Berkas_.cs" />
+    <Compile Include="Utilities\Chiper_.cs" />
     <Compile Include="Utilities\Config_.cs" />
     <Compile Include="Utilities\Converter_.cs" />
     <Compile Include="Utilities\Ftp_.cs" />
@@ -138,7 +139,7 @@
     <Compile Include="Utilities\WinReg_.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <EmbeddedResource Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
