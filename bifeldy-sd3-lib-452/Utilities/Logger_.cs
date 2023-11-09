@@ -43,6 +43,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             if (!Directory.Exists(LogInfoFolderPath)) {
                 Directory.CreateDirectory(LogInfoFolderPath);
             }
+
             LogErrorFolderPath = Path.Combine(_app.AppLocation, "_data", "Error_Logs");
             if (!Directory.Exists(LogErrorFolderPath)) {
                 Directory.CreateDirectory(LogErrorFolderPath);
