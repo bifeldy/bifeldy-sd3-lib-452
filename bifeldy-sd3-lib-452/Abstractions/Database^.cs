@@ -27,15 +27,6 @@ using bifeldy_sd3_lib_452.Utilities;
 namespace bifeldy_sd3_lib_452.Abstractions {
 
     public interface IDatabase {
-        Task<DataColumnCollection> GetAllColumnTableAsync(string tableName);
-        Task<DataTable> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
-        Task<T> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null);
-        Task<bool> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
-        Task<CDbExecProcResult> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null);
-        Task<int> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null);
-        Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
-        Task<string> RetrieveBlob(string stringPathDownload, string stringFileName, string queryString, List<CDbQueryParamBind> bindParam = null);
-        Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
         string DbUsername { get; } // Hanya Expose Get Saja
         string DbName { get; } // Hanya Expose Get Saja
         string DbConnectionString { get; } // Hanya Expose Get Saja
@@ -45,6 +36,14 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         Task MarkBeforeCommitRollback();
         void MarkSuccessCommitAndClose();
         void MarkFailedRollbackAndClose();
+        Task<DataColumnCollection> GetAllColumnTableAsync(string tableName);
+        Task<DataTable> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
+        Task<T> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null);
+        Task<bool> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
+        Task<CDbExecProcResult> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null);
+        Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
+        Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
+        Task<string> RetrieveBlob(string stringPathDownload, string stringFileName, string queryString, List<CDbQueryParamBind> bindParam = null);
     }
 
     public abstract class CDatabase : IDatabase, ICloneable {
@@ -121,7 +120,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             CloseConnection(true);
         }
 
-        protected void LogQueryParameter(DbCommand databaseCommand) {
+        protected void LogQueryParameter(DbCommand databaseCommand, char databaseParameterPrefix) {
             string sqlTextQueryParameters = databaseCommand.CommandText;
             for (int i = 0; i < databaseCommand.Parameters.Count; i++) {
                 dynamic pVal = databaseCommand.Parameters[i].Value;
@@ -129,7 +128,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                 if (pValType == typeof(string) || pValType == typeof(DateTime)) {
                     pVal = $"'{pVal}'";
                 }
-                Regex regex = new Regex($":{databaseCommand.Parameters[i].ParameterName}");
+                Regex regex = new Regex($"{databaseParameterPrefix}{databaseCommand.Parameters[i].ParameterName}");
                 sqlTextQueryParameters = regex.Replace(sqlTextQueryParameters, pVal.ToString(), 1);
             }
             sqlTextQueryParameters = sqlTextQueryParameters.Replace($"\r\n", " ");
@@ -224,23 +223,6 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             return (exception == null) ? result : throw exception;
         }
 
-        protected virtual async Task<int> UpdateTable(DbDataAdapter dataAdapter, DataSet dataSet, string dataSetTableName) {
-            int result = 0;
-            Exception exception = null;
-            try {
-                await OpenConnection();
-                result = dataAdapter.Update(dataSet, dataSetTableName);
-            }
-            catch (Exception ex) {
-                _logger.WriteError(ex, 4);
-                exception = ex;
-            }
-            finally {
-                CloseConnection();
-            }
-            return (exception == null) ? result : throw exception;
-        }
-
         /// <summary> Jangan Lupa Di Close Koneksinya (Wajib) </summary>
         /// <summary> Saat Setelah Selesai Baca Dan Tidak Digunakan Lagi </summary>
         /// <summary> Bisa Pakai Manual Panggil Fungsi Close / Commit / Rollback Di Atas </summary>
@@ -306,15 +288,16 @@ namespace bifeldy_sd3_lib_452.Abstractions {
 
         /** Wajib di Override */
 
+        protected abstract void BindQueryParameter(List<CDbQueryParamBind> parameters);
+
         public abstract Task<DataColumnCollection> GetAllColumnTableAsync(string tableName);
         public abstract Task<DataTable> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         public abstract Task<T> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null);
         public abstract Task<bool> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         public abstract Task<CDbExecProcResult> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null);
-        public abstract Task<int> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null);
+        public abstract Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
         public abstract Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         public abstract Task<string> RetrieveBlob(string stringPathDownload, string stringFileName, string queryString, List<CDbQueryParamBind> bindParam = null);
-        public abstract Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
 
     }
 

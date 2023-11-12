@@ -66,7 +66,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                 }
                 DatabaseConnection = new SqlConnection(DbConnectionString);
                 DatabaseCommand = new SqlCommand {
-                    Connection = (SqlConnection)DatabaseConnection,
+                    Connection = (SqlConnection) DatabaseConnection,
                     CommandTimeout = 1800 // 30 menit
                 };
                 DatabaseAdapter = new SqlDataAdapter(DatabaseCommand);
@@ -77,10 +77,15 @@ namespace bifeldy_sd3_lib_452.Databases {
             }
         }
 
-        private void BindQueryParameter(List<CDbQueryParamBind> parameters) {
+        protected override void BindQueryParameter(List<CDbQueryParamBind> parameters) {
+            char prefix = '@';
             DatabaseCommand.Parameters.Clear();
             if (parameters != null) {
                 for (int i = 0; i < parameters.Count; i++) {
+                    string pName = parameters[i].NAME.StartsWith($"{prefix}") ? parameters[i].NAME.Substring(1) : parameters[i].NAME;
+                    if (string.IsNullOrEmpty(pName)) {
+                        throw new Exception("Parameter Name Required!");
+                    }
                     dynamic pVal = parameters[i].VALUE;
                     Type pValType = (pVal == null) ? typeof(DBNull) : pVal.GetType();
                     if (pValType.IsArray) {
@@ -90,19 +95,19 @@ namespace bifeldy_sd3_lib_452.Databases {
                             if (!string.IsNullOrEmpty(bindStr)) {
                                 bindStr += ", ";
                             }
-                            bindStr += $":{parameters[i].NAME}_{id}";
+                            bindStr += $"{prefix}{pName}_{id}";
                             DatabaseCommand.Parameters.Add(new SqlParameter {
-                                ParameterName = $"{parameters[i].NAME}_{id}",
+                                ParameterName = $"{pName}_{id}",
                                 Value = data ?? DBNull.Value
                             });
                             id++;
                         }
-                        Regex regex = new Regex($":{parameters[i].NAME}");
+                        Regex regex = new Regex($"{prefix}{pName}");
                         DatabaseCommand.CommandText = regex.Replace(DatabaseCommand.CommandText, bindStr, 1);
                     }
                     else {
                         SqlParameter param = new SqlParameter {
-                            ParameterName = parameters[i].NAME,
+                            ParameterName = pName,
                             Value = pVal ?? DBNull.Value
                         };
                         if (parameters[i].SIZE > 0) {
@@ -115,10 +120,8 @@ namespace bifeldy_sd3_lib_452.Databases {
                     }
                 }
             }
-            LogQueryParameter(DatabaseCommand);
+            LogQueryParameter(DatabaseCommand, prefix);
         }
-
-        /** Bagian Ini Mirip :: Oracle - Ms. Sql Server - PostgreSQL */
 
         public override async Task<DataColumnCollection> GetAllColumnTableAsync(string tableName) {
             DatabaseCommand.CommandText = $@"SELECT * FROM {tableName} LIMIT 1";
@@ -152,13 +155,6 @@ namespace bifeldy_sd3_lib_452.Databases {
             DatabaseCommand.CommandType = CommandType.StoredProcedure;
             BindQueryParameter(bindParam);
             return await ExecProcedureAsync(DatabaseCommand);
-        }
-
-        public override async Task<int> UpdateTable(DataSet dataSet, string dataSetTableName, string queryString, List<CDbQueryParamBind> bindParam = null) {
-            DatabaseCommand.CommandText = queryString;
-            DatabaseCommand.CommandType = CommandType.Text;
-            BindQueryParameter(bindParam);
-            return await UpdateTable(DatabaseAdapter, dataSet, dataSetTableName);
         }
 
         public override async Task<bool> BulkInsertInto(string tableName, DataTable dataTable) {
