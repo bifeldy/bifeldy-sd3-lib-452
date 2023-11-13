@@ -79,7 +79,8 @@ namespace bifeldy_sd3_lib_452 {
                 DynamicRegistrationStyle
             > registrationBuilder = _builder
                                         .RegisterAssemblyTypes(assembly)
-                                        .Where(type => namespaces.Any(type.Namespace.Contains)
+                                        .Where(type => !string.IsNullOrEmpty(type.Namespace)
+                                                        && namespaces.Any(type.Namespace.Contains)
                                                         && type.IsClass
                                                         && Regex.IsMatch(type.Name, _acceptableIndentifierName));
             if (singleton) {
@@ -113,7 +114,8 @@ namespace bifeldy_sd3_lib_452 {
                 DynamicRegistrationStyle
             > registrationBuilder = _builder
                                         .RegisterAssemblyTypes(assembly)
-                                        .Where(type => namespaces.Any(type.Namespace.Contains)
+                                        .Where(type => !string.IsNullOrEmpty(type.Namespace)
+                                                        && namespaces.Any(type.Namespace.Contains)
                                                         && type.IsClass
                                                         && Regex.IsMatch(type.Name, _acceptableIndentifierName))
                                         .Named<object>(c => c.Name);
@@ -146,7 +148,8 @@ namespace bifeldy_sd3_lib_452 {
                 DynamicRegistrationStyle
             > registrationBuilder = _builder
                                         .RegisterAssemblyTypes(assembly)
-                                        .Where(type => namespaces.Any(type.Namespace.Contains)
+                                        .Where(type => !string.IsNullOrEmpty(type.Namespace)
+                                                        && namespaces.Any(type.Namespace.Contains)
                                                         && type.IsClass
                                                         && Regex.IsMatch(type.Name, _acceptableIndentifierName))
                                         .As(c => c.GetInterfaces().Where(i => i.Name == "I" + c.Name.Substring(1)).First());
