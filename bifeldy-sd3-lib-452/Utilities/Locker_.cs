@@ -19,9 +19,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface ILocker {
         Semaphore MutexGlobalSys { get; }
-        SemaphoreSlim MutexLocalApp { get; }
+        SemaphoreSlim MutexGlobalApp { get; }
         Semaphore SemaphoreGlobalSys(string name, int initialCount = 0, int maximumCount = 0);
-        SemaphoreSlim SemaphoreLocalApp(string name, int initialCount = 0, int maximumCount = 0);
+        SemaphoreSlim SemaphoreGlobalApp(string name, int initialCount = 0, int maximumCount = 0);
     }
 
     public sealed class CLocker : ILocker {
@@ -31,19 +31,19 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private Semaphore mutex_global_sys = null;
         private readonly IDictionary<string, Semaphore> semaphore_global_sys = new Dictionary<string, Semaphore>();
 
-        private SemaphoreSlim mutex_local_app = null;
-        private readonly IDictionary<string, SemaphoreSlim> semaphore_local_app = new Dictionary<string, SemaphoreSlim>();
+        private SemaphoreSlim mutex_global_app = null;
+        private readonly IDictionary<string, SemaphoreSlim> semaphore_global_app = new Dictionary<string, SemaphoreSlim>();
 
         public CLocker(IApplication app) {
             _app = app;
             //
             mutex_global_sys = new Semaphore(1, 1, _app.AppName);
-            mutex_local_app = new SemaphoreSlim(1, 1);
+            mutex_global_app = new SemaphoreSlim(1, 1);
         }
 
         public Semaphore MutexGlobalSys => mutex_global_sys;
 
-        public SemaphoreSlim MutexLocalApp => mutex_local_app;
+        public SemaphoreSlim MutexGlobalApp => mutex_global_app;
 
         public Semaphore SemaphoreGlobalSys(string name, int initialCount = 0, int maximumCount = 0) {
             if (!semaphore_global_sys.ContainsKey(name)) {
@@ -57,11 +57,11 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return semaphore_global_sys[name];
         }
 
-        public SemaphoreSlim SemaphoreLocalApp(string name, int initialCount = 0, int maximumCount = 0) {
-            if (!semaphore_local_app.ContainsKey(name)) {
-                semaphore_local_app.Add(name, new SemaphoreSlim(initialCount, maximumCount));
+        public SemaphoreSlim SemaphoreGlobalApp(string name, int initialCount = 0, int maximumCount = 0) {
+            if (!semaphore_global_app.ContainsKey(name)) {
+                semaphore_global_app.Add(name, new SemaphoreSlim(initialCount, maximumCount));
             }
-            return semaphore_local_app[name];
+            return semaphore_global_app[name];
         }
 
     }
