@@ -154,6 +154,7 @@
     <Compile Include="Utilities\Config_.cs" />
     <Compile Include="Utilities\Converter_.cs" />
     <Compile Include="Utilities\Ftp_.cs" />
+    <Compile Include="Utilities\Locker_.cs" />
     <Compile Include="Utilities\Logger_.cs" />
     <Compile Include="Utilities\QrBar_.cs" />
     <Compile Include="Utilities\Sftp_.cs" />
