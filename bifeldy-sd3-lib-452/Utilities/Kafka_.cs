@@ -20,7 +20,7 @@ using bifeldy_sd3_lib_452.Models;
 
 namespace bifeldy_sd3_lib_452.Utilities {
 
-    public interface IKafkaService {
+    public interface IKafka {
         ProducerConfig GenerateProducerConfig(string hostPort);
         IProducer<T1, T2> GenerateProducerBuilder<T1, T2>(ProducerConfig config);
         IProducer<T1, T2> CreateKafkaProducerInstance<T1, T2>(string hostPort);
@@ -33,12 +33,12 @@ namespace bifeldy_sd3_lib_452.Utilities {
         KafkaMessage<string, dynamic> ConsumeSingleMessage<T>(string hostPort, string groupId, string topicName, int partition = 0, long offset = -1);
     }
 
-    public sealed class CKafkaService : IKafkaService {
+    public sealed class CKafka : IKafka {
 
         private readonly ILogger _logger;
         private readonly IConverter _converter;
 
-        public CKafkaService(ILogger logger, IConverter converter) {
+        public CKafka(ILogger logger, IConverter converter) {
             _logger = logger;
             _converter = converter;
         }
