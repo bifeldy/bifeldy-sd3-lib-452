@@ -132,7 +132,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Abstractions\Database^.cs" />
+    <Compile Include="Extensions\ByteExtensions.cs" />
+    <Compile Include="Extensions\DataTableExtensions.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
+    <Compile Include="Extensions\ListExtensions.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\TimeSpanExtensions.cs" />
     <Compile Include="Handlers\DbHandler~.cs" />
     <Compile Include="Bifeldy.cs" />
