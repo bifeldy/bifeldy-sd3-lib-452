@@ -110,7 +110,7 @@ namespace bifeldy_sd3_lib_452.Services {
                     message.Value = _converter.JsonToObject<T>(result.Message.Value);
                 }
                 consumer.Close();
-                return (KafkaMessage<string, dynamic>)message;
+                return (KafkaMessage<string, dynamic>) message;
             }
         }
 
