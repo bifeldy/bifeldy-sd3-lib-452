@@ -17,9 +17,8 @@ using System.Threading.Tasks;
 using Confluent.Kafka;
 
 using bifeldy_sd3_lib_452.Models;
-using bifeldy_sd3_lib_452.Utilities;
 
-namespace bifeldy_sd3_lib_452.Services {
+namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IKafkaService {
         ProducerConfig GenerateProducerConfig(string hostPort);
