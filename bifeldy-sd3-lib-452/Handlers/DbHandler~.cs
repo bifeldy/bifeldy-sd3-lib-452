@@ -32,6 +32,9 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task MarkBeforeCommitRollback();
         void MarkSuccessCommitAndClose();
         void MarkFailedRollbackAndClose();
+        COracle NewExternalConnectionOra(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid);
+        CPostgres NewExternalConnectionPg(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName);
+        CMsSQL NewExternalConnectionMsSql(string dbIpAddrss, string dbUsername, string dbPassword, string dbName);
         Task<string> GetJenisDc();
         Task<string> GetKodeDc();
         Task<string> GetNamaDc();
@@ -40,17 +43,13 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<bool> CheckIpMac();
         Task<string> GetURLWebService(string webType);
         Task<T> GetMailInfo<T>(string kolom);
-        Task<bool> OraPg_AlterTable_AddColumnIfNotExist(string tableName, string columnName, string columnType);
-        COracle NewExternalConnectionOra(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid);
-        CPostgres NewExternalConnectionPg(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName);
-        CMsSQL NewExternalConnectionMsSql(string dbIpAddrss, string dbUsername, string dbPassword, string dbName);
-        Task<bool> OraPg_TruncateTable(string TableName);
-        Task<bool> OraPg_BulkInsertInto(string tableName, DataTable dataTable);
-        Task<List<string>> OraPg_GetAllColumnTable(string tableName);
         Task<DateTime> OraPg_GetYesterdayDate(int lastDay);
         Task<DateTime> OraPg_GetLastMonth(int lastMonth);
         Task<DateTime> OraPg_GetCurrentTimestamp();
         Task<DateTime> OraPg_GetCurrentDate();
+        Task<bool> OraPg_AlterTable_AddColumnIfNotExist(string tableName, string columnName, string columnType);
+        Task<bool> OraPg_TruncateTable(string TableName);
+        Task<bool> OraPg_BulkInsertInto(string tableName, DataTable dataTable);
         Task<T> OraPg_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<bool> OraPg_ExecQuery(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<DataTable> OraPg_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
@@ -353,39 +352,6 @@ namespace bifeldy_sd3_lib_452.Handlers {
             );
         }
 
-        /* ** */
-
-        public async Task<bool> OraPg_AlterTable_AddColumnIfNotExist(string tableName, string columnName, string columnType) {
-            var cols_dc_npbtoko_log = await OraPg_GetAllColumnTable(tableName);
-            if (!cols_dc_npbtoko_log.Contains(columnName.ToUpper())) {
-                return await OraPg.ExecQueryAsync($@"
-                    ALTER TABLE {tableName}
-                        ADD {(_app.IsUsingPostgres ? "COLUMN" : "(")}
-                            {columnName} {columnType}
-                        {(_app.IsUsingPostgres ? "" : ")")}
-                ");
-            }
-            return false;
-        }
-
-        public async Task<bool> OraPg_TruncateTable(string TableName) {
-            return await OraPg.ExecQueryAsync($@"TRUNCATE TABLE {TableName}");
-        }
-
-        public async Task<bool> OraPg_BulkInsertInto(string tableName, DataTable dataTable) {
-            return await OraPg.BulkInsertInto(tableName, dataTable);
-        }
-
-        // Bisa Kena SQL Injection
-        public async Task<List<string>> OraPg_GetAllColumnTable(string tableName) {
-            List<string> cols = new List<string>();
-            DataColumnCollection columns = await OraPg.GetAllColumnTableAsync(tableName);
-            foreach (DataColumn col in columns) {
-                cols.Add(col.ColumnName.ToUpper());
-            }
-            return cols;
-        }
-
         public async Task<DateTime> OraPg_GetYesterdayDate(int lastDay) {
             return await OraPg.ExecScalarAsync<DateTime>(
                 $@"
@@ -420,6 +386,34 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return await OraPg.ExecScalarAsync<DateTime>($@"
                 SELECT {(_app.IsUsingPostgres ? "CURRENT_DATE" : "TRUNC(SYSDATE) FROM DUAL")}
             ");
+        }
+
+        /* ** */
+
+        // Bisa Kena SQL Injection
+        public async Task<bool> OraPg_AlterTable_AddColumnIfNotExist(string tableName, string columnName, string columnType) {
+            List<string> cols = new List<string>();
+            DataColumnCollection columns = await OraPg.GetAllColumnTableAsync(tableName);
+            foreach (DataColumn col in columns) {
+                cols.Add(col.ColumnName.ToUpper());
+            }
+            if (!cols.Contains(columnName.ToUpper())) {
+                return await OraPg.ExecQueryAsync($@"
+                    ALTER TABLE {tableName}
+                        ADD {(_app.IsUsingPostgres ? "COLUMN" : "(")}
+                            {columnName} {columnType}
+                        {(_app.IsUsingPostgres ? "" : ")")}
+                ");
+            }
+            return false;
+        }
+
+        public async Task<bool> OraPg_TruncateTable(string TableName) {
+            return await OraPg.ExecQueryAsync($@"TRUNCATE TABLE {TableName}");
+        }
+
+        public async Task<bool> OraPg_BulkInsertInto(string tableName, DataTable dataTable) {
+            return await OraPg.BulkInsertInto(tableName, dataTable);
         }
 
         public async Task<T> OraPg_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
