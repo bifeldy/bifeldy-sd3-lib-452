@@ -11,6 +11,7 @@
  * 
  */
 
+using System;
 using System.Collections.Generic;
 using System.Dynamic;
 
@@ -45,6 +46,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public RxBehaviorSubject<T> GetGlobalAppBehaviorSubject<T>(string variableName) {
+            if (string.IsNullOrEmpty(variableName)) {
+                throw new Exception("Variable Name Is Empty / Null");
+            }
             if (!keyValuePairs.ContainsKey(variableName)) {
                 T defaultValue = _converter.GetDefaultValueT<T>();
                 return CreateGlobalAppBehaviorSubject(variableName, defaultValue);
@@ -53,6 +57,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public RxBehaviorSubject<T> CreateGlobalAppBehaviorSubject<T>(string variableName, T initialValue) {
+            if (string.IsNullOrEmpty(variableName)) {
+                throw new Exception("Variable Name Is Empty / Null");
+            }
             if (!keyValuePairs.ContainsKey(variableName)) {
                 keyValuePairs.Add(variableName, CreateNewBehaviorSubject(initialValue));
             }

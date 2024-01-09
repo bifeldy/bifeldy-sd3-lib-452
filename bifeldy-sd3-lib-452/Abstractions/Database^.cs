@@ -252,7 +252,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                 string filePathResult = $"{stringPathDownload}/{stringFileName}";
                 DbDataReader rdrGetBlob = await databaseCommand.ExecuteReaderAsync(CommandBehavior.SequentialAccess);
                 if (!rdrGetBlob.HasRows) {
-                    throw new Exception("Error file not found");
+                    throw new Exception("Error File Not Found");
                 }
                 while (await rdrGetBlob.ReadAsync()) {
                     FileStream fs = new FileStream(filePathResult, FileMode.OpenOrCreate, FileAccess.Write);
