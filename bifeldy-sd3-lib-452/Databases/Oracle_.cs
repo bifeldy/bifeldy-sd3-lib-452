@@ -70,7 +70,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                     string.IsNullOrEmpty(DbUsername) ||
                     string.IsNullOrEmpty(DbPassword)
                 ) {
-                    throw new Exception("Database Not Available!");
+                    throw new Exception("Database Tidak Tersedia");
                 }
                 DatabaseConnection = new OracleConnection(DbConnectionString);
                 DatabaseCommand = new OracleCommand {
@@ -95,7 +95,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                 for (int i = 0; i < parameters.Count; i++) {
                     string pName = parameters[i].NAME.StartsWith($"{prefix}") ? parameters[i].NAME.Substring(1) : parameters[i].NAME;
                     if (string.IsNullOrEmpty(pName)) {
-                        throw new Exception("Parameter Name Required!");
+                        throw new Exception("Nama Parameter Wajib Diisi");
                     }
                     dynamic pVal = parameters[i].VALUE;
                     Type pValType = (pVal == null) ? typeof(DBNull) : pVal.GetType();

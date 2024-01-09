@@ -69,7 +69,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                     string.IsNullOrEmpty(DbPassword) ||
                     string.IsNullOrEmpty(DbName)
                 ) {
-                    throw new Exception("Database Not Available!");
+                    throw new Exception("Database Tidak Tersedia");
                 }
                 DatabaseConnection = new NpgsqlConnection(DbConnectionString);
                 DatabaseCommand = new NpgsqlCommand {
@@ -91,7 +91,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                 for (int i = 0; i < parameters.Count; i++) {
                     string pName = parameters[i].NAME.StartsWith($"{prefix}") ? parameters[i].NAME.Substring(1) : parameters[i].NAME;
                     if (string.IsNullOrEmpty(pName)) {
-                        throw new Exception("Parameter Name Required!");
+                        throw new Exception("Nama Parameter Wajib Diisi");
                     }
                     dynamic pVal = parameters[i].VALUE;
                     Type pValType = (pVal == null) ? typeof(DBNull) : pVal.GetType();
@@ -178,7 +178,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             Exception exception = null;
             try {
                 if (string.IsNullOrEmpty(tableName)) {
-                    throw new Exception("No destination table is set ...");
+                    throw new Exception("Target Tabel Tidak Ditemukan");
                 }
                 int colCount = dataTable.Columns.Count;
 
@@ -189,7 +189,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                 DatabaseCommand.CommandText = $"SELECT * FROM {tableName} LIMIT 1";
                 using (NpgsqlDataReader rdr = (NpgsqlDataReader) await DatabaseCommand.ExecuteReaderAsync()) {
                     if (rdr.FieldCount != colCount) {
-                        throw new Exception("Column count does not match ...");
+                        throw new Exception("Jumlah Kolom Tabel Tidak Sama");
                     }
                     ReadOnlyCollection<NpgsqlDbColumn> columns = rdr.GetColumnSchema();
                     for (int i = 0; i < colCount; i++) {

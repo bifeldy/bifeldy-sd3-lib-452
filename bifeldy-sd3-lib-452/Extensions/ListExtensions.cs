@@ -37,7 +37,7 @@ namespace bifeldy_sd3_lib_452.Extensions {
 
             if (typeof(T).IsValueType || typeof(T).Equals(typeof(string))) {
                 if (string.IsNullOrEmpty(arrayListSingleValueColumnName)) {
-                    throw new Exception("Nama Kolom Tabel Wajib Di Isi");
+                    throw new Exception("Nama Kolom Tabel Wajib Diisi");
                 }
 
                 DataColumn dc = new DataColumn(arrayListSingleValueColumnName, typeof(T));

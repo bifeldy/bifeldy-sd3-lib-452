@@ -47,7 +47,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public RxBehaviorSubject<T> GetGlobalAppBehaviorSubject<T>(string variableName) {
             if (string.IsNullOrEmpty(variableName)) {
-                throw new Exception("Variable Name Is Empty / Null");
+                throw new Exception("Nama Variable Wajib Diisi");
             }
             if (!keyValuePairs.ContainsKey(variableName)) {
                 T defaultValue = _converter.GetDefaultValueT<T>();
@@ -58,7 +58,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public RxBehaviorSubject<T> CreateGlobalAppBehaviorSubject<T>(string variableName, T initialValue) {
             if (string.IsNullOrEmpty(variableName)) {
-                throw new Exception("Variable Name Is Empty / Null");
+                throw new Exception("Nama Variable Wajib Diisi");
             }
             if (!keyValuePairs.ContainsKey(variableName)) {
                 keyValuePairs.Add(variableName, CreateNewBehaviorSubject(initialValue));
