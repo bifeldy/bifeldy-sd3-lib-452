@@ -14,7 +14,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -28,6 +27,7 @@ using bifeldy_sd3_lib_452.Utilities;
 namespace bifeldy_sd3_lib_452.Handlers {
 
     public interface IDbHandler {
+        bool LocalDbOnly { get; }
         string LoggedInUsername { get; set; }
         string DbName { get; }
         string GetAllAvailableDbConnectionsString();
@@ -61,11 +61,9 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
     public class CDbHandler : IDbHandler {
 
-        private readonly bool _localDbOnly;
+        public bool LocalDbOnly { get; }
 
         private readonly IApplication _app;
-        private readonly IConfig _config;
-        private readonly IConverter _converter;
 
         private readonly IOracle _oracle;
         private readonly IPostgres _postgres;
@@ -78,12 +76,10 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         public string LoggedInUsername { get; set; }
 
-        public CDbHandler(IApplication app, IConfig config, IConverter converter, IOracle oracle, IPostgres postgres, IMsSQL mssql, ISqlite sqlite) {
-            _localDbOnly = config.Get<bool>("LocalDbOnly", bool.Parse(app.GetConfig("local_db_only")));
+        public CDbHandler(IApplication app, IConfig config, IOracle oracle, IPostgres postgres, IMsSQL mssql, ISqlite sqlite) {
+            LocalDbOnly = config.Get<bool>("LocalDbOnly", bool.Parse(app.GetConfig("local_db_only")));
 
             _app = app;
-            _config = config;
-            _converter = converter;
             _oracle = oracle;
             _postgres = postgres;
             _mssql = mssql;
@@ -92,7 +88,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         protected IOracle Oracle {
             get {
-                if (_localDbOnly) {
+                if (LocalDbOnly) {
                     throw new Exception("Hanya Bisa Menggunakan SQLite Dalam Mode Lokal Database Saja");
                 }
                 IOracle ret = _oracle.Available ? _oracle : null;
@@ -105,7 +101,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         protected IPostgres Postgres {
             get {
-                if (_localDbOnly) {
+                if (LocalDbOnly) {
                     throw new Exception("Hanya Bisa Menggunakan SQLite Dalam Mode Lokal Database Saja");
                 }
                 IPostgres ret = _postgres.Available ? _postgres : null;
@@ -118,7 +114,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         protected IDatabase OraPg {
             get {
-                if (_localDbOnly) {
+                if (LocalDbOnly) {
                     throw new Exception("Hanya Bisa Menggunakan SQLite Dalam Mode Lokal Database Saja");
                 }
                 if (_app.IsUsingPostgres) {
@@ -130,7 +126,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         protected IMsSQL MsSql {
             get {
-                if (_localDbOnly) {
+                if (LocalDbOnly) {
                     throw new Exception("Hanya Bisa Menggunakan SQLite Dalam Mode Lokal Database Saja");
                 }
                 IMsSQL ret = _mssql.Available ? _mssql : null;
@@ -155,7 +151,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         public string DbName {
             get {
-                if (_localDbOnly) {
+                if (LocalDbOnly) {
                     return Sqlite.DbName?.Replace("\\", "/").Split('/').Last();
                 }
                 string FullDbName = string.Empty;
@@ -226,7 +222,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         /* ** */
 
         public async Task<string> GetJenisDc() {
-            if (_localDbOnly) {
+            if (LocalDbOnly) {
                 return "NONDC";
             }
             if (OraPg.DbUsername.ToUpper().Contains("DCHO")) {
@@ -239,7 +235,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         public async Task<string> GetKodeDc() {
-            if (_localDbOnly) {
+            if (LocalDbOnly) {
                 return "GXXX";
             }
             if (OraPg.DbUsername.ToUpper().Contains("DCHO")) {
@@ -252,7 +248,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         public async Task<string> GetNamaDc() {
-            if (_localDbOnly) {
+            if (LocalDbOnly) {
                 return "LOKAL";
             }
             if (OraPg.DbUsername.ToUpper().Contains("DCHO")) {
@@ -265,7 +261,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         public async Task<string> CekVersi() {
-            if (_app.DebugMode || _localDbOnly) {
+            if (_app.DebugMode || LocalDbOnly) {
                 return "OKE";
             }
             else {
@@ -332,11 +328,11 @@ namespace bifeldy_sd3_lib_452.Handlers {
         public async Task<bool> LoginUser(string userNameNik, string password) {
             string query = $@"
                 SELECT
-                    {(_localDbOnly ? "uname" : "user_name")}
+                    {(LocalDbOnly ? "uname" : "user_name")}
                 FROM
-                    {(_localDbOnly ? "users" : "dc_user_t")}
+                    {(LocalDbOnly ? "users" : "dc_user_t")}
                 WHERE
-                    {(_localDbOnly ? @"
+                    {(LocalDbOnly ? @"
                         UPPER(uname) = UPPER(:uname)
                         AND UPPER(upswd) = UPPER(:pass)
                     " : @"
@@ -348,7 +344,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
                 new CDbQueryParamBind { NAME = "uname", VALUE = userNameNik }
             };
             if (string.IsNullOrEmpty(LoggedInUsername)) {
-                if (_localDbOnly) {
+                if (LocalDbOnly) {
                     byte[] pswd = new SHA1Managed().ComputeHash(Encoding.UTF8.GetBytes(password));
                     string hash = string.Concat(pswd.Select(b => b.ToString("x2")));
                     param.Add(new CDbQueryParamBind { NAME = "pass", VALUE = hash });
@@ -364,7 +360,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         public async Task<bool> CheckIpMac() {
-            if (_app.DebugMode || _localDbOnly) {
+            if (_app.DebugMode || LocalDbOnly) {
                 return true;
             }
             else {
