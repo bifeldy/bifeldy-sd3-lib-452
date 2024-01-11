@@ -33,8 +33,6 @@ namespace bifeldy_sd3_lib_452.Databases {
 
     public sealed class CSqlite : CDatabase, ISqlite {
 
-        private readonly string defaultDatabaseName;
-
         private readonly IApplication _app;
         private readonly IConfig _config;
         private readonly ILogger _logger;
