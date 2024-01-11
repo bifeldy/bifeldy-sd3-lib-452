@@ -48,13 +48,13 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         private async Task<SmtpClient> CreateSmtpClient() {
-            int port = int.Parse(await _db.GetMailInfo<string>("MAIL_PORT"));
+            int port = int.Parse(await _db.OraPg_GetMailInfo<string>("MAIL_PORT"));
             return new SmtpClient() {
-                Host = await _db.GetMailInfo<string>("MAIL_IP") ?? _config.Get<string>("SmtpServerIpDomain", _app.GetConfig("smtp_server_ip_domain")),
+                Host = await _db.OraPg_GetMailInfo<string>("MAIL_IP") ?? _config.Get<string>("SmtpServerIpDomain", _app.GetConfig("smtp_server_ip_domain")),
                 Port = (port > 0) ? port : _config.Get<int>("SmtpServerPort", int.Parse(_app.GetConfig("smtp_server_port"))),
                 Credentials = new NetworkCredential(
-                    await _db.GetMailInfo<string>("MAIL_USERNAME") ?? _config.Get<string>("SmtpServerUsername", _app.GetConfig("smtp_server_username"), true),
-                    await _db.GetMailInfo<string>("MAIL_PASSWORD") ?? _config.Get<string>("SmtpServerPassword", _app.GetConfig("smtp_server_password"), true)
+                    await _db.OraPg_GetMailInfo<string>("MAIL_USERNAME") ?? _config.Get<string>("SmtpServerUsername", _app.GetConfig("smtp_server_username"), true),
+                    await _db.OraPg_GetMailInfo<string>("MAIL_PASSWORD") ?? _config.Get<string>("SmtpServerPassword", _app.GetConfig("smtp_server_password"), true)
                 )
             };
         }

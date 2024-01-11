@@ -14,7 +14,10 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 
 using bifeldy_sd3_lib_452.Abstractions;
@@ -41,8 +44,8 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<string> CekVersi();
         Task<bool> LoginUser(string usernameNik, string password);
         Task<bool> CheckIpMac();
-        Task<string> GetURLWebService(string webType);
-        Task<T> GetMailInfo<T>(string kolom);
+        Task<string> OraPg_GetURLWebService(string webType);
+        Task<T> OraPg_GetMailInfo<T>(string kolom);
         Task<DateTime> OraPg_GetYesterdayDate(int lastDay);
         Task<DateTime> OraPg_GetLastMonth(int lastMonth);
         Task<DateTime> OraPg_GetCurrentTimestamp();
@@ -58,11 +61,16 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
     public class CDbHandler : IDbHandler {
 
+        private readonly bool _localDbOnly;
+
         private readonly IApplication _app;
+        private readonly IConfig _config;
+        private readonly IConverter _converter;
 
         private readonly IOracle _oracle;
         private readonly IPostgres _postgres;
         private readonly IMsSQL _mssql;
+        private readonly ISqlite _sqlite;
 
         private string DcCode = null;
         private string DcName = null;
@@ -70,15 +78,23 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         public string LoggedInUsername { get; set; }
 
-        public CDbHandler(IApplication app, IOracle oracle, IPostgres postgres, IMsSQL mssql) {
+        public CDbHandler(IApplication app, IConfig config, IConverter converter, IOracle oracle, IPostgres postgres, IMsSQL mssql, ISqlite sqlite) {
+            _localDbOnly = config.Get<bool>("LocalDbOnly", bool.Parse(app.GetConfig("local_db_only")));
+
             _app = app;
+            _config = config;
+            _converter = converter;
             _oracle = oracle;
             _postgres = postgres;
             _mssql = mssql;
+            _sqlite = sqlite;
         }
 
         protected IOracle Oracle {
             get {
+                if (_localDbOnly) {
+                    throw new Exception("Hanya Bisa Menggunakan SQLite Dalam Mode Lokal Database Saja");
+                }
                 IOracle ret = _oracle.Available ? _oracle : null;
                 if (ret == null) {
                     throw new Exception("Gagal Membaca Dan Mengambil `Kunci` Oracle Database");
@@ -89,6 +105,9 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         protected IPostgres Postgres {
             get {
+                if (_localDbOnly) {
+                    throw new Exception("Hanya Bisa Menggunakan SQLite Dalam Mode Lokal Database Saja");
+                }
                 IPostgres ret = _postgres.Available ? _postgres : null;
                 if (ret == null) {
                     throw new Exception("Gagal Membaca Dan Mengambil `Kunci` Postgres Database");
@@ -97,8 +116,23 @@ namespace bifeldy_sd3_lib_452.Handlers {
             }
         }
 
+        protected IDatabase OraPg {
+            get {
+                if (_localDbOnly) {
+                    throw new Exception("Hanya Bisa Menggunakan SQLite Dalam Mode Lokal Database Saja");
+                }
+                if (_app.IsUsingPostgres) {
+                    return Postgres;
+                }
+                return Oracle;
+            }
+        }
+
         protected IMsSQL MsSql {
             get {
+                if (_localDbOnly) {
+                    throw new Exception("Hanya Bisa Menggunakan SQLite Dalam Mode Lokal Database Saja");
+                }
                 IMsSQL ret = _mssql.Available ? _mssql : null;
                 if (ret == null) {
                     throw new Exception("Gagal Membaca Dan Mengambil `Kunci` Ms. SQL Server Database");
@@ -107,12 +141,13 @@ namespace bifeldy_sd3_lib_452.Handlers {
             }
         }
 
-        protected IDatabase OraPg {
+        protected ISqlite Sqlite {
             get {
-                if (_app.IsUsingPostgres) {
-                    return Postgres;
+                ISqlite ret = _sqlite.Available ? _sqlite : null;
+                if (ret == null) {
+                    throw new Exception("Gagal Membaca Dan Mengambil `Kunci` SQLite Database");
                 }
-                return Oracle;
+                return ret;
             }
         }
 
@@ -120,6 +155,9 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         public string DbName {
             get {
+                if (_localDbOnly) {
+                    return Sqlite.DbName?.Replace("\\", "/").Split('/').Last();
+                }
                 string FullDbName = string.Empty;
                 try {
                     FullDbName += OraPg.DbName;
@@ -142,8 +180,9 @@ namespace bifeldy_sd3_lib_452.Handlers {
             // Bypass Check DB Availablility ~
             string oracle = $"Oracle :: {_oracle.DbName}\r\n\r\n{_oracle.DbConnectionString}\r\n\r\n\r\n";
             string postgre = $"Postgres :: {_postgres.DbName}\r\n\r\n{_postgres.DbConnectionString}\r\n\r\n\r\n";
-            string mssql = $"MsSQL :: {_mssql.DbName}\r\n\r\n{_mssql.DbConnectionString}";
-            return oracle + postgre + mssql;
+            string mssql = $"Postgres :: {_mssql.DbName}\r\n\r\n{_mssql.DbConnectionString}\r\n\r\n\r\n";
+            string sqlite = $"SQLite :: {_sqlite.DbName?.Replace("\\", "/").Split('/').Last()}\r\n\r\n{_sqlite.DbConnectionString}";
+            return oracle + postgre + mssql + sqlite;
         }
 
         public void CloseAllConnection(bool force = false) {
@@ -187,6 +226,9 @@ namespace bifeldy_sd3_lib_452.Handlers {
         /* ** */
 
         public async Task<string> GetJenisDc() {
+            if (_localDbOnly) {
+                return "NONDC";
+            }
             if (OraPg.DbUsername.ToUpper().Contains("DCHO")) {
                 return "HO";
             }
@@ -197,6 +239,9 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         public async Task<string> GetKodeDc() {
+            if (_localDbOnly) {
+                return "GXXX";
+            }
             if (OraPg.DbUsername.ToUpper().Contains("DCHO")) {
                 return "DCHO";
             }
@@ -207,6 +252,9 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         public async Task<string> GetNamaDc() {
+            if (_localDbOnly) {
+                return "LOKAL";
+            }
             if (OraPg.DbUsername.ToUpper().Contains("DCHO")) {
                 return "DC HEAD OFFICE";
             }
@@ -217,7 +265,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         public async Task<string> CekVersi() {
-            if (_app.DebugMode) {
+            if (_app.DebugMode || _localDbOnly) {
                 return "OKE";
             }
             else {
@@ -282,29 +330,41 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         public async Task<bool> LoginUser(string userNameNik, string password) {
+            string query = $@"
+                SELECT
+                    {(_localDbOnly ? "uname" : "user_name")}
+                FROM
+                    {(_localDbOnly ? "users" : "dc_user_t")}
+                WHERE
+                    {(_localDbOnly ? @"
+                        UPPER(uname) = UPPER(:uname)
+                        AND UPPER(upswd) = UPPER(:pass)
+                    " : @"
+                        (UPPER(user_name) = UPPER(:uname) OR UPPER(user_nik) = UPPER(:unik))
+                        AND UPPER(user_password) = UPPER(:pass)
+                    ")}
+            ";
+            var param = new List<CDbQueryParamBind> {
+                new CDbQueryParamBind { NAME = "uname", VALUE = userNameNik }
+            };
             if (string.IsNullOrEmpty(LoggedInUsername)) {
-                LoggedInUsername = await OraPg.ExecScalarAsync<string>(
-                    $@"
-                        SELECT
-                            user_name
-                        FROM
-                            dc_user_t
-                        WHERE
-                            (UPPER(user_name) = :user_name OR UPPER(user_nik) = :user_nik)
-                            AND UPPER(user_password) = :password
-                    ",
-                    new List<CDbQueryParamBind> {
-                        new CDbQueryParamBind { NAME = "user_name", VALUE = userNameNik },
-                        new CDbQueryParamBind { NAME = "user_nik", VALUE = userNameNik },
-                        new CDbQueryParamBind { NAME = "password", VALUE = password }
-                    }
-                );
+                if (_localDbOnly) {
+                    byte[] pswd = new SHA1Managed().ComputeHash(Encoding.UTF8.GetBytes(password));
+                    string hash = string.Concat(pswd.Select(b => b.ToString("x2")));
+                    param.Add(new CDbQueryParamBind { NAME = "pass", VALUE = hash });
+                    LoggedInUsername = await Sqlite.ExecScalarAsync<string>(query, param);
+                }
+                else {
+                    param.Add(new CDbQueryParamBind { NAME = "unik", VALUE = userNameNik });
+                    param.Add(new CDbQueryParamBind { NAME = "pass", VALUE = password });
+                    LoggedInUsername = await OraPg.ExecScalarAsync<string>(query, param);
+                }
             }
             return !string.IsNullOrEmpty(LoggedInUsername);
         }
 
         public async Task<bool> CheckIpMac() {
-            if (_app.DebugMode) {
+            if (_app.DebugMode || _localDbOnly) {
                 return true;
             }
             else {
@@ -334,7 +394,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
             }
         }
 
-        public async Task<string> GetURLWebService(string webType) {
+        public async Task<string> OraPg_GetURLWebService(string webType) {
             return await OraPg.ExecScalarAsync<string>(
                 $@"SELECT WEB_URL FROM DC_WEBSERVICE_T WHERE WEB_TYPE = :web_type",
                 new List<CDbQueryParamBind> {
@@ -343,7 +403,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
             );
         }
 
-        public async Task<T> GetMailInfo<T>(string kolom) {
+        public async Task<T> OraPg_GetMailInfo<T>(string kolom) {
             return await OraPg.ExecScalarAsync<T>(
                 $@"SELECT {kolom} FROM DC_LISTMAILSERVER_T WHERE MAIL_DCKODE = :mail_dckode",
                 new List<CDbQueryParamBind> {
