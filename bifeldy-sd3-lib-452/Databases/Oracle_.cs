@@ -54,16 +54,16 @@ namespace bifeldy_sd3_lib_452.Databases {
             if (!string.IsNullOrEmpty(_dbTnsOdp)) {
                 _dbTnsOdp = Regex.Replace(_dbTnsOdp, @"\s+", "");
             }
-            DbTnsOdp = dbTnsOdp ?? _dbTnsOdp;
+            DbTnsOdp = _dbTnsOdp;
         }
 
         private void SettingUpDatabase() {
-            string _dbName = null;
-            if (!string.IsNullOrEmpty(DbTnsOdp)) {
-                _dbName = DbTnsOdp.Split(new string[] { "SERVICE_NAME=" }, StringSplitOptions.None)[1].Split(new string[] { ")" }, StringSplitOptions.None)[0];
-            }
-            DbName = _dbName;
             try {
+                string _dbName = null;
+                if (!string.IsNullOrEmpty(DbTnsOdp)) {
+                    _dbName = DbTnsOdp.Split(new string[] { "SERVICE_NAME=" }, StringSplitOptions.None)[1].Split(new string[] { ")" }, StringSplitOptions.None)[0];
+                }
+                DbName = _dbName;
                 DbConnectionString = $"Data Source={DbTnsOdp};User ID={DbUsername};Password={DbPassword};Connection Timeout=180;"; // 3 menit
                 if (
                     string.IsNullOrEmpty(DbTnsOdp) ||
