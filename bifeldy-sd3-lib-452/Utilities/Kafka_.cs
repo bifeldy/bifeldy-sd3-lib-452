@@ -25,7 +25,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
     public interface IKafka {
         Task<KafkaDeliveryResult<string, string>> ProduceSingleMessage(string hostPort, string topic, KafkaMessage<string, dynamic> data);
         KafkaMessage<string, dynamic> ConsumeSingleMessage<T>(string hostPort, string groupId, string topicName, int partition = 0, long offset = -1);
-        void CreateKafkaProducerListener(string hostPort, string topicName, bool suffixKodeDc = false, CancellationToken stoppingToken = default);
+        Task CreateKafkaProducerListener(string hostPort, string topicName, bool suffixKodeDc = false, CancellationToken stoppingToken = default);
         void DisposeAndRemoveKafkaProducerListener(string hostPort, string topicName, bool suffixKodeDc = false);
         Task CreateKafkaConsumerListener(string hostPort, string topicName, string groupId, bool suffixKodeDc = false, CancellationToken stoppingToken = default, Action<KafkaMessage<string, dynamic>> execLambda = null);
     }
@@ -136,7 +136,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return topicName;
         }
 
-        public async void CreateKafkaProducerListener(string hostPort, string topicName, bool suffixKodeDc = false, CancellationToken stoppingToken = default) {
+        public async Task CreateKafkaProducerListener(string hostPort, string topicName, bool suffixKodeDc = false, CancellationToken stoppingToken = default) {
             topicName = await GetTopicNameProducerListener(topicName, suffixKodeDc);
             string key = GetKeyProducerListener(hostPort, topicName);
             IProducer<string, string> producer = CreateKafkaProducerInstance<string, string>(hostPort);
