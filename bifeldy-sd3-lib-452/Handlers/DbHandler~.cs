@@ -249,7 +249,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         public async Task<string> GetNamaDc() {
             if (LocalDbOnly) {
-                return "LOKAL";
+                return "NON DC";
             }
             if (OraPg.DbUsername.ToUpper().Contains("DCHO")) {
                 return "DC HEAD OFFICE";

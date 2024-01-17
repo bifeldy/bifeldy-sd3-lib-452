@@ -21,15 +21,15 @@ using bifeldy_sd3_lib_452.Models;
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IKafka {
-        ProducerConfig GenerateProducerConfig(string hostPort);
-        IProducer<T1, T2> GenerateProducerBuilder<T1, T2>(ProducerConfig config);
-        IProducer<T1, T2> CreateKafkaProducerInstance<T1, T2>(string hostPort);
-        Task<DeliveryResult<string, string>> ProduceSingleMessage(string hostPort, string topic, KafkaMessage<string, dynamic> data);
-        ConsumerConfig GenerateConsumerConfig(string hostPort, string groupId, AutoOffsetReset autoOffsetReset);
-        IConsumer<T1, T2> GenerateConsumerBuilder<T1, T2>(ConsumerConfig config);
-        IConsumer<T1, T2> CreateKafkaConsumerInstance<T1, T2>(string hostPort, string groupId);
-        TopicPartition CreateKafkaConsumerTopicPartition(string topicName, int partition);
-        TopicPartitionOffset CreateKafkaConsumerTopicPartitionOffset(TopicPartition topicPartition, long offset);
+        KafkaProducerConfig GenerateKafkaProducerConfig(string hostPort);
+        KafkaProducer<T1, T2> GenerateProducerBuilder<T1, T2>(KafkaProducerConfig config);
+        KafkaProducer<T1, T2> CreateKafkaProducerInstance<T1, T2>(string hostPort);
+        Task<KafkaDeliveryResult<string, string>> ProduceSingleMessage(string hostPort, string topic, KafkaMessage<string, dynamic> data);
+        KafkaConsumerConfig GenerateKafkaConsumerConfig(string hostPort, string groupId, AutoOffsetReset autoOffsetReset);
+        KafkaConsumer<T1, T2> GenerateConsumerBuilder<T1, T2>(KafkaConsumerConfig config);
+        KafkaConsumer<T1, T2> CreateKafkaConsumerInstance<T1, T2>(string hostPort, string groupId);
+        KafkaTopicPartition CreateKafkaConsumerTopicPartition(string topicName, int partition);
+        KafkaTopicPartitionOffset CreateKafkaConsumerTopicPartitionOffset(KafkaTopicPartition topicPartition, long offset);
         KafkaMessage<string, dynamic> ConsumeSingleMessage<T>(string hostPort, string groupId, string topicName, int partition = 0, long offset = -1);
     }
 
@@ -43,32 +43,32 @@ namespace bifeldy_sd3_lib_452.Utilities {
             _converter = converter;
         }
 
-        public ProducerConfig GenerateProducerConfig(string hostPort) {
-            return new ProducerConfig {
+        public KafkaProducerConfig GenerateKafkaProducerConfig(string hostPort) {
+            return new KafkaProducerConfig {
                 BootstrapServers = hostPort
             };
         }
 
-        public IProducer<T1, T2> GenerateProducerBuilder<T1, T2>(ProducerConfig config) {
-            return new ProducerBuilder<T1, T2>(config).Build();
+        public KafkaProducer<T1, T2> GenerateProducerBuilder<T1, T2>(KafkaProducerConfig config) {
+            return (KafkaProducer<T1, T2>) new ProducerBuilder<T1, T2>(config).Build();
         }
 
-        public IProducer<T1, T2> CreateKafkaProducerInstance<T1, T2>(string hostPort) {
-            return GenerateProducerBuilder<T1, T2>(GenerateProducerConfig(hostPort));
+        public KafkaProducer<T1, T2> CreateKafkaProducerInstance<T1, T2>(string hostPort) {
+            return GenerateProducerBuilder<T1, T2>(GenerateKafkaProducerConfig(hostPort));
         }
 
-        public async Task<DeliveryResult<string, string>> ProduceSingleMessage(string hostPort, string topic, KafkaMessage<string, dynamic> data) {
-            using (IProducer<string, string> producer = CreateKafkaProducerInstance<string, string>(hostPort)) {
+        public async Task<KafkaDeliveryResult<string, string>> ProduceSingleMessage(string hostPort, string topic, KafkaMessage<string, dynamic> data) {
+            using (KafkaProducer<string, string> producer = CreateKafkaProducerInstance<string, string>(hostPort)) {
                 Message<string, string> msg = new Message<string, string> {
                     Key = data.Key,
                     Value = typeof(string) == data.Value.GetType() ? data.Value : _converter.ObjectToJson(data.Value)
                 };
-                return await producer.ProduceAsync(topic, msg);
+                return (KafkaDeliveryResult<string, string>) await producer.ProduceAsync(topic, msg);
             }
         }
 
-        public ConsumerConfig GenerateConsumerConfig(string hostPort, string groupId, AutoOffsetReset autoOffsetReset) {
-            return new ConsumerConfig {
+        public KafkaConsumerConfig GenerateKafkaConsumerConfig(string hostPort, string groupId, AutoOffsetReset autoOffsetReset) {
+            return new KafkaConsumerConfig {
                 BootstrapServers = hostPort,
                 GroupId = groupId,
                 AutoOffsetReset = autoOffsetReset,
@@ -76,31 +76,31 @@ namespace bifeldy_sd3_lib_452.Utilities {
             };
         }
 
-        public IConsumer<T1, T2> GenerateConsumerBuilder<T1, T2>(ConsumerConfig config) {
-            return new ConsumerBuilder<T1, T2>(config).Build();
+        public KafkaConsumer<T1, T2> GenerateConsumerBuilder<T1, T2>(KafkaConsumerConfig config) {
+            return (KafkaConsumer<T1, T2>) new ConsumerBuilder<T1, T2>(config).Build();
         }
 
-        public IConsumer<T1, T2> CreateKafkaConsumerInstance<T1, T2>(string hostPort, string groupId) {
-            return GenerateConsumerBuilder<T1, T2>(GenerateConsumerConfig(hostPort, groupId, AutoOffsetReset.Earliest));
+        public KafkaConsumer<T1, T2> CreateKafkaConsumerInstance<T1, T2>(string hostPort, string groupId) {
+            return GenerateConsumerBuilder<T1, T2>(GenerateKafkaConsumerConfig(hostPort, groupId, AutoOffsetReset.Earliest));
         }
 
-        public TopicPartition CreateKafkaConsumerTopicPartition(string topicName, int partition) {
-            return new TopicPartition(topicName, Math.Max(Partition.Any, partition));
+        public KafkaTopicPartition CreateKafkaConsumerTopicPartition(string topicName, int partition) {
+            return new KafkaTopicPartition(topicName, Math.Max(Partition.Any, partition));
         }
 
-        public TopicPartitionOffset CreateKafkaConsumerTopicPartitionOffset(TopicPartition topicPartition, long offset) {
-            return new TopicPartitionOffset(topicPartition, new Offset(offset));
+        public KafkaTopicPartitionOffset CreateKafkaConsumerTopicPartitionOffset(KafkaTopicPartition topicPartition, long offset) {
+            return new KafkaTopicPartitionOffset(topicPartition, new Offset(offset));
         }
 
         public KafkaMessage<string, dynamic> ConsumeSingleMessage<T>(string hostPort, string groupId, string topicName, int partition = 0, long offset = -1) {
-            using (IConsumer<string, dynamic> consumer = CreateKafkaConsumerInstance<string, dynamic>(hostPort, groupId)) {
+            using (KafkaConsumer<string, dynamic> consumer = CreateKafkaConsumerInstance<string, dynamic>(hostPort, groupId)) {
                 TimeSpan timeout = TimeSpan.FromSeconds(3);
-                TopicPartition topicPartition = CreateKafkaConsumerTopicPartition(topicName, partition);
+                KafkaTopicPartition topicPartition = CreateKafkaConsumerTopicPartition(topicName, partition);
                 if (offset < 0) {
                     WatermarkOffsets watermarkOffsets = consumer.QueryWatermarkOffsets(topicPartition, timeout);
                     offset = watermarkOffsets.High.Value - 1;
                 }
-                TopicPartitionOffset topicPartitionOffset = CreateKafkaConsumerTopicPartitionOffset(topicPartition, offset);
+                KafkaTopicPartitionOffset topicPartitionOffset = CreateKafkaConsumerTopicPartitionOffset(topicPartition, offset);
                 consumer.Assign(topicPartitionOffset);
                 ConsumeResult<string, dynamic> result = consumer.Consume(timeout);
                 _logger.WriteInfo(GetType().Name, $"[KAFKA_CONSUMER_{consumer.Position(topicPartition)}] 🏗 {result.Message.Key} :: {result.Message.Value}");

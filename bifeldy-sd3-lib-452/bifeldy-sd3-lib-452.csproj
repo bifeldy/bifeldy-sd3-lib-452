@@ -182,9 +182,9 @@
     <Compile Include="Models\DC_TABEL_V.cs" />
     <Compile Include="Models\FtpResultInfoSendGet_.cs" />
     <Compile Include="Models\IpMacAddress_.cs" />
-    <Compile Include="Models\KafkaMessage.cs" />
-    <Compile Include="Models\LokalUser.cs" />
-    <Compile Include="Models\RxBehaviorSubject.cs" />
+    <Compile Include="Models\KafkaModel_.cs" />
+    <Compile Include="Models\LokalUser_.cs" />
+    <Compile Include="Models\RxNetModel_.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\Api_.cs" />
     <Compile Include="Utilities\Application~.cs" />
