@@ -15,38 +15,6 @@ using Confluent.Kafka;
 
 namespace bifeldy_sd3_lib_452.Models {
 
-    public interface KafkaProducer<TKey, TValue> : IProducer<TKey, TValue> {
-        //
-    }
-
-    public interface KafkaConsumer<TKey, TValue> : IConsumer<TKey, TValue> {
-        //
-    }
-
-    public sealed class KafkaProducerConfig : ProducerConfig {
-        //
-    }
-
-    public sealed class KafkaConsumerConfig : ConsumerConfig {
-        //
-    }
-
-    public sealed class KafkaTopicPartition : TopicPartition {
-
-        public KafkaTopicPartition(string topic, Partition partition) : base(topic, partition) {
-            //
-        }
-
-    }
-
-    public sealed class KafkaTopicPartitionOffset : TopicPartitionOffset {
-
-        public KafkaTopicPartitionOffset(KafkaTopicPartition topicPartition, long offset) : base(topicPartition, offset) {
-            //
-        }
-
-    }
-
     public sealed class KafkaMessage<TKey, TValue> : Message<TKey, TValue> {
         //
     }
