@@ -36,6 +36,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         Task<Uri> CreateUploadUri(GcsMediaUpload mediaUpload);
         Task<IGcsUploadProgress> UploadFile(FileInfo fileInfo, string targetFolderId, Stream stream, Uri uploadSession = null, Action<IGcsUploadProgress> uploadProgress = null);
         Task DownloadFile(GcsObject fileObj, string fileLocalPath, Action<IGcsDownloadProgress> downloadProgress = null);
+        Task<string> CreateDownloadUrlSigned(GcsObject fileObj, TimeSpan expiredDurationFromNow);
     }
 
     public sealed class CGoogleCloudStorage : IGoogleCloudStorage {
