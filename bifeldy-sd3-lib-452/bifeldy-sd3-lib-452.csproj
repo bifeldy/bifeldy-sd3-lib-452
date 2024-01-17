@@ -211,6 +211,7 @@
     <Compile Include="Models\DbQueryParamBind_.cs" />
     <Compile Include="Models\DC_TABEL_V.cs" />
     <Compile Include="Models\FtpResultInfoSendGet_.cs" />
+    <Compile Include="Models\GoogleCloudStorageModel_.cs" />
     <Compile Include="Models\IpMacAddress_.cs" />
     <Compile Include="Models\KafkaModel_.cs" />
     <Compile Include="Models\LokalUser_.cs" />
