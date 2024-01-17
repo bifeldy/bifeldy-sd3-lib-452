@@ -140,18 +140,17 @@ namespace bifeldy_sd3_lib_452.Utilities {
             topicName = await GetTopicNameProducerListener(topicName, suffixKodeDc);
             string key = GetKeyProducerListener(hostPort, topicName);
             IProducer<string, string> producer = CreateKafkaProducerInstance<string, string>(hostPort);
-            _pubSub.GetGlobalAppBehaviorSubject<KafkaMessage<string, dynamic>>(key)
-                .Subscribe(async data => {
-                    if (data != null) {
-                        if (typeof(string) != data.Value.GetType()) {
-                            data.Value = _converter.ObjectToJson(data.Value);
-                        }
-                        string jsonText = _converter.ObjectToJson(data);
-                        _logger.WriteInfo($"{GetType().Name}ProducerListener", jsonText);
-                        KafkaMessage<string, string> jsonObj = _converter.JsonToObject<KafkaMessage<string, string>>(jsonText);
-                        await producer.ProduceAsync(topicName, jsonObj, stoppingToken);
+            _pubSub.GetGlobalAppBehaviorSubject<KafkaMessage<string, dynamic>>(key).Subscribe(async data => {
+                if (data != null) {
+                    if (typeof(string) != data.Value.GetType()) {
+                        data.Value = _converter.ObjectToJson(data.Value);
                     }
-                });
+                    string jsonText = _converter.ObjectToJson(data);
+                    _logger.WriteInfo($"{GetType().Name}ProducerListener", jsonText);
+                    KafkaMessage<string, string> jsonObj = _converter.JsonToObject<KafkaMessage<string, string>>(jsonText);
+                    await producer.ProduceAsync(topicName, jsonObj, stoppingToken);
+                }
+            });
         }
 
         public async void DisposeAndRemoveKafkaProducerListener(string hostPort, string topicName, bool suffixKodeDc = false) {
