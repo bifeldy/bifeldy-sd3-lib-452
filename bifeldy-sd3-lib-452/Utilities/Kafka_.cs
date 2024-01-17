@@ -27,7 +27,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         KafkaMessage<string, dynamic> ConsumeSingleMessage<T>(string hostPort, string groupId, string topicName, int partition = 0, long offset = -1);
         void CreateKafkaProducerListener(string hostPort, string topicName, bool suffixKodeDc = false, CancellationToken stoppingToken = default);
         void DisposeAndRemoveKafkaProducerListener(string hostPort, string topicName, bool suffixKodeDc = false);
-        Task CreateKafkaConsumerListener(string hostPort, string topicName, string groupId, bool suffixKodeDc = false, CancellationToken stoppingToken = default);
+        Task CreateKafkaConsumerListener(string hostPort, string topicName, string groupId, bool suffixKodeDc = false, CancellationToken stoppingToken = default, Action<KafkaMessage<string, dynamic>> execLambda = null);
     }
 
     public sealed class CKafka : IKafka {
@@ -174,7 +174,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return (topicName, groupId);
         }
 
-        public async Task CreateKafkaConsumerListener(string hostPort, string topicName, string groupId, bool suffixKodeDc = false, CancellationToken stoppingToken = default) {
+        public async Task CreateKafkaConsumerListener(string hostPort, string topicName, string groupId, bool suffixKodeDc = false, CancellationToken stoppingToken = default, Action<KafkaMessage<string, dynamic>> execLambda = null) {
             (topicName, groupId) = await GetTopicNameConsumerListener(topicName, groupId, suffixKodeDc);
             string key = $"KAFKA_CONSUMER_{hostPort.ToUpper()}#{topicName.ToUpper()}";
             IConsumer<string, string> consumer = CreateKafkaConsumerInstance<string, string>(hostPort, groupId);
@@ -192,6 +192,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 if (jsonObj.Value.StartsWith("{")) {
                     jsonObj.Value = _converter.JsonToObject<dynamic>(jsonObj.Value);
                 }
+                execLambda(jsonObj);
                 _pubSub.GetGlobalAppBehaviorSubject<KafkaMessage<string, dynamic>>(key).OnNext(jsonObj);
                 if (++i % 10 == 0) {
                     consumer.Commit();
