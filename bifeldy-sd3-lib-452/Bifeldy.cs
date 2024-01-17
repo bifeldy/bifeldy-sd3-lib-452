@@ -169,7 +169,7 @@ namespace bifeldy_sd3_lib_452 {
             return (CClass) container.ResolveNamed<object>(name);
         }
 
-        public ILifetimeScope BeginLifetimeScope() {
+        public dynamic BeginLifetimeScope() {
             if (container == null) {
                 container = _builder.Build();
             }
