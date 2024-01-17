@@ -192,7 +192,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 if (jsonObj.Value.StartsWith("{")) {
                     jsonObj.Value = _converter.JsonToObject<dynamic>(jsonObj.Value);
                 }
-                execLambda(jsonObj);
+                if (execLambda != null) {
+                    execLambda(jsonObj);
+                }
                 _pubSub.GetGlobalAppBehaviorSubject<KafkaMessage<string, dynamic>>(key).OnNext(jsonObj);
                 if (++i % 10 == 0) {
                     consumer.Commit();
