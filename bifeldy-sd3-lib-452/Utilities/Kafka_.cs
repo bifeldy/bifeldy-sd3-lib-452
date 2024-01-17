@@ -111,7 +111,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 ConsumeResult<string, dynamic> result = consumer.Consume(timeout);
                 Message<string, dynamic> message = result.Message;
                 string jsonText = _converter.ObjectToJson(message);
-                _logger.WriteInfo($"{GetType().Name}ConsumerSingle", jsonText);
+                _logger.WriteInfo($"{GetType().Name}ConsumeSingle", jsonText);
                 KafkaMessage<string, dynamic> jsonObj = _converter.JsonToObject<KafkaMessage<string, dynamic>>(jsonText);
                 if (jsonObj.Value.StartsWith("{")) {
                     jsonObj.Value = _converter.JsonToObject<T>(jsonObj.Value);
