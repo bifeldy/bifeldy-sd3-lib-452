@@ -45,6 +45,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
     public class CApplication : IApplication {
 
+        private readonly IConfig _config;
+
         public Process CurrentProcess { get; }
         public bool DebugMode { get; set; } = false;
         public bool IsIdle { get; set; } = false;
@@ -62,7 +64,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         private AppSettingsSection AppSettings = null;
 
-        public CApplication() {
+        public CApplication(IConfig config) {
+            _config = config;
+
             CurrentProcess = Process.GetCurrentProcess();
             string[] args = Environment.GetCommandLineArgs();
             for (int i = 0; i < args.Length; i++) {
@@ -111,8 +115,14 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public string GetVariabel(string key) {
             string id = string.Empty;
             if (DebugMode) {
-                id = GetConfig("setting_debug");
+                id = _config.Get<string>("SettingDebug", GetConfig("setting_debug"));
             }
+            
+            bool localDbOnly = _config.Get<bool>("LocalDbOnly", bool.Parse(GetConfig("local_db_only")));
+            if (localDbOnly) {
+                return null;
+            }
+
             try {
                 // http://xxx.xxx.xxx.xxx/KunciGxxx/Service.asmx
                 string result = _SettingLib.GetVariabel(key, id);

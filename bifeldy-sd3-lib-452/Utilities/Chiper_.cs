@@ -12,6 +12,7 @@
  */
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -26,7 +27,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
     public sealed class CChiper : IChiper {
 
-        private readonly IApplication _app;
+        private string AppName { get; }
 
         // This constant is used to determine the keysize of the encryption algorithm in bits.
         // We divide this by 8 within the code below to get the equivalent number of bytes.
@@ -35,8 +36,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
         // This constant determines the number of iterations for the password bytes generation function.
         private const int DerivationIterations = 1000;
 
-        public CChiper(IApplication app) {
-            _app = app;
+        public CChiper() {
+            string appName = Process.GetCurrentProcess().MainModule.ModuleName.ToUpper();
+            AppName = appName.Substring(0, appName.LastIndexOf(".EXE"));
         }
 
         private byte[] Generate256BitsOfRandomEntropy() {
@@ -50,7 +52,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public string Encrypt(string plainText, string passPhrase = null) {
             if (string.IsNullOrEmpty(passPhrase)) {
-                passPhrase = _app.AppName;
+                passPhrase = AppName;
             }
             // Salt and IV is randomly generated each time, but is preprended to encrypted cipher text
             // so that the same Salt and IV values can be used when decrypting.  
@@ -84,7 +86,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public string Decrypt(string cipherText, string passPhrase = null) {
             if (string.IsNullOrEmpty(passPhrase)) {
-                passPhrase = _app.AppName;
+                passPhrase = AppName;
             }
             // Get the complete stream of bytes that represent:
             // [32 bytes of Salt] + [32 bytes of IV] + [n bytes of CipherText]

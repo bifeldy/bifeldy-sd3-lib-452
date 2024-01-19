@@ -33,6 +33,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         List<T> DataTableToList<T>(DataTable dt);
         DataTable ListToDataTable<T>(List<T> listData, string tableName = null, string arrayListSingleValueColumnName = null);
         T GetDefaultValueT<T>();
+        string FormatByteSizeHumanReadable(long bytes);
     }
 
     public sealed class CConverter : IConverter {
@@ -100,6 +101,32 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     break;
             }
             return (T) Convert.ChangeType(x, typeof(T));
+        }
+
+        public string FormatByteSizeHumanReadable(long bytes) {
+            long digit = 1;
+            string ext = "B";
+            if (bytes > 1000000000000) {
+                digit = 1000000000000;
+                ext = "TB";
+            }
+            else if (bytes > 1000000000) {
+                digit = 1000000000;
+                ext = "GB";
+            }
+            else if (bytes > 1000000) {
+                digit = 1000000;
+                ext = "MB";
+            }
+            else if (bytes > 1000) {
+                digit = 1000;
+                ext = "KB";
+            }
+            else {
+                digit = 1;
+                ext = "B";
+            }
+            return $"{((decimal) bytes / digit):0.00} {ext}";
         }
 
     }

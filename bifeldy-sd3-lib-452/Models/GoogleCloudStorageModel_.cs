@@ -34,15 +34,7 @@ namespace bifeldy_sd3_lib_452.Models {
         //
     }
 
-    public sealed class GcsBuckets : Google.Apis.Storage.v1.Data.Buckets {
-        //
-    }
-
     public sealed class GcsBucket : Google.Apis.Storage.v1.Data.Bucket {
-        //
-    }
-
-    public sealed class GcsObjects : Google.Apis.Storage.v1.Data.Objects {
         //
     }
 

@@ -25,7 +25,6 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
     public sealed class CConfig : IConfig {
 
-        private readonly IApplication _app;
         private readonly IConverter _converter;
         private readonly IChiper _chiper;
 
@@ -33,12 +32,11 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         private IDictionary<string, dynamic> AppConfig = null;
 
-        public CConfig(IApplication app, IConverter converter, IChiper chiper) {
-            _app = app;
+        public CConfig(IConverter converter, IChiper chiper) {
             _converter = converter;
             _chiper = chiper;
 
-            ConfigPath = Path.Combine(_app.AppLocation, "_data", "configuration.json");
+            ConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "_data", "configuration.json");
             Load();
         }
 
