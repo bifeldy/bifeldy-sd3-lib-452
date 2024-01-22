@@ -38,6 +38,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         Task<IGcsUploadProgress> UploadFile(FileInfo fileInfo, string targetFolderId, Stream stream, Uri uploadSession = null, Action<IGcsUploadProgress> uploadProgress = null);
         Task DownloadFile(GcsObject fileObj, string fileLocalPath, Action<IGcsDownloadProgress> downloadProgress = null);
         Task<string> CreateDownloadUrlSigned(GcsObject fileObj, TimeSpan expiredDurationFromNow);
+        Task<string> CreateDownloadUrlSigned(GcsObject fileObj, DateTime expiryDateTime);
     }
 
     public sealed class CGoogleCloudStorage : IGoogleCloudStorage {
@@ -204,7 +205,13 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public async Task<string> CreateDownloadUrlSigned(GcsObject fileObj, TimeSpan expiredDurationFromNow) {
             string ddl = await urlSigner.SignAsync(fileObj.Bucket, fileObj.Name, expiredDurationFromNow);
-            _logger.WriteInfo($"{GetType().Name}DirectDownloadLink", ddl);
+            _logger.WriteInfo($"{GetType().Name}DirectDownloadLinkTimeSpan", ddl);
+            return ddl;
+        }
+
+        public async Task<string> CreateDownloadUrlSigned(GcsObject fileObj, DateTime expiryDateTime) {
+            string ddl = await urlSigner.SignAsync(fileObj.Bucket, fileObj.Name, expiryDateTime);
+            _logger.WriteInfo($"{GetType().Name}DirectDownloadLinkDateTime", ddl);
             return ddl;
         }
 
