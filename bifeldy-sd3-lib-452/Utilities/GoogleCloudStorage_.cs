@@ -203,7 +203,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public async Task<string> CreateDownloadUrlSigned(GcsObject fileObj, TimeSpan expiredDurationFromNow) {
-            return await urlSigner.SignAsync(fileObj.Bucket, fileObj.Name, expiredDurationFromNow);
+            string ddl = await urlSigner.SignAsync(fileObj.Bucket, fileObj.Name, expiredDurationFromNow);
+            _logger.WriteInfo($"{GetType().Name}DirectDownloadLink", ddl);
+            return ddl;
         }
 
     }

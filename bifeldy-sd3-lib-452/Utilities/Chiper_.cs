@@ -17,12 +17,15 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Security.Cryptography;
+using System.Runtime.InteropServices;
 
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IChiper {
         string Encrypt(string plainText, string passPhrase = null);
         string Decrypt(string cipherText, string passPhrase = null);
+        string CalculateMD5(string filename);
+        string GetMimeFromFile(string filename);
     }
 
     public sealed class CChiper : IChiper {
@@ -113,6 +116,60 @@ namespace bifeldy_sd3_lib_452.Utilities {
                         }
                     }
                 }
+            }
+        }
+
+        public string CalculateMD5(string filename) {
+            using (MD5 md5 = MD5.Create()) {
+                using (FileStream stream = File.OpenRead(filename)) {
+                    byte[] hash = md5.ComputeHash(stream);
+                    return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+                }
+            }
+        }
+
+        [DllImport("urlmon.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = false)]
+        private static extern int FindMimeFromData(
+            IntPtr pBC,
+            [MarshalAs(UnmanagedType.LPWStr)] string pwzUrl,
+            [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.I1, SizeParamIndex = 3)] byte[] pBuffer,
+            int cbSize,
+            [MarshalAs(UnmanagedType.LPWStr)] string pwzMimeProposed,
+            int dwMimeFlags,
+            out IntPtr ppwzMimeOut,
+            int dwReserved
+        );
+
+        public string GetMimeFromFile(string filename) {
+            if (!File.Exists(filename)) {
+                throw new FileNotFoundException(filename + " Not Found");
+            }
+            const int maxContent = 256;
+            byte[] buffer = new byte[maxContent];
+            using (FileStream fs = new FileStream(filename, FileMode.Open)) {
+                if (fs.Length >= maxContent) {
+                    fs.Read(buffer, 0, maxContent);
+                }
+                else {
+                    fs.Read(buffer, 0, (int)fs.Length);
+                }
+            }
+            IntPtr mimeTypePtr = IntPtr.Zero;
+            try {
+                int result = FindMimeFromData(IntPtr.Zero, null, buffer, maxContent, null, 0, out mimeTypePtr, 0);
+                if (result != 0) {
+                    Marshal.FreeCoTaskMem(mimeTypePtr);
+                    throw Marshal.GetExceptionForHR(result);
+                }
+                string mime = Marshal.PtrToStringUni(mimeTypePtr);
+                Marshal.FreeCoTaskMem(mimeTypePtr);
+                return mime;
+            }
+            catch {
+                if (mimeTypePtr != IntPtr.Zero) {
+                    Marshal.FreeCoTaskMem(mimeTypePtr);
+                }
+                return "unknown/unknown";
             }
         }
 
