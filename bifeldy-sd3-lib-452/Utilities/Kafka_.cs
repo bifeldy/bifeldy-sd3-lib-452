@@ -27,8 +27,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IKafka {
         Task CreateTopicIfNotExist(string hostPort, string topicName, short replication = 1, int partition = 1);
-        Task<KafkaDeliveryResult<string, string>> ProduceSingleMessage(string hostPort, string topicName, KafkaMessage<string, dynamic> data);
-        Task<KafkaMessage<string, T>> ConsumeSingleMessage<T>(string hostPort, string groupId, string topicName, int partition = 0, long offset = -1);
+        Task<List<KafkaDeliveryResult<string, string>>> ProduceSingleMultipleMessages(string hostPort, string topicName, List<KafkaMessage<string, dynamic>> data);
+        Task<List<KafkaMessage<string, T>>> ConsumeSingleMultipleMessages<T>(string hostPort, string groupId, string topicName, int partition = 0, long offset = -1, ulong nMessagesBlock = 1);
         void CreateKafkaProducerListener(string hostPort, string topicName, bool suffixKodeDc = false, CancellationToken stoppingToken = default, string pubSubName = null);
         void DisposeAndRemoveKafkaProducerListener(string hostPort, string topicName, bool suffixKodeDc = false, string pubSubName = null);
         void CreateKafkaConsumerListener<T>(string hostPort, string topicName, string groupId, bool suffixKodeDc = false, CancellationToken stoppingToken = default, Action<KafkaMessage<string, T>> execLambda = null, string pubSubName = null);
@@ -85,26 +85,30 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return GenerateProducerBuilder<T1, T2>(GenerateKafkaProducerConfig(hostPort));
         }
 
-        public async Task<KafkaDeliveryResult<string, string>> ProduceSingleMessage(string hostPort, string topicName, KafkaMessage<string, dynamic> data) {
+        public async Task<List<KafkaDeliveryResult<string, string>>> ProduceSingleMultipleMessages(string hostPort, string topicName, List<KafkaMessage<string, dynamic>> data) {
             await CreateTopicIfNotExist(hostPort, topicName);
             using (IProducer<string, string> producer = CreateKafkaProducerInstance<string, string>(hostPort)) {
-                Message<string, string> msg = new Message<string, string> {
-                    Key = data.Key,
-                    Value = typeof(string) == data.Value.GetType() ? data.Value : _converter.ObjectToJson(data.Value)
-                };
-                DeliveryResult<string, string> result = await producer.ProduceAsync(topicName, msg);
-                return new KafkaDeliveryResult<string, string> {
-                    Headers = result.Headers,
-                    Key = result.Key,
-                    Message = result.Message,
-                    Offset = result.Offset,
-                    Partition = result.Partition,
-                    Status = result.Status,
-                    Timestamp = result.Timestamp,
-                    Topic = result.Topic,
-                    TopicPartition = result.TopicPartition,
-                    TopicPartitionOffset = result.TopicPartitionOffset
-                };
+                List<KafkaDeliveryResult<string, string>> results = new List<KafkaDeliveryResult<string, string>>();
+                foreach(KafkaMessage<string, dynamic> d in data) {
+                    Message<string, string> msg = new Message<string, string> {
+                        Key = d.Key,
+                        Value = typeof(string) == d.Value.GetType() ? d.Value : _converter.ObjectToJson(d.Value)
+                    };
+                    DeliveryResult<string, string> result = await producer.ProduceAsync(topicName, msg);
+                    results.Add(new KafkaDeliveryResult<string, string> {
+                        Headers = result.Headers,
+                        Key = result.Key,
+                        Message = result.Message,
+                        Offset = result.Offset,
+                        Partition = result.Partition,
+                        Status = result.Status,
+                        Timestamp = result.Timestamp,
+                        Topic = result.Topic,
+                        TopicPartition = result.TopicPartition,
+                        TopicPartitionOffset = result.TopicPartitionOffset
+                    });
+                }
+                return results;
             }
         }
 
@@ -133,7 +137,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return new TopicPartitionOffset(topicPartition, new Offset(offset));
         }
 
-        public async Task<KafkaMessage<string, T>> ConsumeSingleMessage<T>(string hostPort, string groupId, string topicName, int partition = 0, long offset = -1) {
+        public async Task<List<KafkaMessage<string, T>>> ConsumeSingleMultipleMessages<T>(string hostPort, string groupId, string topicName, int partition = 0, long offset = -1, ulong nMessagesBlock = 1) {
             await CreateTopicIfNotExist(hostPort, topicName);
             using (IConsumer<string, string> consumer = CreateKafkaConsumerInstance<string, string>(hostPort, groupId)) {
                 TopicPartition topicPartition = CreateKafkaConsumerTopicPartition(topicName, partition);
@@ -143,15 +147,19 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 }
                 TopicPartitionOffset topicPartitionOffset = CreateKafkaConsumerTopicPartitionOffset(topicPartition, offset);
                 consumer.Assign(topicPartitionOffset);
-                ConsumeResult<string, string> result = consumer.Consume(timeout);
-                KafkaMessage<string, T> message = new KafkaMessage<string, T> {
-                    Headers = result.Message.Headers,
-                    Key = result.Message.Key,
-                    Value = typeof(T) == typeof(string) ? (dynamic) result.Message.Value : _converter.JsonToObject<T>(result.Message.Value),
-                    Timestamp = result.Message.Timestamp
-                };
+                List<KafkaMessage<string, T>> results = new List<KafkaMessage<string, T>>();
+                for (ulong i = 0; i < nMessagesBlock; i++) {
+                    ConsumeResult<string, string> result = consumer.Consume(timeout);
+                    KafkaMessage<string, T> message = new KafkaMessage<string, T> {
+                        Headers = result.Message.Headers,
+                        Key = result.Message.Key,
+                        Value = typeof(T) == typeof(string) ? (dynamic)result.Message.Value : _converter.JsonToObject<T>(result.Message.Value),
+                        Timestamp = result.Message.Timestamp
+                    };
+                    results.Add(message);
+                }
                 consumer.Close();
-                return message;
+                return results;
             }
         }
 
