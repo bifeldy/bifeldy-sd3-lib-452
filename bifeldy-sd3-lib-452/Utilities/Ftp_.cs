@@ -81,7 +81,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 }
                 FtpStatus ftpStatus = await ftpConnection.UploadFileAsync(fi.FullName, fn);
                 CFtpResultSendGet resultSend = new CFtpResultSendGet() {
-                    FtpStatusSendGet = ftpStatus,
+                    FtpStatusSendGet = ftpStatus == FtpStatus.Success,
                     FileInformation = fi
                 };
                 if (ftpStatus == FtpStatus.Success) {
@@ -107,7 +107,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 foreach (FtpResult fr in ftpResult) {
                     string fileGet = "Fail";
                     CFtpResultSendGet resultGet = new CFtpResultSendGet() {
-                        FtpStatusSendGet = fr.IsSuccess ? FtpStatus.Success : FtpStatus.Failed,
+                        FtpStatusSendGet = fr.IsSuccess,
                         FileInformation = new FileInfo(Path.Combine(saveDownloadTo, fr.Name))
                     };
                     if (fr.IsSuccess) {
@@ -124,7 +124,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 string fileGet = "Fail";
                 FtpStatus ftpStatus = await ftpConnection.DownloadFileAsync(_berkas.DownloadFolderPath, fileName, FtpLocalExists.Overwrite);
                 CFtpResultSendGet resultGet = new CFtpResultSendGet() {
-                    FtpStatusSendGet = ftpStatus,
+                    FtpStatusSendGet = ftpStatus == FtpStatus.Success,
                     FileInformation = new FileInfo(saveDownloadTo)
                 };
                 if (ftpStatus == FtpStatus.Success) {

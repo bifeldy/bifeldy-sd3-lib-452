@@ -23,7 +23,7 @@ namespace bifeldy_sd3_lib_452.Models {
     }
 
     public sealed class CFtpResultSendGet {
-        public FtpStatus FtpStatusSendGet { get; set; }
+        public bool FtpStatusSendGet { get; set; }
         public FileInfo FileInformation { get; set; }
     }
 
