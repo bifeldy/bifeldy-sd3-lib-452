@@ -239,9 +239,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="App.config" />
-    <None Include="bifeldy-sd3-lib-452.db">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
