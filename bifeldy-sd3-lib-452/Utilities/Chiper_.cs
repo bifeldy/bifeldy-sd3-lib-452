@@ -72,7 +72,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
             using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, DerivationIterations)) {
                 byte[] keyBytes = password.GetBytes(Keysize / 8);
-                using (Aes symmetricKey = Aes.Create("AesManaged")) {
+                using (RijndaelManaged symmetricKey = new RijndaelManaged()) {
                     symmetricKey.BlockSize = 256;
                     symmetricKey.Mode = CipherMode.CBC;
                     symmetricKey.Padding = PaddingMode.PKCS7;
@@ -129,26 +129,32 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public string CalculateMD5(string filePath) {
             using (MD5 md5 = MD5.Create()) {
-                byte[] hash = md5.ComputeHash(_stream.ReadFileAsBinaryByte(filePath).ToArray());
-                return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+                using (MemoryStream ms = _stream.ReadFileAsBinaryStream(filePath)) {
+                    byte[] hash = md5.ComputeHash(ms.ToArray());
+                    return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+                }
             }
         }
 
         public string CalculateCRC32(string filePath) {
             CRC32 crc32 = new CRC32();
-            byte[] data = _stream.ReadFileAsBinaryByte(filePath).ToArray();
-            crc32.SlurpBlock(data, 0, data.Length);
-            return crc32.Crc32Result.ToString("x");
+            using (MemoryStream ms = _stream.ReadFileAsBinaryStream(filePath)) {
+                byte[] data = ms.ToArray();
+                crc32.SlurpBlock(data, 0, data.Length);
+                return crc32.Crc32Result.ToString("x");
+            }
         }
 
         public string CalculateSHA1(string filePath) {
             using (SHA1 sha1 = SHA1.Create()) {
-                byte[] hash = sha1.ComputeHash(_stream.ReadFileAsBinaryByte(filePath).ToArray());
-                StringBuilder sb = new StringBuilder(hash.Length * 2);
-                foreach (byte b in hash) {
-                    sb.Append(b.ToString("x"));
+                using (MemoryStream ms = _stream.ReadFileAsBinaryStream(filePath)) {
+                    byte[] hash = sha1.ComputeHash(ms.ToArray());
+                    StringBuilder sb = new StringBuilder(hash.Length * 2);
+                    foreach (byte b in hash) {
+                        sb.Append(b.ToString("x"));
+                    }
+                    return sb.ToString();
                 }
-                return sb.ToString();
             }
         }
 

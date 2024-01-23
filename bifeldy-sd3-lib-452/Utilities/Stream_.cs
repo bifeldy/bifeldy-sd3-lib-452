@@ -11,9 +11,12 @@
  * 
  */
 
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+
+using bifeldy_sd3_lib_452.Extensions;
 
 namespace bifeldy_sd3_lib_452.Utilities {
 
@@ -21,7 +24,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
         void CopyTo(Stream src, Stream dest);
         string GZipDecompressString(byte[] byteData);
         byte[] GZipCompressString(string text);
-        MemoryStream ReadFileAsBinaryByte(string filePath, int maxChunk = 2048);
+        List<byte[]> ReadFileAsBinaryChunk(string filePath, int maxChunk = 1024);
+        MemoryStream ReadFileAsBinaryStream(string filePath, int maxChunk = 1024);
     }
 
     public sealed class CStream : IStream {
@@ -61,7 +65,18 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
-        public MemoryStream ReadFileAsBinaryByte(string filePath, int maxChunk = 2048) {
+        public List<byte[]> ReadFileAsBinaryChunk(string filePath, int maxChunk = 1024) {
+            List<byte[]> res = new List<byte[]>();
+            using (MemoryStream ms = ReadFileAsBinaryStream(filePath, maxChunk)) {
+                byte[] data = ms.ToArray();
+                foreach (byte[] d in data.Split(maxChunk)) {
+                    res.Add(d);
+                }
+            }
+            return res;
+        }
+
+        public MemoryStream ReadFileAsBinaryStream(string filePath, int maxChunk = 1024) {
             MemoryStream dest = new MemoryStream();
             using (Stream source = File.OpenRead(filePath)) {
                 byte[] buffer = new byte[maxChunk];

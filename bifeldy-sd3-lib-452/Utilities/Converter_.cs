@@ -12,14 +12,9 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Drawing;
-using System.Linq;
 
 using Newtonsoft.Json;
-
-using bifeldy_sd3_lib_452.Extensions;
 
 namespace bifeldy_sd3_lib_452.Utilities {
 
@@ -28,10 +23,6 @@ namespace bifeldy_sd3_lib_452.Utilities {
         Image ByteToImage(byte[] byteArray);
         T JsonToObject<T>(string j2o);
         string ObjectToJson(object body);
-        string ByteToString(byte[] bytes, bool removeHypens = true);
-        byte[] StringToByte(string hex, string separator = null);
-        List<T> DataTableToList<T>(DataTable dt);
-        DataTable ListToDataTable<T>(List<T> listData, string tableName = null, string arrayListSingleValueColumnName = null);
         T GetDefaultValueT<T>();
         string FormatByteSizeHumanReadable(long bytes);
     }
@@ -50,32 +41,12 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return (Bitmap) new ImageConverter().ConvertFrom(byteArray);
         }
 
-        public string TimeSpanToEta(TimeSpan ts) {
-            return ts.ToEta();
-        }
-
         public T JsonToObject<T>(string j2o) {
             return JsonConvert.DeserializeObject<T>(j2o);
         }
 
         public string ObjectToJson(object o2j) {
             return JsonConvert.SerializeObject(o2j);
-        }
-
-        public string ByteToString(byte[] bytes, bool removeHypens = true) {
-            return bytes.ToString(removeHypens);
-        }
-
-        public byte[] StringToByte(string hex, string separator = null) {
-            return hex.ToByte(separator);
-        }
-
-        public List<T> DataTableToList<T>(DataTable dt) {
-            return dt.ToList<T>();
-        }
-
-        public DataTable ListToDataTable<T>(List<T> listData, string tableName = null, string arrayListSingleValueColumnName = null) {
-            return listData.ToDataTable(tableName, arrayListSingleValueColumnName);
         }
 
         public T GetDefaultValueT<T>() {
