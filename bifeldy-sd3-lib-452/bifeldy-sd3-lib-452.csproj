@@ -209,6 +209,7 @@
     <Compile Include="Libraries\DefaultIcons.cs" />
     <Compile Include="Models\DbExecProcResult_.cs" />
     <Compile Include="Models\DbQueryParamBind_.cs" />
+    <Compile Include="Models\DC_KAFKA_CONSUMER_T.cs" />
     <Compile Include="Models\DC_TABEL_V.cs" />
     <Compile Include="Models\FtpResultInfoSendGet_.cs" />
     <Compile Include="Models\GoogleCloudStorageModel_.cs" />

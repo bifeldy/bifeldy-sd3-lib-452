@@ -20,7 +20,7 @@ namespace bifeldy_sd3_lib_452.Models {
     }
 
     public sealed class KafkaDeliveryResult<TKey, TValue> : DeliveryResult<TKey, TValue> {
-        //
+        public new TopicPartition TopicPartition { get; set; }
     }
 
 }

@@ -50,6 +50,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<DateTime> OraPg_GetLastMonth(int lastMonth);
         Task<DateTime> OraPg_GetCurrentTimestamp();
         Task<DateTime> OraPg_GetCurrentDate();
+        Task<bool> SaveKafkaToTable(string topic, decimal offset, decimal partition, KafkaMessage<string, string> msg, string tabelName = "DC_KAFKALOG_T");
         Task<bool> OraPg_AlterTable_AddColumnIfNotExist(string tableName, string columnName, string columnType);
         Task<bool> OraPg_TruncateTable(string TableName);
         Task<bool> OraPg_BulkInsertInto(string tableName, DataTable dataTable);
@@ -449,6 +450,20 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return await OraPg.ExecScalarAsync<DateTime>($@"
                 SELECT {(_app.IsUsingPostgres ? "CURRENT_DATE" : "TRUNC(SYSDATE) FROM DUAL")}
             ");
+        }
+
+        public async Task<bool> SaveKafkaToTable(string topic, decimal offset, decimal partition, KafkaMessage<string, string> msg, string tabelName = "DC_KAFKALOG_T") {
+            return await OraPg.ExecQueryAsync($@"
+                INSERT INTO {tabelName} (TPC, OFFS, PARTT, KEY, VAL, TMSTAMP)
+                VALUES (:tpc, :offs, :partt, :key, :value, :tmstmp)
+            ", new List<CDbQueryParamBind> {
+                new CDbQueryParamBind { NAME = "tpc", VALUE = topic },
+                new CDbQueryParamBind { NAME = "offs", VALUE = offset },
+                new CDbQueryParamBind { NAME = "partt", VALUE = partition },
+                new CDbQueryParamBind { NAME = "key", VALUE = msg.Key },
+                new CDbQueryParamBind { NAME = "value", VALUE = msg.Value },
+                new CDbQueryParamBind { NAME = "tmstmp", VALUE = msg.Timestamp.UtcDateTime }
+            });
         }
 
         /* ** */
