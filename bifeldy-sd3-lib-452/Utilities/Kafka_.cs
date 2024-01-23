@@ -153,7 +153,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     KafkaMessage<string, T> message = new KafkaMessage<string, T> {
                         Headers = result.Message.Headers,
                         Key = result.Message.Key,
-                        Value = typeof(T) == typeof(string) ? (dynamic)result.Message.Value : _converter.JsonToObject<T>(result.Message.Value),
+                        Value = typeof(T) == typeof(string) ? (dynamic) result.Message.Value : _converter.JsonToObject<T>(result.Message.Value),
                         Timestamp = result.Message.Timestamp
                     };
                     results.Add(message);
