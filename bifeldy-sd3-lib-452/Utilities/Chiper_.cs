@@ -19,16 +19,22 @@ using System.Text;
 using System.Security.Cryptography;
 using System.Runtime.InteropServices;
 
+using Ionic.Crc;
+
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IChiper {
-        string Encrypt(string plainText, string passPhrase = null);
-        string Decrypt(string cipherText, string passPhrase = null);
-        string CalculateMD5(string filename);
+        string EncryptText(string plainText, string passPhrase = null);
+        string DecryptText(string cipherText, string passPhrase = null);
+        string CalculateMD5(string filePath);
+        string CalculateCRC32(string filePath);
+        string CalculateSHA1(string filePath);
         string GetMimeFromFile(string filename);
     }
 
     public sealed class CChiper : IChiper {
+
+        private readonly IStream _stream;
 
         private string AppName { get; }
 
@@ -39,7 +45,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
         // This constant determines the number of iterations for the password bytes generation function.
         private const int DerivationIterations = 1000;
 
-        public CChiper() {
+        public CChiper(IStream stream) {
+            _stream = stream;
+
             string appName = Process.GetCurrentProcess().MainModule.ModuleName.ToUpper();
             AppName = appName.Substring(0, appName.LastIndexOf(".EXE"));
         }
@@ -53,7 +61,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return randomBytes;
         }
 
-        public string Encrypt(string plainText, string passPhrase = null) {
+        public string EncryptText(string plainText, string passPhrase = null) {
             if (string.IsNullOrEmpty(passPhrase)) {
                 passPhrase = AppName;
             }
@@ -64,7 +72,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
             using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, DerivationIterations)) {
                 byte[] keyBytes = password.GetBytes(Keysize / 8);
-                using (RijndaelManaged symmetricKey = new RijndaelManaged()) {
+                using (Aes symmetricKey = Aes.Create("AesManaged")) {
                     symmetricKey.BlockSize = 256;
                     symmetricKey.Mode = CipherMode.CBC;
                     symmetricKey.Padding = PaddingMode.PKCS7;
@@ -87,7 +95,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
-        public string Decrypt(string cipherText, string passPhrase = null) {
+        public string DecryptText(string cipherText, string passPhrase = null) {
             if (string.IsNullOrEmpty(passPhrase)) {
                 passPhrase = AppName;
             }
@@ -119,12 +127,21 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
-        public string CalculateMD5(string filename) {
+        public string CalculateMD5(string filePath) {
             using (MD5 md5 = MD5.Create()) {
-                using (FileStream stream = File.OpenRead(filename)) {
-                    byte[] hash = md5.ComputeHash(stream);
-                    return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
-                }
+                byte[] hash = md5.ComputeHash(_stream.ReadFileAsBinaryByte(filePath));
+                return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+            }
+        }
+
+        public string CalculateCRC32(string filePath) {
+            return new CRC32().GetCrc32(_stream.ReadFileAsBinaryByte(filePath)).ToString("x");
+        }
+
+        public string CalculateSHA1(string filePath) {
+            using (SHA1 sha1 = SHA1.Create()) {
+                var hash = sha1.ComputeHash(_stream.ReadFileAsBinaryByte(filePath));
+                return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
             }
         }
 

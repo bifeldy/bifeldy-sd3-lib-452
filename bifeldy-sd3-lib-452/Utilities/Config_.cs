@@ -65,7 +65,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             try {
                 dynamic value = AppConfig[keyName];
                 if (value.GetType() == typeof(string) && encrypted) {
-                    value = _chiper.Decrypt((string) value);
+                    value = _chiper.DecryptText((string) value);
                 }
                 return (T) Convert.ChangeType(value, typeof(T));
             }
@@ -76,7 +76,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public void Set(string keyName, dynamic value, bool encrypted = false) {
-            AppConfig[keyName] = (value.GetType() == typeof(string) && encrypted) ? _chiper.Encrypt(value) : value;
+            AppConfig[keyName] = (value.GetType() == typeof(string) && encrypted) ? _chiper.EncryptText(value) : value;
             Save();
         }
 
