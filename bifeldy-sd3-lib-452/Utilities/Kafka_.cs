@@ -27,8 +27,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IKafka {
         Task CreateTopicIfNotExist(string hostPort, string topicName, short replication = 1, int partition = 1);
-        Task<KafkaDeliveryResult<string, string>> ProduceSingleMessage(string hostPort, string topic, KafkaMessage<string, dynamic> data);
-        KafkaMessage<string, T> ConsumeSingleMessage<T>(string hostPort, string groupId, string topicName, int partition = 0, long offset = -1);
+        Task<KafkaDeliveryResult<string, string>> ProduceSingleMessage(string hostPort, string topicName, KafkaMessage<string, dynamic> data);
+        Task<KafkaMessage<string, T>> ConsumeSingleMessage<T>(string hostPort, string groupId, string topicName, int partition = 0, long offset = -1);
         void CreateKafkaProducerListener(string hostPort, string topicName, bool suffixKodeDc = false, CancellationToken stoppingToken = default, string pubSubName = null);
         void DisposeAndRemoveKafkaProducerListener(string hostPort, string topicName, bool suffixKodeDc = false, string pubSubName = null);
         void CreateKafkaConsumerListener<T>(string hostPort, string topicName, string groupId, bool suffixKodeDc = false, CancellationToken stoppingToken = default, Action<KafkaMessage<string, T>> execLambda = null, string pubSubName = null);
@@ -85,13 +85,14 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return GenerateProducerBuilder<T1, T2>(GenerateKafkaProducerConfig(hostPort));
         }
 
-        public async Task<KafkaDeliveryResult<string, string>> ProduceSingleMessage(string hostPort, string topic, KafkaMessage<string, dynamic> data) {
+        public async Task<KafkaDeliveryResult<string, string>> ProduceSingleMessage(string hostPort, string topicName, KafkaMessage<string, dynamic> data) {
+            await CreateTopicIfNotExist(hostPort, topicName);
             using (IProducer<string, string> producer = CreateKafkaProducerInstance<string, string>(hostPort)) {
                 Message<string, string> msg = new Message<string, string> {
                     Key = data.Key,
                     Value = typeof(string) == data.Value.GetType() ? data.Value : _converter.ObjectToJson(data.Value)
                 };
-                DeliveryResult<string, string> result = await producer.ProduceAsync(topic, msg);
+                DeliveryResult<string, string> result = await producer.ProduceAsync(topicName, msg);
                 return new KafkaDeliveryResult<string, string> {
                     Headers = result.Headers,
                     Key = result.Key,
@@ -132,7 +133,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return new TopicPartitionOffset(topicPartition, new Offset(offset));
         }
 
-        public KafkaMessage<string, T> ConsumeSingleMessage<T>(string hostPort, string groupId, string topicName, int partition = 0, long offset = -1) {
+        public async Task<KafkaMessage<string, T>> ConsumeSingleMessage<T>(string hostPort, string groupId, string topicName, int partition = 0, long offset = -1) {
+            await CreateTopicIfNotExist(hostPort, topicName);
             using (IConsumer<string, string> consumer = CreateKafkaConsumerInstance<string, string>(hostPort, groupId)) {
                 TopicPartition topicPartition = CreateKafkaConsumerTopicPartition(topicName, partition);
                 if (offset < 0) {
@@ -170,6 +172,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public async void CreateKafkaProducerListener(string hostPort, string topicName, bool suffixKodeDc = false, CancellationToken stoppingToken = default, string pubSubName = null) {
             topicName = await GetTopicNameProducerListener(topicName, suffixKodeDc);
+            await CreateTopicIfNotExist(hostPort, topicName);
             string key = GetKeyProducerListener(hostPort, topicName, pubSubName);
             IProducer<string, string> producer = CreateKafkaProducerInstance<string, string>(hostPort);
             _pubSub.GetGlobalAppBehaviorSubject<KafkaMessage<string, dynamic>>(key).Subscribe(async data => {
@@ -207,6 +210,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public async void CreateKafkaConsumerListener<T>(string hostPort, string topicName, string groupId, bool suffixKodeDc = false, CancellationToken stoppingToken = default, Action<KafkaMessage<string, T>> execLambda = null, string pubSubName = null) {
             const ulong COMMIT_AFTER_N_MESSAGES = 10;
             (topicName, groupId) = await GetTopicNameConsumerListener(topicName, groupId, suffixKodeDc);
+            await CreateTopicIfNotExist(hostPort, topicName);
             string key = !string.IsNullOrEmpty(pubSubName) ? pubSubName : $"KAFKA_CONSUMER_{hostPort.ToUpper()}#{topicName.ToUpper()}";
             IConsumer<string, string> consumer = CreateKafkaConsumerInstance<string, string>(hostPort, groupId);
             TopicPartition topicPartition = CreateKafkaConsumerTopicPartition(topicName, -1);
