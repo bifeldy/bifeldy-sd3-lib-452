@@ -95,6 +95,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                         Value = typeof(string) == d.Value.GetType() ? d.Value : _converter.ObjectToJson(d.Value)
                     };
                     DeliveryResult<string, string> result = await producer.ProduceAsync(topicName, msg);
+                    _logger.WriteInfo($"{GetType().Name}Produce{result.Status}", msg.Key);
                     results.Add(new KafkaDeliveryResult<string, string> {
                         Headers = result.Headers,
                         Key = result.Key,
@@ -150,6 +151,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 List<KafkaMessage<string, T>> results = new List<KafkaMessage<string, T>>();
                 for (ulong i = 0; i < nMessagesBlock; i++) {
                     ConsumeResult<string, string> result = consumer.Consume(timeout);
+                    _logger.WriteInfo($"{GetType().Name}Consume", result.Message.Key);
                     KafkaMessage<string, T> message = new KafkaMessage<string, T> {
                         Headers = result.Message.Headers,
                         Key = result.Message.Key,
