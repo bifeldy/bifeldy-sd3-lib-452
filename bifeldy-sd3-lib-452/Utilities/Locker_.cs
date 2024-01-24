@@ -20,8 +20,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
     public interface ILocker {
         Semaphore MutexGlobalSys { get; }
         SemaphoreSlim MutexGlobalApp { get; }
-        Semaphore SemaphoreGlobalSys(string name, int initialCount = 0, int maximumCount = 0);
-        SemaphoreSlim SemaphoreGlobalApp(string name, int initialCount = 0, int maximumCount = 0);
+        Semaphore SemaphoreGlobalSys(string name, int initialCount = 1, int maximumCount = 1);
+        SemaphoreSlim SemaphoreGlobalApp(string name, int initialCount = 1, int maximumCount = 1);
     }
 
     public sealed class CLocker : ILocker {
@@ -45,7 +45,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public SemaphoreSlim MutexGlobalApp => mutex_global_app;
 
-        public Semaphore SemaphoreGlobalSys(string name, int initialCount = 0, int maximumCount = 0) {
+        public Semaphore SemaphoreGlobalSys(string name, int initialCount = 1, int maximumCount = 1) {
             if (!semaphore_global_sys.ContainsKey(name)) {
                 SemaphoreSecurity semaphoreSecurity = new SemaphoreSecurity(name, AccessControlSections.All);
                 Semaphore semaphore = new Semaphore(initialCount, maximumCount, name, out bool createdNew, semaphoreSecurity);
@@ -57,7 +57,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return semaphore_global_sys[name];
         }
 
-        public SemaphoreSlim SemaphoreGlobalApp(string name, int initialCount = 0, int maximumCount = 0) {
+        public SemaphoreSlim SemaphoreGlobalApp(string name, int initialCount = 1, int maximumCount = 1) {
             if (!semaphore_global_app.ContainsKey(name)) {
                 semaphore_global_app.Add(name, new SemaphoreSlim(initialCount, maximumCount));
             }
