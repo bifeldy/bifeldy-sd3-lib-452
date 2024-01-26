@@ -15,10 +15,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Google.Apis.Download;
 using Google.Apis.Services;
 using Google.Apis.Storage.v1.Data;
-using Google.Apis.Upload;
 
 using static Google.Apis.Storage.v1.ObjectsResource;
 
