@@ -18,7 +18,6 @@ using System.Threading.Tasks;
 using System.Web;
 
 using Google.Apis.Auth.OAuth2;
-using Google.Apis.Download;
 using Google.Apis.Services;
 using Google.Apis.Storage.v1;
 using Google.Apis.Upload;
@@ -26,7 +25,6 @@ using Google.Apis.Upload;
 using Google.Cloud.Storage.V1;
 
 using bifeldy_sd3_lib_452.Models;
-using static Google.Apis.Storage.v1.ObjectsResource;
 
 namespace bifeldy_sd3_lib_452.Utilities {
 
