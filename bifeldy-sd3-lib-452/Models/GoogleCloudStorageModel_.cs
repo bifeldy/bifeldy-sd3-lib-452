@@ -315,7 +315,13 @@ namespace bifeldy_sd3_lib_452.Models {
 
     public sealed class GcsMediaUpload : InsertMediaUpload {
 
-        public GcsMediaUpload(IClientService clientService, GcsObject body, string bucket, Stream stream, string contentType) : base(clientService, body, bucket, stream, contentType) {
+        public GcsMediaUpload(
+            IClientService clientService,
+            GcsObject body,
+            string bucket,
+            Stream stream,
+            string contentType
+        ) : base(clientService, body, bucket, stream, contentType) {
             //
         }
 
