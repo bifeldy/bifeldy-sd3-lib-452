@@ -14,6 +14,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -56,14 +57,17 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<bool> OraPg_BulkInsertInto(string tableName, DataTable dataTable);
         Task<T> OraPg_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<bool> OraPg_ExecQuery(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
+        Task<DbDataReader> OraPg_ExecReaderAsync(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<DataTable> OraPg_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<CDbExecProcResult> OraPg_CALL_(string procName, List<CDbQueryParamBind> bindParam = null);
         Task<T> MsSql_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<bool> MsSql_ExecQuery(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
+        Task<DbDataReader> MsSql_ExecReaderAsync(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<DataTable> MsSql_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<CDbExecProcResult> MsSql_CALL_(string procedureName, List<CDbQueryParamBind> bindParam = null);
         Task<T> SQLite_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<bool> SQLite_ExecQuery(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
+        Task<DbDataReader> Sqlite_ExecReaderAsync(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<DataTable> SQLite_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
     }
 
@@ -193,24 +197,28 @@ namespace bifeldy_sd3_lib_452.Handlers {
             _oracle.CloseConnection(force);
             _postgres.CloseConnection(force);
             _mssql.CloseConnection(force);
+            _sqlite.CloseConnection(force);
         }
 
         public async Task MarkBeforeCommitRollback() {
             await _oracle.MarkBeforeCommitRollback();
             await _postgres.MarkBeforeCommitRollback();
             await _mssql.MarkBeforeCommitRollback();
+            await _sqlite.MarkBeforeCommitRollback();
         }
 
         public void MarkSuccessCommitAndClose() {
             _oracle.MarkSuccessCommitAndClose();
             _postgres.MarkSuccessCommitAndClose();
             _mssql.MarkSuccessCommitAndClose();
+            _sqlite.MarkSuccessCommitAndClose();
         }
 
         public void MarkFailedRollbackAndClose() {
             _oracle.MarkFailedRollbackAndClose();
             _postgres.MarkFailedRollbackAndClose();
             _mssql.MarkFailedRollbackAndClose();
+            _sqlite.MarkFailedRollbackAndClose();
         }
 
         /* Perlakuan Khusus */
@@ -502,6 +510,10 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return await OraPg.ExecQueryAsync(sqlQuery, bindParam);
         }
 
+        public async Task<DbDataReader> OraPg_ExecReaderAsync(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
+            return await OraPg.ExecReaderAsync(sqlQuery, bindParam);
+        }
+
         public async Task<DataTable> OraPg_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
             return await OraPg.GetDataTableAsync(sqlQuery, bindParam);
         }
@@ -520,6 +532,10 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return await MsSql.ExecQueryAsync(sqlQuery, bindParam);
         }
 
+        public async Task<DbDataReader> MsSql_ExecReaderAsync(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
+            return await MsSql.ExecReaderAsync(sqlQuery, bindParam);
+        }
+
         public async Task<DataTable> MsSql_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
             return await MsSql.GetDataTableAsync(sqlQuery, bindParam);
         }
@@ -536,6 +552,10 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         public async Task<bool> SQLite_ExecQuery(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
             return await Sqlite.ExecQueryAsync(sqlQuery, bindParam);
+        }
+
+        public async Task<DbDataReader> Sqlite_ExecReaderAsync(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
+            return await Sqlite.ExecReaderAsync(sqlQuery, bindParam);
         }
 
         public async Task<DataTable> SQLite_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
