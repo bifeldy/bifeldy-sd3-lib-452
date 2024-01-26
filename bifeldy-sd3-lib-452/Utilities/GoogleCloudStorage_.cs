@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using System.Web;
 
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Download;
 using Google.Apis.Services;
 using Google.Apis.Storage.v1;
 using Google.Apis.Upload;
@@ -36,7 +37,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         GcsMediaUpload GenerateUploadMedia(FileInfo fileInfo, string bucketName, Stream stream);
         Task<Uri> CreateUploadUri(GcsMediaUpload mediaUpload);
         Task<CGcsUploadProgress> UploadFile(GcsMediaUpload mediaUpload, Uri uploadSession = null, Action<CGcsUploadProgress> uploadProgress = null);
-        Task DownloadFile(GcsObject fileObj, string fileLocalPath, Action<CGcsDownloadProgress> downloadProgress = null);
+        Task<CGcsDownloadProgress> DownloadFile(GcsObject fileObj, string fileLocalPath, Action<CGcsDownloadProgress> downloadProgress = null);
         Task<string> CreateDownloadUrlSigned(GcsObject fileObj, TimeSpan expiredDurationFromNow);
         Task<string> CreateDownloadUrlSigned(GcsObject fileObj, DateTime expiryDateTime);
     }
@@ -93,7 +94,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     ApplicationName = projectId
                 }
             );
-            _logger.WriteInfo($"{GetType().Name}Client", storageService.Name);
+            _logger.WriteInfo($"{GetType().Name}Client", projectId);
         }
 
         public async Task<List<GcsBucket>> ListAllBuckets() {
@@ -277,7 +278,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             };
         }
 
-        public async Task DownloadFile(GcsObject fileObj, string fileLocalPath, Action<CGcsDownloadProgress> downloadProgress = null) {
+        public async Task<CGcsDownloadProgress> DownloadFile(GcsObject fileObj, string fileLocalPath, Action<CGcsDownloadProgress> downloadProgress = null) {
             ObjectsResource.GetRequest request = storageService.Objects.Get(fileObj.Bucket, fileObj.Name);
 
             request.MediaDownloader.ChunkSize = ResumableUpload.MinimumChunkSize;
@@ -297,8 +298,15 @@ namespace bifeldy_sd3_lib_452.Utilities {
             _logger.WriteInfo($"{GetType().Name}DownloadStart", $"{fileObj.Bucket}/{fileObj.Name} <<<=== {fileLocalPath} :: {fileObj.Size} Bytes");
 
             using (FileStream fs = new FileStream(fileLocalPath, FileMode.Create, FileAccess.Write)) {
-                await request.DownloadAsync(fs);
+                IDownloadProgress result = await request.DownloadAsync(fs);
                 _logger.WriteInfo($"{GetType().Name}DownloadCompleted", $"{fileObj.Bucket}/{fileObj.Name} <<<=== {fileLocalPath} :: 100 %");
+
+                Enum.TryParse(result.Status.ToString(), out EGcsDownloadStatus downloadStatus);
+                return new CGcsDownloadProgress {
+                    BytesDownloaded = result.BytesDownloaded,
+                    Exception = result.Exception,
+                    Status = downloadStatus
+                };
             }
         }
 
