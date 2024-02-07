@@ -12,16 +12,19 @@
  */
 
 using System;
-using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
-using Tamir.SharpSsh;
+using Renci.SshNet;
+using Renci.SshNet.Sftp;
 
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface ISftp {
-        bool GetFile(string hostname, int port, string username, string password, string remotePath, string localFile);
-        bool PutFile(string hostname, int port, string username, string password, string localFile, string remotePath);
-        ArrayList GetDirectoryList(string hostname, int port, string username, string password, string remotePath);
+        bool GetFile(string hostname, int port, string username, string password, string remotePath, string localFile, Action<double> progress = null);
+        bool PutFile(string hostname, int port, string username, string password, string localFile, string remotePath, Action<double> progress = null);
+        string[] GetDirectoryList(string hostname, int port, string username, string password, string remotePath);
     }
 
     public sealed class CSftp : ISftp {
@@ -32,12 +35,21 @@ namespace bifeldy_sd3_lib_452.Utilities {
             _logger = logger;
         }
 
-        public bool GetFile(string hostname, int port, string username, string password, string remotePath, string localFile) {
+        public bool GetFile(string hostname, int port, string username, string password, string remotePath, string localFile, Action<double> progress = null) {
             try {
-                Sftp Transfer = new Sftp(hostname, username, password);
-                Transfer.Connect(port);
-                Transfer.Get(remotePath, localFile);
-                Transfer.Close();
+                using (SftpClient sftp = new SftpClient(hostname, port, username, password)) {
+                    sftp.Connect();
+                    using (FileStream fs = new FileStream(localFile, FileMode.OpenOrCreate)) {
+                        sftp.DownloadFile(remotePath, fs, downloaded => {
+                            double percentage = (double)downloaded / fs.Length * 100;
+                            if (progress != null) {
+                                progress(percentage);
+                            }
+                            _logger.WriteInfo($"{GetType().Name}Get", $"{fs.Name} {percentage} %");
+                        });
+                    }
+                    sftp.Disconnect();
+                }
                 return true;
             }
             catch (Exception ex) {
@@ -46,34 +58,42 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
-        public bool PutFile(string hostname, int port, string username, string password, string localFile, string remotePath) {
+        public bool PutFile(string hostname, int port, string username, string password, string localFile, string remotePath, Action<double> progress = null) {
             try {
-                Sftp Transfer = new Sftp(hostname, username, password);
-                Transfer.Connect(port);
-                Transfer.Put(localFile, remotePath);
-                Transfer.Close();
-                _logger.WriteInfo($"{GetType().Name}SentOk", remotePath);
+                using (SftpClient sftp = new SftpClient(hostname, port, username, password)) {
+                    sftp.Connect();
+                    using (FileStream fs = new FileStream(localFile, FileMode.Open)) {
+                        sftp.UploadFile(fs, remotePath, uploaded => {
+                            double percentage = (double)uploaded / fs.Length * 100;
+                            if (progress != null) {
+                                progress(percentage);
+                            }
+                            _logger.WriteInfo($"{GetType().Name}Put", $"{fs.Name} {percentage} %");
+                        });
+                    }
+                    sftp.Disconnect();
+                }
                 return true;
             }
             catch (Exception ex) {
-                _logger.WriteInfo($"{GetType().Name}SentFail", remotePath);
                 _logger.WriteError(ex, 3);
                 return false;
             }
         }
 
-        public ArrayList GetDirectoryList(string hostname, int port, string username, string password, string remotePath) {
-            ArrayList response = new ArrayList();
+        public string[] GetDirectoryList(string hostname, int port, string username, string password, string remotePath) {
+            List<SftpFile> response = new List<SftpFile>();
             try {
-                Sftp Transfer = new Sftp(hostname, username, password);
-                Transfer.Connect(port);
-                response = Transfer.GetFileList(remotePath);
-                Transfer.Close();
+                using (SftpClient sftp = new SftpClient(hostname, port, username, password)) {
+                    sftp.Connect();
+                    response = (List<SftpFile>)sftp.ListDirectory(remotePath);
+                    sftp.Disconnect();
+                }
             }
             catch (Exception ex) {
                 _logger.WriteError(ex, 3);
             }
-            return response;
+            return response.Select(r => r.FullName).ToArray();
         }
 
     }
