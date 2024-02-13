@@ -98,7 +98,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 // Mungkin Akan Membuat Force-Close Program
                 // Comment Jika Mau Beneran Menyerah Dan Gak Ngapa"in
                 // Agar Tidak Force-Close Dan Tetap Jalan
-                throw ex;
+                // throw ex;
             }
         }
 
