@@ -36,6 +36,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public IProgress<string> LogReporter = null;
 
+        private string sSw = null;
+        private StreamWriter swInfo = null;
+        private StreamWriter swError = null;
+
         public CLogger(IApplication app) {
             _app = app;
 
@@ -48,6 +52,24 @@ namespace bifeldy_sd3_lib_452.Utilities {
             if (!Directory.Exists(LogErrorFolderPath)) {
                 Directory.CreateDirectory(LogErrorFolderPath);
             }
+
+            CheckStreamWritter();
+        }
+
+        private void CheckStreamWritter() {
+            if (sSw != $"{DateTime.Now:yyyy-MM-dd}") {
+                sSw = $"{DateTime.Now:yyyy-MM-dd}";
+                if (swInfo != null) {
+                    swInfo.Close();
+                    swInfo.Dispose();
+                }
+                swInfo = new StreamWriter($"{LogInfoFolderPath}/{sSw}.log", true);
+                if (swError != null) {
+                    swError.Close();
+                    swError.Dispose();
+                }
+                swError = new StreamWriter($"{LogErrorFolderPath}/{sSw}.log", true);
+            }
         }
 
         public void SetLogReporter(IProgress<string> logReporter) {
@@ -56,6 +78,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public void WriteInfo(string subject, string body, bool newLine = false, bool force = false) {
             try {
+                CheckStreamWritter();
                 string content = $"[{DateTime.Now:HH:mm:ss tt zzz}] {subject} :: {body} {Environment.NewLine}";
                 if (newLine) {
                     content += Environment.NewLine;
@@ -64,10 +87,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     LogReporter.Report(content);
                 }
                 if (_app.DebugMode || force) {
-                    StreamWriter sw = new StreamWriter($"{LogInfoFolderPath}/{DateTime.Now:yyyy-MM-dd}.log", true);
-                    sw.WriteLine(content);
-                    sw.Flush();
-                    sw.Close();
+                    swInfo.WriteLine(content);
+                    swInfo.Flush();
                 }
             }
             catch (Exception ex) {
@@ -77,9 +98,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public void WriteError(string errorMessage, int skipFrame = 1) {
             try {
+                CheckStreamWritter();
                 StackFrame fromsub = new StackFrame(skipFrame, false);
-                string content = string.Empty;
-                content += $"##" + Environment.NewLine;
+                string content = $"##" + Environment.NewLine;
                 content += $"#  ErrDate : {DateTime.Now:dd-MM-yyyy HH:mm:ss}" + Environment.NewLine;
                 content += $"#  ErrFunc : {fromsub.GetMethod().Name}" + Environment.NewLine;
                 content += $"#  ErrInfo : {errorMessage}" + Environment.NewLine;
@@ -87,10 +108,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 if (LogReporter != null) {
                     LogReporter.Report(content);
                 }
-                StreamWriter sw = new StreamWriter($"{LogErrorFolderPath}/{DateTime.Now:yyyy-MM-dd}.log", true);
-                sw.WriteLine(content);
-                sw.Flush();
-                sw.Close();
+                swError.WriteLine(content);
+                swError.Flush();
             }
             catch (Exception ex) {
                 // Nyerah ~~
@@ -98,7 +117,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 // Mungkin Akan Membuat Force-Close Program
                 // Comment Jika Mau Beneran Menyerah Dan Gak Ngapa"in
                 // Agar Tidak Force-Close Dan Tetap Jalan
-                // throw ex;
+                throw ex;
             }
         }
 
