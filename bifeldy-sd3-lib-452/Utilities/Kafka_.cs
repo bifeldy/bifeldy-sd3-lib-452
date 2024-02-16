@@ -91,7 +91,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 List<KafkaDeliveryResult<string, string>> results = new List<KafkaDeliveryResult<string, string>>();
                 foreach(KafkaMessage<string, dynamic> d in data) {
                     Message<string, string> msg = new Message<string, string> {
+                        Headers = d.Headers,
                         Key = d.Key,
+                        Timestamp = d.Timestamp,
                         Value = typeof(string) == d.Value.GetType() ? d.Value : _converter.ObjectToJson(d.Value)
                     };
                     DeliveryResult<string, string> result = await producer.ProduceAsync(topicName, msg);
@@ -155,8 +157,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     KafkaMessage<string, T> message = new KafkaMessage<string, T> {
                         Headers = result.Message.Headers,
                         Key = result.Message.Key,
-                        Value = typeof(T) == typeof(string) ? (dynamic) result.Message.Value : _converter.JsonToObject<T>(result.Message.Value),
-                        Timestamp = result.Message.Timestamp
+                        Timestamp = result.Message.Timestamp,
+                        Value = typeof(T) == typeof(string) ? (dynamic) result.Message.Value : _converter.JsonToObject<T>(result.Message.Value)
                     };
                     results.Add(message);
                 }
@@ -188,7 +190,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
             _pubSub.GetGlobalAppBehaviorSubject<KafkaMessage<string, dynamic>>(key).Subscribe(async data => {
                 if (data != null) {
                     Message<string, string> msg = new Message<string, string> {
+                        Headers = data.Headers,
                         Key = data.Key,
+                        Timestamp = data.Timestamp,
                         Value = typeof(string) == data.Value.GetType() ? data.Value : _converter.ObjectToJson(data.Value)
                     };
                     await producer.ProduceAsync(topicName, msg, stoppingToken);
@@ -234,8 +238,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     KafkaMessage<string, string> msg = new KafkaMessage<string, string> {
                         Headers = result.Message.Headers,
                         Key = result.Message.Key,
-                        Value = result.Message.Value,
-                        Timestamp = result.Message.Timestamp
+                        Timestamp = result.Message.Timestamp,
+                        Value = result.Message.Value
                     };
                     await _db.SaveKafkaToTable(result.Topic, result.Offset.Value, result.Partition.Value, msg);
                 }
@@ -245,8 +249,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 KafkaMessage<string, T> message = new KafkaMessage<string, T> {
                     Headers = result.Message.Headers,
                     Key = result.Message.Key,
-                    Value = typeof(T) == typeof(string) ? (dynamic) result.Message.Value : _converter.JsonToObject<T>(result.Message.Value),
-                    Timestamp = result.Message.Timestamp
+                    Timestamp = result.Message.Timestamp,
+                    Value = typeof(T) == typeof(string) ? (dynamic) result.Message.Value : _converter.JsonToObject<T>(result.Message.Value)
                 };
                 if (execLambda != null) {
                     execLambda(message);
