@@ -11,12 +11,14 @@
 * 
 */
 
+using System.Collections.Generic;
+
 using Confluent.Kafka;
 
 namespace bifeldy_sd3_lib_452.Models {
 
     public sealed class KafkaMessage<TKey, TValue> /* : Message<TKey, TValue> */ {
-        public /* new */ Headers Headers {
+        public /* new Headers */ IDictionary<string, string> Headers {
             get; // base.Headers;
             set; // base.Headers = value;
         }

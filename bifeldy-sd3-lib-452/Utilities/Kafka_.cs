@@ -14,6 +14,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -71,6 +72,14 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
+        private Headers CreateHeaderFromDictionary(IDictionary<string, string> dict) {
+            Headers hdr = new Headers();
+            foreach (KeyValuePair<string, string> kvp in dict) {
+                hdr.Add(kvp.Key, Encoding.UTF8.GetBytes(kvp.Value));
+            }
+            return hdr;
+        }
+
         private ProducerConfig GenerateKafkaProducerConfig(string hostPort) {
             return new ProducerConfig {
                 BootstrapServers = hostPort
@@ -91,13 +100,13 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 List<KafkaDeliveryResult<string, string>> results = new List<KafkaDeliveryResult<string, string>>();
                 foreach(KafkaMessage<string, dynamic> d in data) {
                     Message<string, string> msg = new Message<string, string> {
-                        Headers = d.Headers,
+                        Headers = CreateHeaderFromDictionary(d.Headers),
                         Key = d.Key,
                         Timestamp = d.Timestamp,
                         Value = typeof(string) == d.Value.GetType() ? d.Value : _converter.ObjectToJson(d.Value)
                     };
                     DeliveryResult<string, string> result = await producer.ProduceAsync(topicName, msg);
-                    _logger.WriteInfo($"{GetType().Name}Produce{result.Status}", msg.Key);
+                    _logger.WriteInfo($"{GetType().Name}Produce{result.Status}", $"{msg.Key} :: {msg.Value}");
                     results.Add(new KafkaDeliveryResult<string, string> {
                         Headers = result.Headers,
                         Key = result.Key,
@@ -153,9 +162,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 List<KafkaMessage<string, T>> results = new List<KafkaMessage<string, T>>();
                 for (ulong i = 0; i < nMessagesBlock; i++) {
                     ConsumeResult<string, string> result = consumer.Consume(timeout);
-                    _logger.WriteInfo($"{GetType().Name}Consume", result.Message.Key);
+                    _logger.WriteInfo($"{GetType().Name}Consume", $"{result.Message.Key} :: {result.Message.Value}");
                     KafkaMessage<string, T> message = new KafkaMessage<string, T> {
-                        Headers = result.Message.Headers,
+                        Headers = _converter.ClassToDictionary<string>(result.Message.Headers),
                         Key = result.Message.Key,
                         Timestamp = result.Message.Timestamp,
                         Value = typeof(T) == typeof(string) ? (dynamic) result.Message.Value : _converter.JsonToObject<T>(result.Message.Value)
@@ -190,7 +199,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             _pubSub.GetGlobalAppBehaviorSubject<KafkaMessage<string, dynamic>>(key).Subscribe(async data => {
                 if (data != null) {
                     Message<string, string> msg = new Message<string, string> {
-                        Headers = data.Headers,
+                        Headers = CreateHeaderFromDictionary(data.Headers),
                         Key = data.Key,
                         Timestamp = data.Timestamp,
                         Value = typeof(string) == data.Value.GetType() ? data.Value : _converter.ObjectToJson(data.Value)
@@ -234,9 +243,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
             ulong i = 0;
             while (!stoppingToken.IsCancellationRequested) {
                 ConsumeResult<string, string> result = consumer.Consume(stoppingToken);
+                IDictionary<string, string> resMsgHdr = _converter.ClassToDictionary<string>(result.Message.Headers);
                 try {
                     KafkaMessage<string, string> msg = new KafkaMessage<string, string> {
-                        Headers = result.Message.Headers,
+                        Headers = resMsgHdr,
                         Key = result.Message.Key,
                         Timestamp = result.Message.Timestamp,
                         Value = result.Message.Value
@@ -247,7 +257,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     _logger.WriteError(e);
                 }
                 KafkaMessage<string, T> message = new KafkaMessage<string, T> {
-                    Headers = result.Message.Headers,
+                    Headers = resMsgHdr,
                     Key = result.Message.Key,
                     Timestamp = result.Message.Timestamp,
                     Value = typeof(T) == typeof(string) ? (dynamic) result.Message.Value : _converter.JsonToObject<T>(result.Message.Value)
