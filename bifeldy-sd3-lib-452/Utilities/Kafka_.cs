@@ -75,7 +75,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private Headers CreateHeaderFromDictionary(IDictionary<string, string> dict) {
             Headers hdr = new Headers();
             foreach (KeyValuePair<string, string> kvp in dict) {
-                hdr.Add(kvp.Key, Encoding.UTF8.GetBytes(kvp.Value));
+                if (kvp.Value != null) {
+                    hdr.Add(kvp.Key, Encoding.UTF8.GetBytes(kvp.Value));
+                }
             }
             return hdr;
         }
@@ -99,8 +101,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
             using (IProducer<string, string> producer = CreateKafkaProducerInstance<string, string>(hostPort)) {
                 List<KafkaDeliveryResult<string, string>> results = new List<KafkaDeliveryResult<string, string>>();
                 foreach(KafkaMessage<string, dynamic> d in data) {
+                    var x = CreateHeaderFromDictionary(d.Headers);
                     Message<string, string> msg = new Message<string, string> {
-                        Headers = CreateHeaderFromDictionary(d.Headers),
+                        Headers = x,
                         Key = d.Key,
                         Timestamp = d.Timestamp,
                         Value = typeof(string) == d.Value.GetType() ? d.Value : _converter.ObjectToJson(d.Value)
