@@ -112,7 +112,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                             dynamic data = prop.GetValue(obj, null);
                             if (typeof(T) == typeof(string)) {
                                 if (data.GetType() == typeof(DateTime)) {
-                                    data = ((DateTime) data).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+                                    data = ((DateTime) data).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
                                 }
                                 if (typeof(T) == typeof(object)) {
                                     data = ObjectToJson(data);
