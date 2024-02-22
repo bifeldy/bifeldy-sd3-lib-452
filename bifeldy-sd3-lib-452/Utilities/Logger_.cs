@@ -104,7 +104,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 content += $"#  ErrDate : {DateTime.Now:dd-MM-yyyy HH:mm:ss}" + Environment.NewLine;
                 content += $"#  ErrFunc : {fromsub.GetMethod().Name}" + Environment.NewLine;
                 content += $"#  ErrInfo : {errorMessage}" + Environment.NewLine;
-                content += $"##";
+                content += $"##" + Environment.NewLine;
                 if (LogReporter != null) {
                     LogReporter.Report(content);
                 }
