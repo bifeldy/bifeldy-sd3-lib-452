@@ -37,7 +37,7 @@ namespace bifeldy_sd3_lib_452.Models {
     }
 
     public sealed class KafkaDeliveryResult<TKey, TValue> /* : DeliveryResult<TKey, TValue> */ {
-        public /* new */ Headers Headers {
+        public /* new Headers */ IDictionary<string, string> Headers {
             get; // base.Headers;
             set; // base.Headers = value;
         }
@@ -45,7 +45,7 @@ namespace bifeldy_sd3_lib_452.Models {
             get; // base.Key;
             set; // base.Key = value;
         }
-        public /* new */ Message<TKey, TValue> Message {
+        public /* new */ KafkaMessage<TKey, TValue> Message {
             get; // base.Message;
             set; // base.Message = value;
         }

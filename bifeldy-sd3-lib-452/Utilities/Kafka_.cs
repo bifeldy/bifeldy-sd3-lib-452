@@ -82,6 +82,14 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return hdr;
         }
 
+        private IDictionary<string, string> CreateDictionaryFromHeaders(Headers headers) {
+            return headers.Select(h => {
+                string key = h.Key;
+                string value = Encoding.UTF8.GetString(h.GetValueBytes());
+                return new { key, value };
+            }).ToDictionary(h => h.key, h => h.value);
+        }
+
         private ProducerConfig GenerateKafkaProducerConfig(string hostPort) {
             return new ProducerConfig {
                 BootstrapServers = hostPort
@@ -111,9 +119,14 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     DeliveryResult<string, string> result = await producer.ProduceAsync(topicName, msg);
                     _logger.WriteInfo($"{GetType().Name}Produce{result.Status}", $"{msg.Key} :: {msg.Value}");
                     results.Add(new KafkaDeliveryResult<string, string> {
-                        Headers = result.Headers,
+                        Headers = CreateDictionaryFromHeaders(result.Headers),
                         Key = result.Key,
-                        Message = result.Message,
+                        Message = new KafkaMessage<string, string> {
+                            Headers = CreateDictionaryFromHeaders(result.Message.Headers),
+                            Key = result.Message.Key,
+                            Timestamp = result.Message.Timestamp,
+                            Value = result.Message.Value
+                        },
                         Offset = result.Offset,
                         Partition = result.Partition,
                         Status = result.Status,
