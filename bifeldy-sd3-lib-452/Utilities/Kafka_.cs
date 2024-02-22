@@ -27,9 +27,9 @@ using bifeldy_sd3_lib_452.Models;
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IKafka {
-        Task CreateTopicIfNotExist(string hostPort, string topicName, short replication = 1, int partition = 1);
+        Task CreateTopicIfNotExist(string hostPort, string topicName, short replication = -1, int partition = -1);
         Task<List<KafkaDeliveryResult<string, string>>> ProduceSingleMultipleMessages(string hostPort, string topicName, List<KafkaMessage<string, dynamic>> data);
-        Task<List<KafkaMessage<string, T>>> ConsumeSingleMultipleMessages<T>(string hostPort, string groupId, string topicName, int partition = 0, long offset = -1, ulong nMessagesBlock = 1);
+        Task<List<KafkaMessage<string, T>>> ConsumeSingleMultipleMessages<T>(string hostPort, string groupId, string topicName, int partition = -1, long offset = -1, ulong nMessagesBlock = 1);
         void CreateKafkaProducerListener(string hostPort, string topicName, bool suffixKodeDc = false, CancellationToken stoppingToken = default, string pubSubName = null);
         void DisposeAndRemoveKafkaProducerListener(string hostPort, string topicName, bool suffixKodeDc = false, string pubSubName = null);
         void CreateKafkaConsumerListener<T>(string hostPort, string topicName, string groupId, bool suffixKodeDc = false, CancellationToken stoppingToken = default, Action<KafkaMessage<string, T>> execLambda = null, string pubSubName = null);
@@ -51,7 +51,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             _db = db;
         }
 
-        public async Task CreateTopicIfNotExist(string hostPort, string topicName, short replication = 1, int partition = 1) {
+        public async Task CreateTopicIfNotExist(string hostPort, string topicName, short replication = -1, int partition = -1) {
             try {
                 AdminClientConfig adminConfig = new AdminClientConfig {
                     BootstrapServers = hostPort
@@ -165,7 +165,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return new TopicPartitionOffset(topicPartition, new Offset(offset));
         }
 
-        public async Task<List<KafkaMessage<string, T>>> ConsumeSingleMultipleMessages<T>(string hostPort, string groupId, string topicName, int partition = 0, long offset = -1, ulong nMessagesBlock = 1) {
+        public async Task<List<KafkaMessage<string, T>>> ConsumeSingleMultipleMessages<T>(string hostPort, string groupId, string topicName, int partition = -1, long offset = -1, ulong nMessagesBlock = 1) {
             await CreateTopicIfNotExist(hostPort, topicName);
             using (IConsumer<string, string> consumer = CreateKafkaConsumerInstance<string, string>(hostPort, groupId)) {
                 TopicPartition topicPartition = CreateKafkaConsumerTopicPartition(topicName, partition);
