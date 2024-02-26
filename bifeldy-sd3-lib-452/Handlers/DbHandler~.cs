@@ -188,7 +188,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
             // Bypass Check DB Availablility ~
             string oracle = $"Oracle :: {_oracle.DbName}\r\n\r\n{_oracle.DbConnectionString}\r\n\r\n\r\n";
             string postgre = $"Postgres :: {_postgres.DbName}\r\n\r\n{_postgres.DbConnectionString}\r\n\r\n\r\n";
-            string mssql = $"Postgres :: {_mssql.DbName}\r\n\r\n{_mssql.DbConnectionString}\r\n\r\n\r\n";
+            string mssql = $"MsSql :: {_mssql.DbName}\r\n\r\n{_mssql.DbConnectionString}\r\n\r\n\r\n";
             string sqlite = $"SQLite :: {_sqlite.DbName?.Replace("\\", "/").Split('/').Last()}\r\n\r\n{_sqlite.DbConnectionString}";
             return oracle + postgre + mssql + sqlite;
         }
