@@ -28,11 +28,11 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IKafka {
         Task CreateTopicIfNotExist(string hostPort, string topicName, short replication = -1, int partition = -1);
-        Task<List<KafkaDeliveryResult<string, string>>> ProduceSingleMultipleMessages(string hostPort, string topicName, List<KafkaMessage<string, dynamic>> data);
-        Task<List<KafkaMessage<string, T>>> ConsumeSingleMultipleMessages<T>(string hostPort, string groupId, string topicName, int partition = -1, long offset = -1, ulong nMessagesBlock = 1);
-        void CreateKafkaProducerListener(string hostPort, string topicName, bool suffixKodeDc = false, CancellationToken stoppingToken = default, string pubSubName = null);
+        Task<List<KafkaDeliveryResult<string, string>>> ProduceSingleMultipleMessages(string hostPort, string topicName, List<KafkaMessage<string, dynamic>> data, short replication = -1, int partition = -1);
+        Task<List<KafkaMessage<string, T>>> ConsumeSingleMultipleMessages<T>(string hostPort, string groupId, string topicName, short replication = -1, int partition = -1, long offset = -1, ulong nMessagesBlock = 1);
+        void CreateKafkaProducerListener(string hostPort, string topicName, short replication = -1, int partition = -1, bool suffixKodeDc = false, CancellationToken stoppingToken = default, string pubSubName = null);
         void DisposeAndRemoveKafkaProducerListener(string hostPort, string topicName, bool suffixKodeDc = false, string pubSubName = null);
-        void CreateKafkaConsumerListener<T>(string hostPort, string topicName, string groupId, bool suffixKodeDc = false, CancellationToken stoppingToken = default, Action<KafkaMessage<string, T>> execLambda = null, string pubSubName = null);
+        void CreateKafkaConsumerListener<T>(string hostPort, string topicName, string groupId, short replication = -1, int partition = -1, bool suffixKodeDc = false, CancellationToken stoppingToken = default, Action<KafkaMessage<string, T>> execLambda = null, string pubSubName = null);
     }
 
     public sealed class CKafka : IKafka {
@@ -104,8 +104,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return GenerateProducerBuilder<T1, T2>(GenerateKafkaProducerConfig(hostPort));
         }
 
-        public async Task<List<KafkaDeliveryResult<string, string>>> ProduceSingleMultipleMessages(string hostPort, string topicName, List<KafkaMessage<string, dynamic>> data) {
-            await CreateTopicIfNotExist(hostPort, topicName);
+        public async Task<List<KafkaDeliveryResult<string, string>>> ProduceSingleMultipleMessages(string hostPort, string topicName, List<KafkaMessage<string, dynamic>> data, short replication = -1, int partition = -1) {
+            await CreateTopicIfNotExist(hostPort, topicName, replication, partition);
             using (IProducer<string, string> producer = CreateKafkaProducerInstance<string, string>(hostPort)) {
                 List<KafkaDeliveryResult<string, string>> results = new List<KafkaDeliveryResult<string, string>>();
                 foreach(KafkaMessage<string, dynamic> d in data) {
@@ -165,8 +165,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return new TopicPartitionOffset(topicPartition, new Offset(offset));
         }
 
-        public async Task<List<KafkaMessage<string, T>>> ConsumeSingleMultipleMessages<T>(string hostPort, string groupId, string topicName, int partition = -1, long offset = -1, ulong nMessagesBlock = 1) {
-            await CreateTopicIfNotExist(hostPort, topicName);
+        public async Task<List<KafkaMessage<string, T>>> ConsumeSingleMultipleMessages<T>(string hostPort, string groupId, string topicName, short replication = -1, int partition = -1, long offset = -1, ulong nMessagesBlock = 1) {
+            await CreateTopicIfNotExist(hostPort, topicName, replication, partition);
             using (IConsumer<string, string> consumer = CreateKafkaConsumerInstance<string, string>(hostPort, groupId)) {
                 TopicPartition topicPartition = CreateKafkaConsumerTopicPartition(topicName, partition);
                 if (offset < 0) {
@@ -207,9 +207,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return topicName;
         }
 
-        public async void CreateKafkaProducerListener(string hostPort, string topicName, bool suffixKodeDc = false, CancellationToken stoppingToken = default, string pubSubName = null) {
+        public async void CreateKafkaProducerListener(string hostPort, string topicName, short replication = -1, int partition = -1, bool suffixKodeDc = false, CancellationToken stoppingToken = default, string pubSubName = null) {
             topicName = await GetTopicNameProducerListener(topicName, suffixKodeDc);
-            await CreateTopicIfNotExist(hostPort, topicName);
+            await CreateTopicIfNotExist(hostPort, topicName, replication, partition);
             string key = GetKeyProducerListener(hostPort, topicName, pubSubName);
             IProducer<string, string> producer = CreateKafkaProducerInstance<string, string>(hostPort);
             _pubSub.GetGlobalAppBehaviorSubject<KafkaMessage<string, dynamic>>(key).Subscribe(async data => {
@@ -246,10 +246,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return (topicName, groupId);
         }
 
-        public async void CreateKafkaConsumerListener<T>(string hostPort, string topicName, string groupId, bool suffixKodeDc = false, CancellationToken stoppingToken = default, Action<KafkaMessage<string, T>> execLambda = null, string pubSubName = null) {
+        public async void CreateKafkaConsumerListener<T>(string hostPort, string topicName, string groupId, short replication = -1, int partition = -1, bool suffixKodeDc = false, CancellationToken stoppingToken = default, Action<KafkaMessage<string, T>> execLambda = null, string pubSubName = null) {
             const ulong COMMIT_AFTER_N_MESSAGES = 10;
             (topicName, groupId) = await GetTopicNameConsumerListener(topicName, groupId, suffixKodeDc);
-            await CreateTopicIfNotExist(hostPort, topicName);
+            await CreateTopicIfNotExist(hostPort, topicName, replication, partition);
             string key = !string.IsNullOrEmpty(pubSubName) ? pubSubName : $"KAFKA_CONSUMER_{hostPort.ToUpper()}#{topicName.ToUpper()}";
             IConsumer<string, string> consumer = CreateKafkaConsumerInstance<string, string>(hostPort, groupId);
             TopicPartition topicPartition = CreateKafkaConsumerTopicPartition(topicName, -1);
