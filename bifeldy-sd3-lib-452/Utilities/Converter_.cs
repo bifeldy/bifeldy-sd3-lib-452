@@ -54,28 +54,38 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public T GetDefaultValueT<T>() {
-            dynamic x = null;
-            switch (Type.GetTypeCode(typeof(T))) {
-                case TypeCode.DateTime:
-                    x = DateTime.MinValue;
-                    break;
-                case TypeCode.Byte:
-                case TypeCode.SByte:
-                case TypeCode.Int16:
-                case TypeCode.UInt16:
-                case TypeCode.Int32:
-                case TypeCode.UInt32:
-                case TypeCode.Int64:
-                case TypeCode.UInt64:
-                case TypeCode.Decimal:
-                case TypeCode.Double:
-                    x = 0;
-                    break;
-                case TypeCode.Boolean:
-                    x = false;
-                    break;
+            dynamic x = null; bool isNullable = false;
+            Type type = typeof(T);
+            if (!type.IsValueType) {
+                isNullable = true;
             }
-            return (T) Convert.ChangeType(x, typeof(T));
+            if (Nullable.GetUnderlyingType(type) != null) {
+                isNullable = true;
+            }
+            if (!isNullable) {
+                switch (Type.GetTypeCode(typeof(T))) {
+                    case TypeCode.DateTime:
+                        x = DateTime.MinValue;
+                        break;
+                    case TypeCode.Byte:
+                    case TypeCode.SByte:
+                    case TypeCode.Int16:
+                    case TypeCode.UInt16:
+                    case TypeCode.Int32:
+                    case TypeCode.UInt32:
+                    case TypeCode.Int64:
+                    case TypeCode.UInt64:
+                    case TypeCode.Decimal:
+                    case TypeCode.Double:
+                        x = 0;
+                        break;
+                    case TypeCode.Boolean:
+                        x = false;
+                        break;
+                }
+                x = (T) Convert.ChangeType(x, typeof(T));
+            }
+            return x;
         }
 
         public string FormatByteSizeHumanReadable(long bytes, string forceUnit = null) {
