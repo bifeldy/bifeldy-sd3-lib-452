@@ -54,7 +54,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public T GetDefaultValueT<T>() {
-            dynamic x = null; bool isNullable = false;
+            dynamic x = null;
+            bool isNullable = false;
             Type type = typeof(T);
             if (!type.IsValueType) {
                 isNullable = true;
