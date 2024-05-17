@@ -50,8 +50,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 throw new Exception("Nama Key Wajib Diisi");
             }
             if (!keyValuePairs.ContainsKey(key)) {
-                T defaultValue = _converter.GetDefaultValueT<T>();
-                return CreateGlobalAppBehaviorSubject(key, defaultValue);
+                return CreateGlobalAppBehaviorSubject(key, default(T));
             }
             return keyValuePairs[key];
         }

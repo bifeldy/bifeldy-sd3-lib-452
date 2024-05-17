@@ -26,7 +26,6 @@ namespace bifeldy_sd3_lib_452.Utilities {
         Image ByteToImage(byte[] byteArray);
         T JsonToObject<T>(string j2o);
         string ObjectToJson(object body);
-        T GetDefaultValueT<T>();
         string FormatByteSizeHumanReadable(long bytes, string forceUnit = null);
         Dictionary<string, T> ClassToDictionary<T>(object obj);
     }
@@ -51,42 +50,6 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public string ObjectToJson(object o2j) {
             return JsonConvert.SerializeObject(o2j);
-        }
-
-        public T GetDefaultValueT<T>() {
-            dynamic x = null;
-            bool isNullable = false;
-            Type type = typeof(T);
-            if (!type.IsValueType) {
-                isNullable = true;
-            }
-            if (Nullable.GetUnderlyingType(type) != null) {
-                isNullable = true;
-            }
-            if (!isNullable) {
-                switch (Type.GetTypeCode(typeof(T))) {
-                    case TypeCode.DateTime:
-                        x = DateTime.MinValue;
-                        break;
-                    case TypeCode.Byte:
-                    case TypeCode.SByte:
-                    case TypeCode.Int16:
-                    case TypeCode.UInt16:
-                    case TypeCode.Int32:
-                    case TypeCode.UInt32:
-                    case TypeCode.Int64:
-                    case TypeCode.UInt64:
-                    case TypeCode.Decimal:
-                    case TypeCode.Double:
-                        x = 0;
-                        break;
-                    case TypeCode.Boolean:
-                        x = false;
-                        break;
-                }
-                x = (T) Convert.ChangeType(x, typeof(T));
-            }
-            return x;
         }
 
         public string FormatByteSizeHumanReadable(long bytes, string forceUnit = null) {
@@ -135,7 +98,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                             return (T) data;
                         }
                         catch {
-                            return GetDefaultValueT<T>();
+                            return default;
                         }
                     });
         }
