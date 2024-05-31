@@ -32,10 +32,10 @@ namespace bifeldy_sd3_lib_452.Handlers {
         string LoggedInUsername { get; set; }
         string DbName { get; }
         string GetAllAvailableDbConnectionsString();
-        void CloseAllConnection(bool force = false);
-        Task MarkBeforeCommitRollback();
-        void MarkSuccessCommitAndClose();
-        void MarkFailedRollbackAndClose();
+        void OraPg_MsSqlLiteCloseAllConnection(bool force = false);
+        Task OraPg_MsSqlLiteMarkBeforeCommitRollback();
+        void OraPg_MsSqlLiteMarkSuccessCommitAndClose();
+        void OraPg_MsSqlLiteMarkFailedRollbackAndClose();
         COracle NewExternalConnectionOra(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid);
         CPostgres NewExternalConnectionPg(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName);
         CMsSQL NewExternalConnectionMsSql(string dbIpAddrss, string dbUsername, string dbPassword, string dbName);
@@ -193,30 +193,26 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return oracle + postgre + mssql + sqlite;
         }
 
-        public void CloseAllConnection(bool force = false) {
-            _oracle.CloseConnection(force);
-            _postgres.CloseConnection(force);
+        public void OraPg_MsSqlLiteCloseAllConnection(bool force = false) {
+            OraPg.CloseConnection(force);
             _mssql.CloseConnection(force);
             _sqlite.CloseConnection(force);
         }
 
-        public async Task MarkBeforeCommitRollback() {
-            await _oracle.MarkBeforeCommitRollback();
-            await _postgres.MarkBeforeCommitRollback();
+        public async Task OraPg_MsSqlLiteMarkBeforeCommitRollback() {
+            await OraPg.MarkBeforeCommitRollback();
             await _mssql.MarkBeforeCommitRollback();
             await _sqlite.MarkBeforeCommitRollback();
         }
 
-        public void MarkSuccessCommitAndClose() {
-            _oracle.MarkSuccessCommitAndClose();
-            _postgres.MarkSuccessCommitAndClose();
+        public void OraPg_MsSqlLiteMarkSuccessCommitAndClose() {
+            OraPg.MarkSuccessCommitAndClose();
             _mssql.MarkSuccessCommitAndClose();
             _sqlite.MarkSuccessCommitAndClose();
         }
 
-        public void MarkFailedRollbackAndClose() {
-            _oracle.MarkFailedRollbackAndClose();
-            _postgres.MarkFailedRollbackAndClose();
+        public void OraPg_MsSqlLiteMarkFailedRollbackAndClose() {
+            OraPg.MarkFailedRollbackAndClose();
             _mssql.MarkFailedRollbackAndClose();
             _sqlite.MarkFailedRollbackAndClose();
         }
