@@ -61,12 +61,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 sSw = $"{DateTime.Now:yyyy-MM-dd}";
                 if (swInfo != null) {
                     swInfo.Close();
-                    swInfo.Dispose();
                 }
                 swInfo = new StreamWriter($"{LogInfoFolderPath}/{sSw}.log", true);
                 if (swError != null) {
                     swError.Close();
-                    swError.Dispose();
                 }
                 swError = new StreamWriter($"{LogErrorFolderPath}/{sSw}.log", true);
             }

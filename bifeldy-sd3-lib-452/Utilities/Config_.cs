@@ -45,8 +45,6 @@ namespace bifeldy_sd3_lib_452.Utilities {
             if (fi.Exists) {
                 using (StreamReader reader = new StreamReader(ConfigPath)) {
                     string fileContents = reader.ReadToEnd();
-                    reader.Close();
-                    reader.Dispose();
                     AppConfig = _converter.JsonToObject<Dictionary<string, dynamic>>(fileContents);
                 }
             }

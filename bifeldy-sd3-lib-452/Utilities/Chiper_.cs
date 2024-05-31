@@ -20,6 +20,7 @@ using System.Security.Cryptography;
 using System.Runtime.InteropServices;
 
 using Ionic.Crc;
+using bifeldy_sd3_lib_452.Extensions;
 
 namespace bifeldy_sd3_lib_452.Utilities {
 
@@ -34,27 +35,30 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
     public sealed class CChiper : IChiper {
 
+        private readonly IApplication _app;
         private readonly IStream _stream;
 
         private string AppName { get; }
 
         // This constant is used to determine the keysize of the encryption algorithm in bits.
         // We divide this by 8 within the code below to get the equivalent number of bytes.
-        private const int Keysize = 256;
+        private const int Keysize = 128;
+        private const int Blocksize = 128;
 
         // This constant determines the number of iterations for the password bytes generation function.
         private const int DerivationIterations = 1000;
 
-        public CChiper(IStream stream) {
+        public CChiper(IApplication app, IStream stream) {
+            _app = app;
             _stream = stream;
 
             string appName = Process.GetCurrentProcess().MainModule.ModuleName.ToUpper();
             AppName = appName.Substring(0, appName.LastIndexOf(".EXE"));
         }
 
-        private byte[] Generate256BitsOfRandomEntropy() {
-            byte[] randomBytes = new byte[32]; // 32 Bytes will give us 256 bits.
-            using (RNGCryptoServiceProvider rngCsp = new RNGCryptoServiceProvider()) {
+        private byte[] Generate128BitsOfRandomEntropy() {
+            byte[] randomBytes = new byte[16]; // 16 Bytes will give us 128 bits.
+            using (var rngCsp = RandomNumberGenerator.Create()) {
                 // Fill the array with cryptographically secure random bytes.
                 rngCsp.GetBytes(randomBytes);
             }
@@ -62,23 +66,23 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public string EncryptText(string plainText, string passPhrase = null) {
-            if (string.IsNullOrEmpty(passPhrase)) {
-                passPhrase = AppName;
+            if (string.IsNullOrEmpty(passPhrase) || passPhrase?.Length < 8) {
+                passPhrase = this.HashText(this._app.AppName);
             }
             // Salt and IV is randomly generated each time, but is preprended to encrypted cipher text
             // so that the same Salt and IV values can be used when decrypting.  
-            byte[] saltStringBytes = Generate256BitsOfRandomEntropy();
-            byte[] ivStringBytes = Generate256BitsOfRandomEntropy();
+            byte[] saltStringBytes = this.Generate128BitsOfRandomEntropy();
+            byte[] ivStringBytes = this.Generate128BitsOfRandomEntropy();
             byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
-            using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, DerivationIterations)) {
+            using (var password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, DerivationIterations)) {
                 byte[] keyBytes = password.GetBytes(Keysize / 8);
-                using (RijndaelManaged symmetricKey = new RijndaelManaged()) {
-                    symmetricKey.BlockSize = 256;
+                using (var symmetricKey = Aes.Create()) {
+                    symmetricKey.BlockSize = Blocksize;
                     symmetricKey.Mode = CipherMode.CBC;
                     symmetricKey.Padding = PaddingMode.PKCS7;
                     using (ICryptoTransform encryptor = symmetricKey.CreateEncryptor(keyBytes, ivStringBytes)) {
-                        using (MemoryStream memoryStream = new MemoryStream()) {
-                            using (CryptoStream cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write)) {
+                        using (var memoryStream = new MemoryStream()) {
+                            using (var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write)) {
                                 cryptoStream.Write(plainTextBytes, 0, plainTextBytes.Length);
                                 cryptoStream.FlushFinalBlock();
                                 // Create the final bytes as a concatenation of the random salt bytes, the random iv bytes and the cipher bytes.
@@ -96,8 +100,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public string DecryptText(string cipherText, string passPhrase = null) {
-            if (string.IsNullOrEmpty(passPhrase)) {
-                passPhrase = AppName;
+            if (string.IsNullOrEmpty(passPhrase) || passPhrase?.Length < 8) {
+                passPhrase = this.HashText(this._app.AppName);
             }
             // Get the complete stream of bytes that represent:
             // [32 bytes of Salt] + [32 bytes of IV] + [n bytes of CipherText]
@@ -107,17 +111,17 @@ namespace bifeldy_sd3_lib_452.Utilities {
             // Get the IV bytes by extracting the next 32 bytes from the supplied cipherText bytes.
             byte[] ivStringBytes = cipherTextBytesWithSaltAndIv.Skip(Keysize / 8).Take(Keysize / 8).ToArray();
             // Get the actual cipher text bytes by removing the first 64 bytes from the cipherText string.
-            byte[] cipherTextBytes = cipherTextBytesWithSaltAndIv.Skip((Keysize / 8) * 2).Take(cipherTextBytesWithSaltAndIv.Length - ((Keysize / 8) * 2)).ToArray();
-            using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, DerivationIterations)) {
+            byte[] cipherTextBytes = cipherTextBytesWithSaltAndIv.Skip(Keysize / 8 * 2).Take(cipherTextBytesWithSaltAndIv.Length - (Keysize / 8 * 2)).ToArray();
+            using (var password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, DerivationIterations)) {
                 byte[] keyBytes = password.GetBytes(Keysize / 8);
-                using (RijndaelManaged symmetricKey = new RijndaelManaged()) {
-                    symmetricKey.BlockSize = 256;
+                using (var symmetricKey = Aes.Create()) {
+                    symmetricKey.BlockSize = Blocksize;
                     symmetricKey.Mode = CipherMode.CBC;
                     symmetricKey.Padding = PaddingMode.PKCS7;
                     using (ICryptoTransform decryptor = symmetricKey.CreateDecryptor(keyBytes, ivStringBytes)) {
-                        using (MemoryStream memoryStream = new MemoryStream(cipherTextBytes)) {
-                            using (CryptoStream cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read)) {
-                                using (StreamReader streamReader = new StreamReader(cryptoStream, Encoding.UTF8)) {
+                        using (var memoryStream = new MemoryStream(cipherTextBytes)) {
+                            using (var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read)) {
+                                using (var streamReader = new StreamReader(cryptoStream, Encoding.UTF8)) {
                                     return streamReader.ReadToEnd();
                                 }
                             }
@@ -128,17 +132,17 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public string CalculateMD5(string filePath) {
-            using (MD5 md5 = MD5.Create()) {
-                using (MemoryStream ms = _stream.ReadFileAsBinaryStream(filePath)) {
+            using (var md5 = MD5.Create()) {
+                using (MemoryStream ms = this._stream.ReadFileAsBinaryStream(filePath)) {
                     byte[] hash = md5.ComputeHash(ms.ToArray());
-                    return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+                    return hash.ToStringHex();
                 }
             }
         }
 
         public string CalculateCRC32(string filePath) {
-            CRC32 crc32 = new CRC32();
-            using (MemoryStream ms = _stream.ReadFileAsBinaryStream(filePath)) {
+            var crc32 = new CRC32();
+            using (MemoryStream ms = this._stream.ReadFileAsBinaryStream(filePath)) {
                 byte[] data = ms.ToArray();
                 crc32.SlurpBlock(data, 0, data.Length);
                 return crc32.Crc32Result.ToString("x");
@@ -146,13 +150,14 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public string CalculateSHA1(string filePath) {
-            using (SHA1 sha1 = SHA1.Create()) {
-                using (MemoryStream ms = _stream.ReadFileAsBinaryStream(filePath)) {
+            using (var sha1 = SHA1.Create()) {
+                using (MemoryStream ms = this._stream.ReadFileAsBinaryStream(filePath)) {
                     byte[] hash = sha1.ComputeHash(ms.ToArray());
-                    StringBuilder sb = new StringBuilder(hash.Length * 2);
+                    var sb = new StringBuilder(hash.Length * 2);
                     foreach (byte b in hash) {
-                        sb.Append(b.ToString("x"));
+                        _ = sb.Append(b.ToString("x"));
                     }
+
                     return sb.ToString();
                 }
             }
@@ -200,6 +205,13 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     Marshal.FreeCoTaskMem(mimeTypePtr);
                 }
                 return "unknown/unknown";
+            }
+        }
+
+        public string HashText(string text) {
+            using (var sha1 = SHA1.Create()) {
+                byte[] hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(text));
+                return hash.ToStringHex();
             }
         }
 
