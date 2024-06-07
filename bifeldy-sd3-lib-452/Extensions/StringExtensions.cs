@@ -16,9 +16,9 @@ namespace bifeldy_sd3_lib_452.Extensions {
 
     public static class StringExtensions {
 
-        public static byte[] ParseHexTextToByte(this string hex, string separator = null) {
+        public static byte[] ParseHexTextToByte(this string hex, char separator) {
             byte[] array;
-            if (string.IsNullOrEmpty(separator)) {
+            if (string.IsNullOrEmpty($"{separator}")) {
                 int numberChars = hex.Length;
                 array = new byte[numberChars / 2];
                 for (int i = 0; i < numberChars; i += 2) {

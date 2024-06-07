@@ -64,12 +64,15 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public void LoadCredential(string pathFile, bool isEncrypted = false) {
             credentialPath = pathFile;
             if (string.IsNullOrEmpty(credentialPath) || !File.Exists(credentialPath)) {
-                throw new Exception("Lokasi file credential.json tidak valid");
+                throw new Exception("Lokasi file credential tidak valid");
             }
             string text = File.ReadAllText(credentialPath);
             _logger.WriteInfo($"{GetType().Name}Credential", text);
             if (isEncrypted) {
                 text = _chiper.DecryptText(text);
+            }
+            else {
+                File.WriteAllText($"{credentialPath}.txt", _chiper.EncryptText(text));
             }
             IDictionary<string, string> json = _converter.JsonToObject<Dictionary<string, string>>(text);
             json.TryGetValue("project_id", out projectId);

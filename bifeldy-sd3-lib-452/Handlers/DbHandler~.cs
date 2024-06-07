@@ -101,9 +101,9 @@ namespace bifeldy_sd3_lib_452.Handlers {
         protected IOracle Oracle {
             get {
                 if (LocalDbOnly) {
-                    throw new Exception("Hanya Bisa Menggunakan SQLite Dalam Mode Lokal Database Saja");
+                    return null;
                 }
-                IOracle ret = _oracle.Available ? _oracle : null;
+                IOracle ret = (bool) _oracle?.Available ? _oracle : null;
                 if (ret == null) {
                     throw new Exception("Gagal Membaca Dan Mengambil `Kunci` Oracle Database");
                 }
@@ -114,9 +114,9 @@ namespace bifeldy_sd3_lib_452.Handlers {
         protected IPostgres Postgres {
             get {
                 if (LocalDbOnly) {
-                    throw new Exception("Hanya Bisa Menggunakan SQLite Dalam Mode Lokal Database Saja");
+                    return null;
                 }
-                IPostgres ret = _postgres.Available ? _postgres : null;
+                IPostgres ret = (bool) _postgres?.Available ? _postgres : null;
                 if (ret == null) {
                     throw new Exception("Gagal Membaca Dan Mengambil `Kunci` Postgres Database");
                 }
@@ -127,7 +127,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         protected IDatabase OraPg {
             get {
                 if (LocalDbOnly) {
-                    throw new Exception("Hanya Bisa Menggunakan SQLite Dalam Mode Lokal Database Saja");
+                    return null;
                 }
                 if (_app.IsUsingPostgres) {
                     return Postgres;
@@ -139,9 +139,9 @@ namespace bifeldy_sd3_lib_452.Handlers {
         protected IMsSQL MsSql {
             get {
                 if (LocalDbOnly) {
-                    throw new Exception("Hanya Bisa Menggunakan SQLite Dalam Mode Lokal Database Saja");
+                    return null;
                 }
-                IMsSQL ret = _mssql.Available ? _mssql : null;
+                IMsSQL ret = (bool) _mssql?.Available ? _mssql : null;
                 if (ret == null) {
                     throw new Exception("Gagal Membaca Dan Mengambil `Kunci` Ms. SQL Server Database");
                 }
@@ -151,7 +151,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         protected ISqlite Sqlite {
             get {
-                ISqlite ret = _sqlite.Available ? _sqlite : null;
+                ISqlite ret = (bool) _sqlite?.Available ? _sqlite : null;
                 if (ret == null) {
                     throw new Exception("Gagal Membaca Dan Mengambil `Kunci` SQLite Database");
                 }
@@ -168,7 +168,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
                 }
                 string FullDbName = string.Empty;
                 try {
-                    FullDbName += OraPg.DbName;
+                    FullDbName += OraPg?.DbName;
                 }
                 catch {
                     FullDbName += "-";
@@ -186,49 +186,49 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         public string GetAllAvailableDbConnectionsString() {
             // Bypass Check DB Availablility ~
-            string oracle = $"Oracle :: {_oracle.DbName}\r\n\r\n{_oracle.DbConnectionString}\r\n\r\n\r\n";
-            string postgre = $"Postgres :: {_postgres.DbName}\r\n\r\n{_postgres.DbConnectionString}\r\n\r\n\r\n";
-            string mssql = $"MsSql :: {_mssql.DbName}\r\n\r\n{_mssql.DbConnectionString}\r\n\r\n\r\n";
-            string sqlite = $"SQLite :: {_sqlite.DbName?.Replace("\\", "/").Split('/').Last()}\r\n\r\n{_sqlite.DbConnectionString}";
+            string oracle = $"Oracle :: {_oracle?.DbName}\r\n\r\n{_oracle?.DbConnectionString}\r\n\r\n\r\n";
+            string postgre = $"Postgres :: {_postgres?.DbName}\r\n\r\n{_postgres?.DbConnectionString}\r\n\r\n\r\n";
+            string mssql = $"MsSql :: {_mssql?.DbName}\r\n\r\n{_mssql?.DbConnectionString}\r\n\r\n\r\n";
+            string sqlite = $"SQLite :: {_sqlite?.DbName?.Replace("\\", "/").Split('/').Last()}\r\n\r\n{_sqlite?.DbConnectionString}";
             return oracle + postgre + mssql + sqlite;
         }
 
         public void OraPg_MsSqlLiteCloseAllConnection(bool force = false) {
-            OraPg.CloseConnection(force);
-            _mssql.CloseConnection(force);
-            _sqlite.CloseConnection(force);
+            OraPg?.CloseConnection(force);
+            _mssql?.CloseConnection(force);
+            _sqlite?.CloseConnection(force);
         }
 
         public async Task OraPg_MsSqlLiteMarkBeforeCommitRollback() {
-            await OraPg.MarkBeforeCommitRollback();
-            await _mssql.MarkBeforeCommitRollback();
-            await _sqlite.MarkBeforeCommitRollback();
+            await OraPg?.MarkBeforeCommitRollback();
+            await _mssql?.MarkBeforeCommitRollback();
+            await _sqlite?.MarkBeforeCommitRollback();
         }
 
         public void OraPg_MsSqlLiteMarkSuccessCommitAndClose() {
-            OraPg.MarkSuccessCommitAndClose();
-            _mssql.MarkSuccessCommitAndClose();
-            _sqlite.MarkSuccessCommitAndClose();
+            OraPg?.MarkSuccessCommitAndClose();
+            _mssql?.MarkSuccessCommitAndClose();
+            _sqlite?.MarkSuccessCommitAndClose();
         }
 
         public void OraPg_MsSqlLiteMarkFailedRollbackAndClose() {
-            OraPg.MarkFailedRollbackAndClose();
-            _mssql.MarkFailedRollbackAndClose();
-            _sqlite.MarkFailedRollbackAndClose();
+            OraPg?.MarkFailedRollbackAndClose();
+            _mssql?.MarkFailedRollbackAndClose();
+            _sqlite?.MarkFailedRollbackAndClose();
         }
 
         /* Perlakuan Khusus */
 
         public COracle NewExternalConnectionOra(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid) {
-            return _oracle.NewExternalConnection(dbIpAddrss, dbPort, dbUsername, dbPassword, dbNameSid);
+            return _oracle?.NewExternalConnection(dbIpAddrss, dbPort, dbUsername, dbPassword, dbNameSid);
         }
 
         public CPostgres NewExternalConnectionPg(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName) {
-            return _postgres.NewExternalConnection(dbIpAddrss, dbPort, dbUsername, dbPassword, dbName);
+            return _postgres?.NewExternalConnection(dbIpAddrss, dbPort, dbUsername, dbPassword, dbName);
         }
 
         public CMsSQL NewExternalConnectionMsSql(string dbIpAddrss, string dbUsername, string dbPassword, string dbName) {
-            return _mssql.NewExternalConnection(dbIpAddrss, dbUsername, dbPassword, dbName);
+            return _mssql?.NewExternalConnection(dbIpAddrss, dbUsername, dbPassword, dbName);
         }
 
         /* ** */
@@ -237,11 +237,11 @@ namespace bifeldy_sd3_lib_452.Handlers {
             if (LocalDbOnly) {
                 return "NONDC";
             }
-            if (OraPg.DbUsername.ToUpper().Contains("DCHO")) {
+            if ((bool) OraPg?.DbUsername.ToUpper().Contains("DCHO")) {
                 return "HO";
             }
             if (string.IsNullOrEmpty(DcJenis)) {
-                DcJenis = await OraPg.ExecScalarAsync<string>("SELECT TBL_JENIS_DC FROM DC_TABEL_DC_T");
+                DcJenis = await OraPg?.ExecScalarAsync<string>("SELECT TBL_JENIS_DC FROM DC_TABEL_DC_T");
             }
             return DcJenis.ToUpper();
         }
@@ -250,11 +250,11 @@ namespace bifeldy_sd3_lib_452.Handlers {
             if (LocalDbOnly) {
                 return "GXXX";
             }
-            if (OraPg.DbUsername.ToUpper().Contains("DCHO")) {
+            if ((bool) OraPg?.DbUsername.ToUpper().Contains("DCHO")) {
                 return "DCHO";
             }
             if (string.IsNullOrEmpty(DcCode)) {
-                DcCode = await OraPg.ExecScalarAsync<string>("SELECT TBL_DC_KODE FROM DC_TABEL_DC_T");
+                DcCode = await OraPg?.ExecScalarAsync<string>("SELECT TBL_DC_KODE FROM DC_TABEL_DC_T");
             }
             return DcCode.ToUpper();
         }
@@ -263,11 +263,11 @@ namespace bifeldy_sd3_lib_452.Handlers {
             if (LocalDbOnly) {
                 return "NON DC";
             }
-            if (OraPg.DbUsername.ToUpper().Contains("DCHO")) {
+            if ((bool) OraPg?.DbUsername.ToUpper().Contains("DCHO")) {
                 return "DC HEAD OFFICE";
             }
             if (string.IsNullOrEmpty(DcName)) {
-                DcName = await OraPg.ExecScalarAsync<string>("SELECT TBL_DC_NAMA FROM DC_TABEL_DC_T");
+                DcName = await OraPg?.ExecScalarAsync<string>("SELECT TBL_DC_NAMA FROM DC_TABEL_DC_T");
             }
             return DcName.ToUpper();
         }
@@ -278,7 +278,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
             }
             else {
                 try {
-                    string res1 = await OraPg.ExecScalarAsync<string>(
+                    string res1 = await OraPg?.ExecScalarAsync<string>(
                         $@"
                             SELECT
                                 CASE
@@ -309,7 +309,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
                     }
                     if (res1 == _app.AppVersion) {
                         try {
-                            bool res2 = await OraPg.ExecQueryAsync(
+                            bool res2 = await OraPg?.ExecQueryAsync(
                                 $@"
                                     INSERT INTO dc_monitoring_program_t (kode_dc, nama_program, ip_client, versi, tanggal)
                                     VALUES (:kode_dc, :nama_program, :ip_client, :versi, {(_app.IsUsingPostgres ? "NOW()" : "SYSDATE")})
@@ -365,7 +365,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
                 else {
                     param.Add(new CDbQueryParamBind { NAME = "unik", VALUE = userNameNik });
                     param.Add(new CDbQueryParamBind { NAME = "pass", VALUE = password });
-                    LoggedInUsername = await OraPg.ExecScalarAsync<string>(query, param);
+                    LoggedInUsername = await OraPg?.ExecScalarAsync<string>(query, param);
                 }
             }
             return !string.IsNullOrEmpty(LoggedInUsername);
@@ -376,7 +376,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
                 return true;
             }
             else {
-                string res = await OraPg.ExecScalarAsync<string>(
+                string res = await OraPg?.ExecScalarAsync<string>(
                     $@"
                         SELECT
                             a.user_name
@@ -403,7 +403,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         public async Task<string> OraPg_GetURLWebService(string webType) {
-            return await OraPg.ExecScalarAsync<string>(
+            return await OraPg?.ExecScalarAsync<string>(
                 $@"SELECT WEB_URL FROM DC_WEBSERVICE_T WHERE WEB_TYPE = :web_type",
                 new List<CDbQueryParamBind> {
                     new CDbQueryParamBind { NAME = "web_type", VALUE = webType }
@@ -412,7 +412,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         public async Task<T> OraPg_GetMailInfo<T>(string kolom) {
-            return await OraPg.ExecScalarAsync<T>(
+            return await OraPg?.ExecScalarAsync<T>(
                 $@"SELECT {kolom} FROM DC_LISTMAILSERVER_T WHERE MAIL_DCKODE = :mail_dckode",
                 new List<CDbQueryParamBind> {
                     new CDbQueryParamBind { NAME = "mail_dckode", VALUE = await GetKodeDc() }
@@ -421,7 +421,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         public async Task<DateTime> OraPg_GetYesterdayDate(int lastDay) {
-            return await OraPg.ExecScalarAsync<DateTime>(
+            return await OraPg?.ExecScalarAsync<DateTime>(
                 $@"
                     SELECT {(_app.IsUsingPostgres ? "CURRENT_DATE" : "TRUNC(SYSDATE)")} - :last_day
                     {(_app.IsUsingPostgres ? "" : "FROM DUAL")}
@@ -433,7 +433,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         public async Task<DateTime> OraPg_GetLastMonth(int lastMonth) {
-            return await OraPg.ExecScalarAsync<DateTime>(
+            return await OraPg?.ExecScalarAsync<DateTime>(
                 $@"
                     SELECT TRUNC(add_months({(_app.IsUsingPostgres ? "CURRENT_DATE" : "SYSDATE")}, - :last_month))
                     {(_app.IsUsingPostgres ? "" : "FROM DUAL")}
@@ -445,19 +445,19 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         public async Task<DateTime> OraPg_GetCurrentTimestamp() {
-            return await OraPg.ExecScalarAsync<DateTime>($@"
+            return await OraPg?.ExecScalarAsync<DateTime>($@"
                 SELECT {(_app.IsUsingPostgres ? "CURRENT_TIMESTAMP" : "SYSDATE FROM DUAL")}
             ");
         }
 
         public async Task<DateTime> OraPg_GetCurrentDate() {
-            return await OraPg.ExecScalarAsync<DateTime>($@"
+            return await OraPg?.ExecScalarAsync<DateTime>($@"
                 SELECT {(_app.IsUsingPostgres ? "CURRENT_DATE" : "TRUNC(SYSDATE) FROM DUAL")}
             ");
         }
 
         public async Task<bool> SaveKafkaToTable(string topic, decimal offset, decimal partition, KafkaMessage<string, string> msg, string tabelName = "DC_KAFKALOG_T") {
-            return await OraPg.ExecQueryAsync($@"
+            return await OraPg?.ExecQueryAsync($@"
                 INSERT INTO {tabelName} (TPC, OFFS, PARTT, KEY, VAL, TMSTAMP)
                 VALUES (:tpc, :offs, :partt, :key, :value, :tmstmp)
             ", new List<CDbQueryParamBind> {
@@ -475,12 +475,12 @@ namespace bifeldy_sd3_lib_452.Handlers {
         // Bisa Kena SQL Injection
         public async Task<bool> OraPg_AlterTable_AddColumnIfNotExist(string tableName, string columnName, string columnType) {
             List<string> cols = new List<string>();
-            DataColumnCollection columns = await OraPg.GetAllColumnTableAsync(tableName);
+            DataColumnCollection columns = await OraPg?.GetAllColumnTableAsync(tableName);
             foreach (DataColumn col in columns) {
                 cols.Add(col.ColumnName.ToUpper());
             }
             if (!cols.Contains(columnName.ToUpper())) {
-                return await OraPg.ExecQueryAsync($@"
+                return await OraPg?.ExecQueryAsync($@"
                     ALTER TABLE {tableName}
                         ADD {(_app.IsUsingPostgres ? "COLUMN" : "(")}
                             {columnName} {columnType}
@@ -491,31 +491,31 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         public async Task<bool> OraPg_TruncateTable(string TableName) {
-            return await OraPg.ExecQueryAsync($@"TRUNCATE TABLE {TableName}");
+            return await OraPg?.ExecQueryAsync($@"TRUNCATE TABLE {TableName}");
         }
 
         public async Task<bool> OraPg_BulkInsertInto(string tableName, DataTable dataTable) {
-            return await OraPg.BulkInsertInto(tableName, dataTable);
+            return await OraPg?.BulkInsertInto(tableName, dataTable);
         }
 
         public async Task<T> OraPg_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
-            return await OraPg.ExecScalarAsync<T>(sqlQuery, bindParam);
+            return await OraPg?.ExecScalarAsync<T>(sqlQuery, bindParam);
         }
 
         public async Task<bool> OraPg_ExecQuery(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
-            return await OraPg.ExecQueryAsync(sqlQuery, bindParam);
+            return await OraPg?.ExecQueryAsync(sqlQuery, bindParam);
         }
 
         public async Task<DbDataReader> OraPg_ExecReaderAsync(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
-            return await OraPg.ExecReaderAsync(sqlQuery, bindParam);
+            return await OraPg?.ExecReaderAsync(sqlQuery, bindParam);
         }
 
         public async Task<DataTable> OraPg_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
-            return await OraPg.GetDataTableAsync(sqlQuery, bindParam);
+            return await OraPg?.GetDataTableAsync(sqlQuery, bindParam);
         }
 
         public async Task<CDbExecProcResult> OraPg_CALL_(string procedureName, List<CDbQueryParamBind> bindParam = null) {
-            return await OraPg.ExecProcedureAsync(procedureName, bindParam);
+            return await OraPg?.ExecProcedureAsync(procedureName, bindParam);
         }
 
         /* ** */

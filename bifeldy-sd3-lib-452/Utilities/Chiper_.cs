@@ -35,7 +35,6 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
     public sealed class CChiper : IChiper {
 
-        private readonly IApplication _app;
         private readonly IStream _stream;
 
         private string AppName { get; }
@@ -48,8 +47,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         // This constant determines the number of iterations for the password bytes generation function.
         private const int DerivationIterations = 1000;
 
-        public CChiper(IApplication app, IStream stream) {
-            _app = app;
+        public CChiper(IStream stream) {
             _stream = stream;
 
             string appName = Process.GetCurrentProcess().MainModule.ModuleName.ToUpper();
@@ -67,7 +65,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public string EncryptText(string plainText, string passPhrase = null) {
             if (string.IsNullOrEmpty(passPhrase) || passPhrase?.Length < 8) {
-                passPhrase = this.HashText(this._app.AppName);
+                passPhrase = this.HashText(this.AppName);
             }
             // Salt and IV is randomly generated each time, but is preprended to encrypted cipher text
             // so that the same Salt and IV values can be used when decrypting.  
@@ -101,7 +99,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public string DecryptText(string cipherText, string passPhrase = null) {
             if (string.IsNullOrEmpty(passPhrase) || passPhrase?.Length < 8) {
-                passPhrase = this.HashText(this._app.AppName);
+                passPhrase = this.HashText(this.AppName);
             }
             // Get the complete stream of bytes that represent:
             // [32 bytes of Salt] + [32 bytes of IV] + [n bytes of CipherText]
