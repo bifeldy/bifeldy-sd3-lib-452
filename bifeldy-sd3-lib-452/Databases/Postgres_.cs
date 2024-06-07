@@ -44,55 +44,57 @@ namespace bifeldy_sd3_lib_452.Databases {
         private NpgsqlDataAdapter DatabaseAdapter { get; set; }
 
         public CPostgres(IApplication app, ILogger logger, IConverter converter) : base(logger, converter) {
-            _app = app;
-            _logger = logger;
+            this._app = app;
+            this._logger = logger;
 
-            InitializePostgresDatabase();
-            SettingUpDatabase();
+            this.InitializePostgresDatabase();
+            this.SettingUpDatabase();
         }
 
         private void InitializePostgresDatabase(string dbIpAddrss = null, string dbPort = null, string dbUsername = null,  string dbPassword = null, string dbName = null) {
-            DbIpAddrss = dbIpAddrss ?? _app.GetVariabel("IPPostgres");
-            DbPort = dbPort ?? _app.GetVariabel("PortPostgres");
-            DbUsername = dbUsername ?? _app.GetVariabel("UserPostgres");
-            DbPassword = dbPassword ?? _app.GetVariabel("PasswordPostgres");
-            DbName = dbName ?? _app.GetVariabel("DatabasePostgres");
+            this.DbIpAddrss = dbIpAddrss ?? this._app.GetVariabel("IPPostgres");
+            this.DbPort = dbPort ?? this._app.GetVariabel("PortPostgres");
+            this.DbUsername = dbUsername ?? this._app.GetVariabel("UserPostgres");
+            this.DbPassword = dbPassword ?? this._app.GetVariabel("PasswordPostgres");
+            this.DbName = dbName ?? this._app.GetVariabel("DatabasePostgres");
         }
 
         private void SettingUpDatabase() {
             try {
-                DbConnectionString = $"Host={DbIpAddrss};Port={DbPort};Username={DbUsername};Password={DbPassword};Database={DbName};Timeout=180;"; // 3 menit
+                this.DbConnectionString = $"Host={this.DbIpAddrss};Port={this.DbPort};Username={this.DbUsername};Password={this.DbPassword};Database={this.DbName};Timeout=180;"; // 3 menit
                 if (
-                    string.IsNullOrEmpty(DbIpAddrss) ||
-                    string.IsNullOrEmpty(DbPort) ||
-                    string.IsNullOrEmpty(DbUsername) ||
-                    string.IsNullOrEmpty(DbPassword) ||
-                    string.IsNullOrEmpty(DbName)
+                    string.IsNullOrEmpty(this.DbIpAddrss) ||
+                    string.IsNullOrEmpty(this.DbPort) ||
+                    string.IsNullOrEmpty(this.DbUsername) ||
+                    string.IsNullOrEmpty(this.DbPassword) ||
+                    string.IsNullOrEmpty(this.DbName)
                 ) {
                     throw new Exception("Database Tidak Tersedia");
                 }
-                DatabaseConnection = new NpgsqlConnection(DbConnectionString);
-                DatabaseCommand = new NpgsqlCommand {
-                    Connection = (NpgsqlConnection) DatabaseConnection,
+
+                this.DatabaseConnection = new NpgsqlConnection(this.DbConnectionString);
+                this.DatabaseCommand = new NpgsqlCommand {
+                    Connection = (NpgsqlConnection) this.DatabaseConnection,
                     CommandTimeout = 1800 // 30 menit
                 };
-                DatabaseAdapter = new NpgsqlDataAdapter(DatabaseCommand);
-                _logger.WriteInfo(GetType().Name, DbConnectionString);
+                this.DatabaseAdapter = new NpgsqlDataAdapter(this.DatabaseCommand);
+                this._logger.WriteInfo(this.GetType().Name, this.DbConnectionString);
             }
             catch (Exception ex) {
-                _logger.WriteError(ex);
+                this._logger.WriteError(ex);
             }
         }
 
         protected override void BindQueryParameter(List<CDbQueryParamBind> parameters) {
             char prefix = ':';
-            DatabaseCommand.Parameters.Clear();
+            this.DatabaseCommand.Parameters.Clear();
             if (parameters != null) {
                 for (int i = 0; i < parameters.Count; i++) {
                     string pName = parameters[i].NAME.StartsWith($"{prefix}") ? parameters[i].NAME.Substring(1) : parameters[i].NAME;
                     if (string.IsNullOrEmpty(pName)) {
                         throw new Exception("Nama Parameter Wajib Diisi");
                     }
+
                     dynamic pVal = parameters[i].VALUE;
                     Type pValType = (pVal == null) ? typeof(DBNull) : pVal.GetType();
                     if (pValType.IsArray) {
@@ -102,59 +104,64 @@ namespace bifeldy_sd3_lib_452.Databases {
                             if (!string.IsNullOrEmpty(bindStr)) {
                                 bindStr += ", ";
                             }
+
                             bindStr += $"{prefix}{pName}_{id}";
-                            DatabaseCommand.Parameters.Add(new NpgsqlParameter {
+                            this.DatabaseCommand.Parameters.Add(new NpgsqlParameter {
                                 ParameterName = $"{pName}_{id}",
                                 Value = data ?? DBNull.Value
                             });
                             id++;
                         }
-                        Regex regex = new Regex($"{prefix}{pName}");
-                        DatabaseCommand.CommandText = regex.Replace(DatabaseCommand.CommandText, bindStr, 1);
+
+                        var regex = new Regex($"{prefix}{pName}");
+                        this.DatabaseCommand.CommandText = regex.Replace(this.DatabaseCommand.CommandText, bindStr, 1);
                     }
                     else {
-                        NpgsqlParameter param = new NpgsqlParameter {
+                        var param = new NpgsqlParameter {
                             ParameterName = pName,
                             Value = pVal ?? DBNull.Value
                         };
                         if (parameters[i].SIZE > 0) {
                             param.Size = parameters[i].SIZE;
                         }
+
                         if (parameters[i].DIRECTION > 0) {
                             param.Direction = parameters[i].DIRECTION;
                         }
-                        DatabaseCommand.Parameters.Add(param);
+
+                        this.DatabaseCommand.Parameters.Add(param);
                     }
                 }
             }
-            LogQueryParameter(DatabaseCommand, prefix);
+
+            this.LogQueryParameter(this.DatabaseCommand, prefix);
         }
 
         public override async Task<DataColumnCollection> GetAllColumnTableAsync(string tableName) {
-            DatabaseCommand.CommandText = $@"SELECT * FROM {tableName} LIMIT 1";
-            DatabaseCommand.CommandType = CommandType.Text;
-            return await GetAllColumnTableAsync(tableName, DatabaseCommand);
+            this.DatabaseCommand.CommandText = $@"SELECT * FROM {tableName} LIMIT 1";
+            this.DatabaseCommand.CommandType = CommandType.Text;
+            return await this.GetAllColumnTableAsync(tableName, this.DatabaseCommand);
         }
 
         public override async Task<DataTable> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
-            DatabaseCommand.CommandText = queryString;
-            DatabaseCommand.CommandType = CommandType.Text;
-            BindQueryParameter(bindParam);
-            return await GetDataTableAsync(DatabaseCommand);
+            this.DatabaseCommand.CommandText = queryString;
+            this.DatabaseCommand.CommandType = CommandType.Text;
+            this.BindQueryParameter(bindParam);
+            return await this.GetDataTableAsync(this.DatabaseCommand);
         }
 
         public override async Task<T> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null) {
-            DatabaseCommand.CommandText = queryString;
-            DatabaseCommand.CommandType = CommandType.Text;
-            BindQueryParameter(bindParam);
-            return await ExecScalarAsync<T>(DatabaseCommand);
+            this.DatabaseCommand.CommandText = queryString;
+            this.DatabaseCommand.CommandType = CommandType.Text;
+            this.BindQueryParameter(bindParam);
+            return await this.ExecScalarAsync<T>(this.DatabaseCommand);
         }
 
         public override async Task<bool> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
-            DatabaseCommand.CommandText = queryString;
-            DatabaseCommand.CommandType = CommandType.Text;
-            BindQueryParameter(bindParam);
-            return await ExecQueryAsync(DatabaseCommand);
+            this.DatabaseCommand.CommandText = queryString;
+            this.DatabaseCommand.CommandType = CommandType.Text;
+            this.BindQueryParameter(bindParam);
+            return await this.ExecQueryAsync(this.DatabaseCommand);
         }
 
         public override async Task<CDbExecProcResult> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null) {
@@ -162,14 +169,17 @@ namespace bifeldy_sd3_lib_452.Databases {
             if (bindParam != null) {
                 for (int i = 0; i < bindParam.Count; i++) {
                     sqlTextQueryParameters += $":{bindParam[i].NAME}";
-                    if (i + 1 < bindParam.Count) sqlTextQueryParameters += ",";
+                    if (i + 1 < bindParam.Count) {
+                        sqlTextQueryParameters += ",";
+                    }
                 }
             }
+
             sqlTextQueryParameters += ")";
-            DatabaseCommand.CommandText = $"CALL {procedureName} {sqlTextQueryParameters}";
-            DatabaseCommand.CommandType = CommandType.Text;
-            BindQueryParameter(bindParam);
-            return await ExecProcedureAsync(DatabaseCommand);
+            this.DatabaseCommand.CommandText = $"CALL {procedureName} {sqlTextQueryParameters}";
+            this.DatabaseCommand.CommandType = CommandType.Text;
+            this.BindQueryParameter(bindParam);
+            return await this.ExecProcedureAsync(this.DatabaseCommand);
         }
 
         // https://stackoverflow.com/questions/65687071/bulk-insert-copy-ienumerable-into-table-with-npgsql
@@ -180,17 +190,19 @@ namespace bifeldy_sd3_lib_452.Databases {
                 if (string.IsNullOrEmpty(tableName)) {
                     throw new Exception("Target Tabel Tidak Ditemukan");
                 }
+
                 int colCount = dataTable.Columns.Count;
 
-                NpgsqlDbType[] types = new NpgsqlDbType[colCount];
+                var types = new NpgsqlDbType[colCount];
                 int[] lengths = new int[colCount];
                 string[] fieldNames = new string[colCount];
 
-                DatabaseCommand.CommandText = $"SELECT * FROM {tableName} LIMIT 1";
-                using (NpgsqlDataReader rdr = (NpgsqlDataReader) await DatabaseCommand.ExecuteReaderAsync()) {
+                this.DatabaseCommand.CommandText = $"SELECT * FROM {tableName} LIMIT 1";
+                using (var rdr = (NpgsqlDataReader) await this.DatabaseCommand.ExecuteReaderAsync()) {
                     if (rdr.FieldCount != colCount) {
                         throw new Exception("Jumlah Kolom Tabel Tidak Sama");
                     }
+
                     ReadOnlyCollection<NpgsqlDbColumn> columns = rdr.GetColumnSchema();
                     for (int i = 0; i < colCount; i++) {
                         types[i] = (NpgsqlDbType) columns[i].NpgsqlDbType;
@@ -199,12 +211,12 @@ namespace bifeldy_sd3_lib_452.Databases {
                     }
                 }
 
-                StringBuilder sB = new StringBuilder(fieldNames[0]);
+                var sB = new StringBuilder(fieldNames[0]);
                 for (int p = 1; p < colCount; p++) {
                     sB.Append(", " + fieldNames[p]);
                 }
 
-                using (NpgsqlBinaryImporter writer = ((NpgsqlConnection) DatabaseConnection).BeginBinaryImport($"COPY {tableName} ({sB}) FROM STDIN (FORMAT BINARY)")) {
+                using (NpgsqlBinaryImporter writer = ((NpgsqlConnection) this.DatabaseConnection).BeginBinaryImport($"COPY {tableName} ({sB}) FROM STDIN (FORMAT BINARY)")) {
                     for (int j = 0; j < dataTable.Rows.Count; j++) {
                         DataRow dR = dataTable.Rows[j];
                         writer.StartRow();
@@ -225,6 +237,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                                         else {
                                             writer.Write((byte) dR[i], types[i]);
                                         }
+
                                         break;
                                     case NpgsqlDbType.Boolean:
                                         writer.Write((bool) dR[i], types[i]);
@@ -233,20 +246,21 @@ namespace bifeldy_sd3_lib_452.Databases {
                                         writer.Write((byte[]) dR[i], types[i]);
                                         break;
                                     case NpgsqlDbType.Char:
-                                        if (dR[i] is string) {
-                                            writer.Write((string) dR[i], types[i]);
+                                        if (dR[i] is string kata) {
+                                            writer.Write(kata, types[i]);
                                         }
                                         else if (dR[i] is Guid) {
                                             string value = dR[i].ToString();
                                             writer.Write(value, types[i]);
                                         }
                                         else if (lengths[i] > 1) {
-                                            writer.Write((char[]) dR[i], types[i]);
+                                            writer.Write((char[])dR[i], types[i]);
                                         }
                                         else {
                                             char[] s = dR[i].ToString().ToCharArray();
                                             writer.Write(s[0], types[i]);
                                         }
+
                                         break;
                                     case NpgsqlDbType.Time:
                                     case NpgsqlDbType.Timestamp:
@@ -259,8 +273,8 @@ namespace bifeldy_sd3_lib_452.Databases {
                                         break;
                                     case NpgsqlDbType.Integer:
                                         try {
-                                            if (dR[i] is int) {
-                                                writer.Write((int) dR[i], types[i]);
+                                            if (dR[i] is int angka) {
+                                                writer.Write(angka, types[i]);
                                                 break;
                                             }
                                             else if (dR[i] is string) {
@@ -270,9 +284,10 @@ namespace bifeldy_sd3_lib_452.Databases {
                                             }
                                         }
                                         catch (Exception ex) {
-                                            _logger.WriteError(ex, 3);
+                                            this._logger.WriteError(ex.Message, 3);
                                             string sh = ex.Message;
                                         }
+
                                         writer.Write(dR[i], types[i]);
                                         break;
                                     case NpgsqlDbType.Interval:
@@ -288,16 +303,18 @@ namespace bifeldy_sd3_lib_452.Databases {
                                     case NpgsqlDbType.Smallint:
                                         try {
                                             if (dR[i] is byte) {
-                                                var swap = Convert.ToInt16(dR[i]);
+                                                short swap = Convert.ToInt16(dR[i]);
                                                 writer.Write(swap, types[i]);
                                                 break;
                                             }
+
                                             writer.Write((short) dR[i], types[i]);
                                         }
                                         catch (Exception ex) {
-                                            _logger.WriteError(ex, 4);
+                                            this._logger.WriteError(ex.Message, 3);
                                             string ms = ex.Message;
                                         }
+
                                         break;
                                     case NpgsqlDbType.Varchar:
                                     case NpgsqlDbType.Text:
@@ -320,7 +337,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                 result = true;
             }
             catch (Exception ex) {
-                _logger.WriteError(ex, 3);
+                this._logger.WriteError(ex, 3);
                 exception = ex;
             }
 
@@ -329,21 +346,21 @@ namespace bifeldy_sd3_lib_452.Databases {
 
         /// <summary> Jangan Lupa Di Close Koneksinya (Wajib) </summary>
         public override async Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
-            DatabaseCommand.CommandText = queryString;
-            DatabaseCommand.CommandType = CommandType.Text;
-            BindQueryParameter(bindParam);
-            return await ExecReaderAsync(DatabaseCommand);
+            this.DatabaseCommand.CommandText = queryString;
+            this.DatabaseCommand.CommandType = CommandType.Text;
+            this.BindQueryParameter(bindParam);
+            return await this.ExecReaderAsync(this.DatabaseCommand);
         }
 
         public override async Task<string> RetrieveBlob(string stringPathDownload, string stringFileName, string queryString, List<CDbQueryParamBind> bindParam = null) {
-            DatabaseCommand.CommandText = queryString;
-            DatabaseCommand.CommandType = CommandType.Text;
-            BindQueryParameter(bindParam);
-            return await RetrieveBlob(DatabaseCommand, stringPathDownload, stringFileName);
+            this.DatabaseCommand.CommandText = queryString;
+            this.DatabaseCommand.CommandType = CommandType.Text;
+            this.BindQueryParameter(bindParam);
+            return await this.RetrieveBlob(this.DatabaseCommand, stringPathDownload, stringFileName);
         }
 
         public CPostgres NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName) {
-            CPostgres postgres = (CPostgres) Clone();
+            var postgres = (CPostgres) this.Clone();
             postgres.InitializePostgresDatabase(dbIpAddrss, dbPort, dbUsername, dbPassword, dbName);
             postgres.SettingUpDatabase();
             return postgres;

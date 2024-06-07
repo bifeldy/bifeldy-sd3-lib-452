@@ -40,63 +40,67 @@ namespace bifeldy_sd3_lib_452.Databases {
         private OracleDataAdapter DatabaseAdapter { get; set; }
 
         public COracle(IApplication app, ILogger logger, IConverter converter) : base(logger, converter) {
-            _app = app;
-            _logger = logger;
+            this._app = app;
+            this._logger = logger;
 
-            InitializeOracleDatabase();
-            SettingUpDatabase();
+            this.InitializeOracleDatabase();
+            this.SettingUpDatabase();
         }
 
         private void InitializeOracleDatabase(string dbUsername = null, string dbPassword = null, string dbTnsOdp = null) {
-            DbUsername = dbUsername ?? _app.GetVariabel("UserOrcl");
-            DbPassword = dbPassword ?? _app.GetVariabel("PasswordOrcl");
-            string _dbTnsOdp = dbTnsOdp ?? _app.GetVariabel("ODPOrcl");
+            this.DbUsername = dbUsername ?? this._app.GetVariabel("UserOrcl");
+            this.DbPassword = dbPassword ?? this._app.GetVariabel("PasswordOrcl");
+            string _dbTnsOdp = dbTnsOdp ?? this._app.GetVariabel("ODPOrcl");
             if (!string.IsNullOrEmpty(_dbTnsOdp)) {
                 _dbTnsOdp = Regex.Replace(_dbTnsOdp, @"\s+", "");
             }
-            DbTnsOdp = _dbTnsOdp;
+
+            this.DbTnsOdp = _dbTnsOdp;
         }
 
         private void SettingUpDatabase() {
             try {
                 string _dbName = null;
-                if (!string.IsNullOrEmpty(DbTnsOdp)) {
-                    _dbName = DbTnsOdp.Split(new string[] { "SERVICE_NAME=" }, StringSplitOptions.None)[1].Split(new string[] { ")" }, StringSplitOptions.None)[0];
+                if (!string.IsNullOrEmpty(this.DbTnsOdp)) {
+                    _dbName = this.DbTnsOdp.Split(new string[] { "SERVICE_NAME=" }, StringSplitOptions.None)[1].Split(new string[] { ")" }, StringSplitOptions.None)[0];
                 }
-                DbName = _dbName;
-                DbConnectionString = $"Data Source={DbTnsOdp};User ID={DbUsername};Password={DbPassword};Connection Timeout=180;"; // 3 menit
+
+                this.DbName = _dbName;
+                this.DbConnectionString = $"Data Source={this.DbTnsOdp};User ID={this.DbUsername};Password={this.DbPassword};Connection Timeout=180;"; // 3 menit
                 if (
-                    string.IsNullOrEmpty(DbTnsOdp) ||
-                    string.IsNullOrEmpty(DbUsername) ||
-                    string.IsNullOrEmpty(DbPassword)
+                    string.IsNullOrEmpty(this.DbTnsOdp) ||
+                    string.IsNullOrEmpty(this.DbUsername) ||
+                    string.IsNullOrEmpty(this.DbPassword)
                 ) {
                     throw new Exception("Database Tidak Tersedia");
                 }
-                DatabaseConnection = new OracleConnection(DbConnectionString);
-                DatabaseCommand = new OracleCommand {
-                    Connection = (OracleConnection) DatabaseConnection,
+
+                this.DatabaseConnection = new OracleConnection(this.DbConnectionString);
+                this.DatabaseCommand = new OracleCommand {
+                    Connection = (OracleConnection) this.DatabaseConnection,
                     BindByName = true,
                     InitialLOBFetchSize = -1,
                     InitialLONGFetchSize = -1,
                     CommandTimeout = 1800 // 30 menit
                 };
-                DatabaseAdapter = new OracleDataAdapter(DatabaseCommand);
-                _logger.WriteInfo(GetType().Name, DbConnectionString);
+                this.DatabaseAdapter = new OracleDataAdapter(this.DatabaseCommand);
+                this._logger.WriteInfo(this.GetType().Name, this.DbConnectionString);
             }
             catch (Exception ex) {
-                _logger.WriteError(ex);
+                this._logger.WriteError(ex);
             }
         }
 
         protected override void BindQueryParameter(List<CDbQueryParamBind> parameters) {
             char prefix = ':';
-            DatabaseCommand.Parameters.Clear();
+            this.DatabaseCommand.Parameters.Clear();
             if (parameters != null) {
                 for (int i = 0; i < parameters.Count; i++) {
                     string pName = parameters[i].NAME.StartsWith($"{prefix}") ? parameters[i].NAME.Substring(1) : parameters[i].NAME;
                     if (string.IsNullOrEmpty(pName)) {
                         throw new Exception("Nama Parameter Wajib Diisi");
                     }
+
                     dynamic pVal = parameters[i].VALUE;
                     Type pValType = (pVal == null) ? typeof(DBNull) : pVal.GetType();
                     if (pValType.IsArray) {
@@ -106,66 +110,71 @@ namespace bifeldy_sd3_lib_452.Databases {
                             if (!string.IsNullOrEmpty(bindStr)) {
                                 bindStr += ", ";
                             }
+
                             bindStr += $"{prefix}{pName}_{id}";
-                            DatabaseCommand.Parameters.Add(new OracleParameter {
+                            this.DatabaseCommand.Parameters.Add(new OracleParameter {
                                 ParameterName = $"{pName}_{id}",
                                 Value = data ?? DBNull.Value
                             });
                             id++;
                         }
-                        Regex regex = new Regex($"{prefix}{pName}");
-                        DatabaseCommand.CommandText = regex.Replace(DatabaseCommand.CommandText, bindStr, 1);
+
+                        var regex = new Regex($"{prefix}{pName}");
+                        this.DatabaseCommand.CommandText = regex.Replace(this.DatabaseCommand.CommandText, bindStr, 1);
                     }
                     else {
-                        OracleParameter param = new OracleParameter {
+                        var param = new OracleParameter {
                             ParameterName = pName,
                             Value = pVal ?? DBNull.Value
                         };
                         if (parameters[i].SIZE > 0) {
                             param.Size = parameters[i].SIZE;
                         }
+
                         if (parameters[i].DIRECTION > 0) {
                             param.Direction = parameters[i].DIRECTION;
                         }
-                        DatabaseCommand.Parameters.Add(param);
+
+                        this.DatabaseCommand.Parameters.Add(param);
                     }
                 }
             }
-            LogQueryParameter(DatabaseCommand, prefix);
+
+            this.LogQueryParameter(this.DatabaseCommand, prefix);
         }
 
         public override async Task<DataColumnCollection> GetAllColumnTableAsync(string tableName) {
-            DatabaseCommand.CommandText = $@"SELECT * FROM {tableName} WHERE ROWNUM <= 1";
-            DatabaseCommand.CommandType = CommandType.Text;
-            return await GetAllColumnTableAsync(tableName, DatabaseCommand);
+            this.DatabaseCommand.CommandText = $@"SELECT * FROM {tableName} WHERE ROWNUM <= 1";
+            this.DatabaseCommand.CommandType = CommandType.Text;
+            return await this.GetAllColumnTableAsync(tableName, this.DatabaseCommand);
         }
 
         public override async Task<DataTable> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
-            DatabaseCommand.CommandText = queryString;
-            DatabaseCommand.CommandType = CommandType.Text;
-            BindQueryParameter(bindParam);
-            return await GetDataTableAsync(DatabaseCommand);
+            this.DatabaseCommand.CommandText = queryString;
+            this.DatabaseCommand.CommandType = CommandType.Text;
+            this.BindQueryParameter(bindParam);
+            return await this.GetDataTableAsync(this.DatabaseCommand);
         }
 
         public override async Task<T> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null) {
-            DatabaseCommand.CommandText = queryString;
-            DatabaseCommand.CommandType = CommandType.Text;
-            BindQueryParameter(bindParam);
-            return await ExecScalarAsync<T>(DatabaseCommand);
+            this.DatabaseCommand.CommandText = queryString;
+            this.DatabaseCommand.CommandType = CommandType.Text;
+            this.BindQueryParameter(bindParam);
+            return await this.ExecScalarAsync<T>(this.DatabaseCommand);
         }
 
         public override async Task<bool> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
-            DatabaseCommand.CommandText = queryString;
-            DatabaseCommand.CommandType = CommandType.Text;
-            BindQueryParameter(bindParam);
-            return await ExecQueryAsync(DatabaseCommand);
+            this.DatabaseCommand.CommandText = queryString;
+            this.DatabaseCommand.CommandType = CommandType.Text;
+            this.BindQueryParameter(bindParam);
+            return await this.ExecQueryAsync(this.DatabaseCommand);
         }
 
         public override async Task<CDbExecProcResult> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null) {
-            DatabaseCommand.CommandText = procedureName;
-            DatabaseCommand.CommandType = CommandType.StoredProcedure;
-            BindQueryParameter(bindParam);
-            return await ExecProcedureAsync(DatabaseCommand);
+            this.DatabaseCommand.CommandText = procedureName;
+            this.DatabaseCommand.CommandType = CommandType.StoredProcedure;
+            this.BindQueryParameter(bindParam);
+            return await this.ExecProcedureAsync(this.DatabaseCommand);
         }
 
         public override async Task<bool> BulkInsertInto(string tableName, DataTable dataTable) {
@@ -173,43 +182,45 @@ namespace bifeldy_sd3_lib_452.Databases {
             Exception exception = null;
             OracleBulkCopy dbBulkCopy = null;
             try {
-                await OpenConnection();
-                dbBulkCopy = new OracleBulkCopy((OracleConnection) DatabaseConnection) {
+                await this.OpenConnection();
+                dbBulkCopy = new OracleBulkCopy((OracleConnection) this.DatabaseConnection) {
                     DestinationTableName = tableName
                 };
                 dbBulkCopy.WriteToServer(dataTable);
                 result = true;
             }
             catch (Exception ex) {
-                _logger.WriteError(ex, 4);
+                this._logger.WriteError(ex, 4);
                 exception = ex;
             }
             finally {
                 if (dbBulkCopy != null) {
                     dbBulkCopy.Close();
                 }
-                CloseConnection();
+
+                this.CloseConnection();
             }
+
             return (exception == null) ? result : throw exception;
         }
 
         /// <summary> Jangan Lupa Di Close Koneksinya (Wajib) </summary>
         public override async Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
-            DatabaseCommand.CommandText = queryString;
-            DatabaseCommand.CommandType = CommandType.Text;
-            BindQueryParameter(bindParam);
-            return await ExecReaderAsync(DatabaseCommand);
+            this.DatabaseCommand.CommandText = queryString;
+            this.DatabaseCommand.CommandType = CommandType.Text;
+            this.BindQueryParameter(bindParam);
+            return await this.ExecReaderAsync(this.DatabaseCommand);
         }
 
         public override async Task<string> RetrieveBlob(string stringPathDownload, string stringFileName, string queryString, List<CDbQueryParamBind> bindParam = null) {
-            DatabaseCommand.CommandText = queryString;
-            DatabaseCommand.CommandType = CommandType.Text;
-            BindQueryParameter(bindParam);
-            return await RetrieveBlob(DatabaseCommand, stringPathDownload, stringFileName);
+            this.DatabaseCommand.CommandText = queryString;
+            this.DatabaseCommand.CommandType = CommandType.Text;
+            this.BindQueryParameter(bindParam);
+            return await this.RetrieveBlob(this.DatabaseCommand, stringPathDownload, stringFileName);
         }
 
         public COracle NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid) {
-            COracle oracle = (COracle) Clone();
+            var oracle = (COracle) this.Clone();
             string dbTnsOdp = $"(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST={dbIpAddrss})(PORT={dbPort})))(CONNECT_DATA=(SERVICE_NAME={dbNameSid})))";
             oracle.InitializeOracleDatabase(dbUsername, dbPassword, dbTnsOdp);
             oracle.SettingUpDatabase();

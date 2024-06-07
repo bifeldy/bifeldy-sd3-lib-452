@@ -56,64 +56,67 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private UrlSigner urlSigner = null;
 
         public CGoogleCloudStorage(ILogger logger, IChiper chiper, IConverter converter) {
-            _logger = logger;
-            _chiper = chiper;
-            _converter = converter;
+            this._logger = logger;
+            this._chiper = chiper;
+            this._converter = converter;
         }
 
         public void LoadCredential(string pathFile, bool isEncrypted = false) {
-            credentialPath = pathFile;
-            if (string.IsNullOrEmpty(credentialPath) || !File.Exists(credentialPath)) {
+            this.credentialPath = pathFile;
+            if (string.IsNullOrEmpty(this.credentialPath) || !File.Exists(this.credentialPath)) {
                 throw new Exception("Lokasi file credential tidak valid");
             }
-            string text = File.ReadAllText(credentialPath);
-            _logger.WriteInfo($"{GetType().Name}Credential", text);
+
+            string text = File.ReadAllText(this.credentialPath);
+            this._logger.WriteInfo($"{this.GetType().Name}Credential", text);
             if (isEncrypted) {
-                text = _chiper.DecryptText(text);
+                text = this._chiper.DecryptText(text);
             }
             else {
-                File.WriteAllText($"{credentialPath}.txt", _chiper.EncryptText(text));
+                File.WriteAllText($"{this.credentialPath}.txt", this._chiper.EncryptText(text));
             }
-            IDictionary<string, string> json = _converter.JsonToObject<Dictionary<string, string>>(text);
-            json.TryGetValue("project_id", out projectId);
-            googleCredential = GoogleCredential.FromJson(text).CreateScoped(StorageService.Scope.DevstorageFullControl);
-            using (MemoryStream ms = new MemoryStream()) {
-                using (StreamWriter writer = new StreamWriter(ms)) {
+
+            IDictionary<string, string> json = this._converter.JsonToObject<Dictionary<string, string>>(text);
+            json.TryGetValue("project_id", out this.projectId);
+            this.googleCredential = GoogleCredential.FromJson(text).CreateScoped(StorageService.Scope.DevstorageFullControl);
+            using (var ms = new MemoryStream()) {
+                using (var writer = new StreamWriter(ms)) {
                     writer.Write(text);
                     writer.Flush();
                     ms.Position = 0;
-                    urlSigner = UrlSigner.FromServiceAccountData(ms);
+                    this.urlSigner = UrlSigner.FromServiceAccountData(ms);
                 }
             }
         }
 
         public void InitializeClient() {
-            if (googleCredential == null) {
-                LoadCredential(credentialPath);
+            if (this.googleCredential == null) {
+                this.LoadCredential(this.credentialPath);
             }
-            storageService = new StorageService(
+
+            this.storageService = new StorageService(
                 new BaseClientService.Initializer() {
                     HttpClientInitializer = googleCredential,
                     ApplicationName = projectId
                 }
             );
-            _logger.WriteInfo($"{GetType().Name}Client", projectId);
+            this._logger.WriteInfo($"{this.GetType().Name}Client", this.projectId);
         }
 
         public async Task<List<GcsBucket>> ListAllBuckets() {
-            if (storageService == null) {
-                InitializeClient();
+            if (this.storageService == null) {
+                this.InitializeClient();
             }
-            List<GcsBucket> allBuckets = new List<GcsBucket>();
 
-            BucketsResource.ListRequest request = storageService.Buckets.List(storageService.ApplicationName);
+            var allBuckets = new List<GcsBucket>();
+
+            BucketsResource.ListRequest request = this.storageService.Buckets.List(this.storageService.ApplicationName);
             request.Fields = "nextPageToken, items";
 
             ulong pageNum = 1;
             string pageToken = null;
             do {
-                _logger.WriteInfo($"{GetType().Name}LoadBucketPage", $"{pageNum}");
-
+                this._logger.WriteInfo($"{this.GetType().Name}LoadBucketPage", $"{pageNum}");
                 request.PageToken = pageToken;
                 Google.Apis.Storage.v1.Data.Buckets buckets = await request.ExecuteAsync();
                 pageToken = buckets.NextPageToken;
@@ -162,16 +165,18 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public async Task<List<GcsObject>> ListAllObjects(string path, string prefix = "", string delimiter = "") {
-            if (storageService == null) {
-                InitializeClient();
+            if (this.storageService == null) {
+                this.InitializeClient();
             }
-            List<GcsObject> allObjects = new List<GcsObject>();
 
-            ObjectsResource.ListRequest request = storageService.Objects.List(path);
+            var allObjects = new List<GcsObject>();
+
+            ObjectsResource.ListRequest request = this.storageService.Objects.List(path);
             request.Fields = "nextPageToken, items";
             if (!string.IsNullOrEmpty(prefix)) {
                 request.Prefix = prefix;
             }
+
             if (!string.IsNullOrEmpty(delimiter)) {
                 request.Delimiter = delimiter;
             }
@@ -179,7 +184,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             ulong pageNum = 1;
             string pageToken = null;
             do {
-                _logger.WriteInfo($"{GetType().Name}LoadObjectPage", $"{pageNum}");
+                this._logger.WriteInfo($"{this.GetType().Name}LoadObjectPage", $"{pageNum}");
 
                 request.PageToken = pageToken;
                 Google.Apis.Storage.v1.Data.Objects objects = await request.ExecuteAsync();
@@ -237,13 +242,13 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public GcsMediaUpload GenerateUploadMedia(FileInfo fileInfo, string bucketName, Stream stream) {
-            GcsObject obj = new GcsObject {
+            var obj = new GcsObject {
                 Name = fileInfo.Name,
                 Bucket = bucketName,
                 ContentType = MimeMapping.GetMimeMapping(fileInfo.Name),
             };
 
-            GcsMediaUpload mu = new GcsMediaUpload(storageService, obj, bucketName, stream, obj.ContentType);
+            var mu = new GcsMediaUpload(this.storageService, obj, bucketName, stream, obj.ContentType);
             mu.Fields = "id, name, size, contentType";
             mu.ChunkSize = ResumableUpload.MinimumChunkSize;
             return mu;
@@ -255,12 +260,13 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public async Task<CGcsUploadProgress> UploadFile(GcsMediaUpload mediaUpload, Uri uploadSession = null, Action<CGcsUploadProgress> uploadProgress = null) {
             if (uploadSession == null) {
-                uploadSession = await CreateUploadUri(mediaUpload);
+                uploadSession = await this.CreateUploadUri(mediaUpload);
             }
+
             if (uploadProgress != null) {
                 mediaUpload.ProgressChanged += (progressNew) => {
                     Enum.TryParse(progressNew.Status.ToString(), out EGcsUploadStatus progressStatus);
-                    CGcsUploadProgress upPrgs = new CGcsUploadProgress {
+                    var upPrgs = new CGcsUploadProgress {
                         Status = progressStatus,
                         BytesSent = progressNew.BytesSent,
                         Exception = progressNew.Exception
@@ -269,9 +275,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 };
             }
 
-            _logger.WriteInfo($"{GetType().Name}UploadStart", $"{mediaUpload.Body.Name} ===>>> {mediaUpload.Bucket} :: {mediaUpload.Body.Size} Bytes");
+            this._logger.WriteInfo($"{this.GetType().Name}UploadStart", $"{mediaUpload.Body.Name} ===>>> {mediaUpload.Bucket} :: {mediaUpload.Body.Size} Bytes");
             IUploadProgress result = await mediaUpload.ResumeAsync(uploadSession);
-            _logger.WriteInfo($"{GetType().Name}UploadCompleted", $"{mediaUpload.Body.Name} ===>>> {mediaUpload.Bucket} :: 100 %");
+            this._logger.WriteInfo($"{this.GetType().Name}UploadCompleted", $"{mediaUpload.Body.Name} ===>>> {mediaUpload.Bucket} :: 100 %");
 
             Enum.TryParse(result.Status.ToString(), out EGcsUploadStatus uploadStatus);
             return  new CGcsUploadProgress {
@@ -282,14 +288,14 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public async Task<CGcsDownloadProgress> DownloadFile(GcsObject fileObj, string fileLocalPath, Action<CGcsDownloadProgress> downloadProgress = null) {
-            ObjectsResource.GetRequest request = storageService.Objects.Get(fileObj.Bucket, fileObj.Name);
+            ObjectsResource.GetRequest request = this.storageService.Objects.Get(fileObj.Bucket, fileObj.Name);
 
             request.MediaDownloader.ChunkSize = ResumableUpload.MinimumChunkSize;
 
             if (downloadProgress != null) {
                 request.MediaDownloader.ProgressChanged += (progressNew) => {
                     Enum.TryParse(progressNew.Status.ToString(), out EGcsDownloadStatus progressStatus);
-                    CGcsDownloadProgress dwPrgs = new CGcsDownloadProgress {
+                    var dwPrgs = new CGcsDownloadProgress {
                         Status = progressStatus,
                         BytesDownloaded = progressNew.BytesDownloaded,
                         Exception = progressNew.Exception
@@ -298,11 +304,11 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 };
             }
 
-            _logger.WriteInfo($"{GetType().Name}DownloadStart", $"{fileObj.Bucket}/{fileObj.Name} <<<=== {fileLocalPath} :: {fileObj.Size} Bytes");
+            this._logger.WriteInfo($"{this.GetType().Name}DownloadStart", $"{fileObj.Bucket}/{fileObj.Name} <<<=== {fileLocalPath} :: {fileObj.Size} Bytes");
 
-            using (FileStream fs = new FileStream(fileLocalPath, FileMode.Create, FileAccess.Write)) {
+            using (var fs = new FileStream(fileLocalPath, FileMode.Create, FileAccess.Write)) {
                 IDownloadProgress result = await request.DownloadAsync(fs);
-                _logger.WriteInfo($"{GetType().Name}DownloadCompleted", $"{fileObj.Bucket}/{fileObj.Name} <<<=== {fileLocalPath} :: 100 %");
+                this._logger.WriteInfo($"{this.GetType().Name}DownloadCompleted", $"{fileObj.Bucket}/{fileObj.Name} <<<=== {fileLocalPath} :: 100 %");
 
                 Enum.TryParse(result.Status.ToString(), out EGcsDownloadStatus downloadStatus);
                 return new CGcsDownloadProgress {
@@ -314,14 +320,14 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public async Task<string> CreateDownloadUrlSigned(GcsObject fileObj, TimeSpan expiredDurationFromNow) {
-            string ddl = await urlSigner.SignAsync(fileObj.Bucket, fileObj.Name, expiredDurationFromNow);
-            _logger.WriteInfo($"{GetType().Name}DirectDownloadLinkTimeSpan", ddl);
+            string ddl = await this.urlSigner.SignAsync(fileObj.Bucket, fileObj.Name, expiredDurationFromNow);
+            this._logger.WriteInfo($"{this.GetType().Name}DirectDownloadLinkTimeSpan", ddl);
             return ddl;
         }
 
         public async Task<string> CreateDownloadUrlSigned(GcsObject fileObj, DateTime expiryDateTime) {
-            string ddl = await urlSigner.SignAsync(fileObj.Bucket, fileObj.Name, expiryDateTime);
-            _logger.WriteInfo($"{GetType().Name}DirectDownloadLinkDateTime", ddl);
+            string ddl = await this.urlSigner.SignAsync(fileObj.Bucket, fileObj.Name, expiryDateTime);
+            this._logger.WriteInfo($"{this.GetType().Name}DirectDownloadLinkDateTime", ddl);
             return ddl;
         }
 

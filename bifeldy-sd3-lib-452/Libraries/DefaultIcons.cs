@@ -24,21 +24,17 @@ namespace bifeldy_sd3_lib_452.Libraries {
 
         private static readonly Lazy<Icon> _lazyFolderIcon = new Lazy<Icon>(FetchIcon, true);
 
-        public static Icon FolderLarge {
-            get {
-                return _lazyFolderIcon.Value;
-            }
-        }
+        public static Icon FolderLarge => _lazyFolderIcon.Value;
 
         private static Icon FetchIcon() {
-            var tmpDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString())).FullName;
-            var icon = ExtractFromPath(tmpDir);
+            string tmpDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString())).FullName;
+            Icon icon = ExtractFromPath(tmpDir);
             Directory.Delete(tmpDir);
             return icon;
         }
 
         private static Icon ExtractFromPath(string path) {
-            SHFILEINFO shinfo = new SHFILEINFO();
+            var shinfo = new SHFILEINFO();
             SHGetFileInfo(
                 path,
                 0, ref shinfo, (uint) Marshal.SizeOf(shinfo),
@@ -52,9 +48,7 @@ namespace bifeldy_sd3_lib_452.Libraries {
 
         // https://renenyffenegger.ch/development/Windows/PowerShell/examples/WinAPI/ExtractIconEx/shell32.html
         public static Icon Extract(string file, int number, bool largeIcon) {
-            IntPtr large;
-            IntPtr small;
-            ExtractIconEx(file, number, out large, out small, 1);
+            ExtractIconEx(file, number, out IntPtr large, out IntPtr small, 1);
             try {
                 return Icon.FromHandle(largeIcon ? large : small);
             }
@@ -108,16 +102,17 @@ namespace bifeldy_sd3_lib_452.Libraries {
                     }
                 }
             }
+
             return icon;
         }
 
         public static async Task<Icon> GetIconFromUrl(string url) {
             var httpClient = new HttpClient();
-            using (var stream = await httpClient.GetStreamAsync(url)) {
+            using (Stream stream = await httpClient.GetStreamAsync(url)) {
                 using (var ms = new MemoryStream()) {
                     stream.CopyTo(ms);
                     ms.Seek(0, SeekOrigin.Begin); // See https://stackoverflow.com/a/72205381/640195
-                    Image img = Image.FromStream(ms);
+                    var img = Image.FromStream(ms);
                     return ConvertToIco(img, 64);
                 }
             }

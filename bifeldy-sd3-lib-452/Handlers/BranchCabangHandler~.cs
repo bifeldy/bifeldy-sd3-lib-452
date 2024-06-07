@@ -47,22 +47,22 @@ namespace bifeldy_sd3_lib_452.Handlers {
         >();
 
         public CBranchCabangHandler(IApplication app, IConfig config, IApi api, IDbHandler db, ILogger logger, IConverter converter) {
-            _app = app;
-            _config = config;
-            _api = api;
-            _db = db;
-            _logger = logger;
-            _converter = converter;
+            this._app = app;
+            this._config = config;
+            this._api = api;
+            this._db = db;
+            this._logger = logger;
+            this._converter = converter;
         }
 
         public async Task<List<DC_TABEL_V>> GetListBranchDbInformation(string kodeDcInduk) {
-            string url = await _db.OraPg_GetURLWebService("SYNCHO") ?? _config.Get<string>("WsSyncHo", _app.GetConfig("ws_syncho"));
+            string url = await this._db.OraPg_GetURLWebService("SYNCHO") ?? this._config.Get<string>("WsSyncHo", this._app.GetConfig("ws_syncho"));
             url += kodeDcInduk;
 
-            HttpResponseMessage httpResponse = await _api.PostData(url, null);
+            HttpResponseMessage httpResponse = await this._api.PostData(url, null);
             string httpResString = await httpResponse.Content.ReadAsStringAsync();
 
-            return _converter.JsonToObject<List<DC_TABEL_V>>(httpResString);
+            return this._converter.JsonToObject<List<DC_TABEL_V>>(httpResString);
         }
 
         //
@@ -78,24 +78,26 @@ namespace bifeldy_sd3_lib_452.Handlers {
             IDictionary<string, CDatabase> dbCons = new Dictionary<string, CDatabase>();
 
             try {
-                List<DC_TABEL_V> dbInfo = await GetListBranchDbInformation(kodeDcInduk);
+                List<DC_TABEL_V> dbInfo = await this.GetListBranchDbInformation(kodeDcInduk);
                 foreach (DC_TABEL_V dbi in dbInfo) {
                     CDatabase dbCon;
                     if (dbi.FLAG_DBPG == "Y") {
-                        dbCon = _db.NewExternalConnectionPg(dbi.DBPG_IP, dbi.DBPG_PORT, dbi.DBPG_USER, dbi.DBPG_PASS, dbi.DBPG_NAME);
+                        dbCon = this._db.NewExternalConnectionPg(dbi.DBPG_IP, dbi.DBPG_PORT, dbi.DBPG_USER, dbi.DBPG_PASS, dbi.DBPG_NAME);
                     }
                     else {
-                        dbCon = _db.NewExternalConnectionOra(dbi.IP_DB, dbi.DB_PORT, dbi.DB_USER_NAME, dbi.DB_PASSWORD, dbi.DB_SID);
+                        dbCon = this._db.NewExternalConnectionOra(dbi.IP_DB, dbi.DB_PORT, dbi.DB_USER_NAME, dbi.DB_PASSWORD, dbi.DB_SID);
                     }
+
                     dbCons.Add(dbi.TBL_DC_KODE, dbCon);
                 }
-                BranchConnectionInfo[kodeDcInduk] = dbCons;
+
+                this.BranchConnectionInfo[kodeDcInduk] = dbCons;
             }
             catch (Exception ex) {
-                _logger.WriteError(ex);
+                this._logger.WriteError(ex);
             }
 
-            return BranchConnectionInfo[kodeDcInduk];
+            return this.BranchConnectionInfo[kodeDcInduk];
         }
 
     }

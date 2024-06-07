@@ -21,41 +21,40 @@ namespace bifeldy_sd3_lib_452.Models {
     // sealed BehaviorSubject
 
     public sealed class RxBehaviorSubject<T> : SubjectBase<T>, IDisposable {
-
-        BehaviorSubject<T> _backing = null;
+        readonly BehaviorSubject<T> _backing = null;
 
         public RxBehaviorSubject(T value) {
-             _backing = new BehaviorSubject<T>(value);
+            this._backing = new BehaviorSubject<T>(value);
         }
 
-        public override bool HasObservers => _backing.HasObservers;
+        public override bool HasObservers => this._backing.HasObservers;
 
-        public override bool IsDisposed => _backing.IsDisposed;
+        public override bool IsDisposed => this._backing.IsDisposed;
 
-        public T Value => _backing.Value;
+        public T Value => this._backing.Value;
 
         public bool TryGetValue(out T value) {
-            return _backing.TryGetValue(out value);
+            return this._backing.TryGetValue(out value);
         }
 
         public override void Dispose() {
-            _backing.Dispose();
+            this._backing.Dispose();
         }
 
         public override void OnCompleted() {
-            _backing.OnCompleted();
+            this._backing.OnCompleted();
         }
 
         public override void OnError(Exception error) {
-            _backing.OnError(error);
+            this._backing.OnError(error);
         }
 
         public override void OnNext(T value) {
-            _backing.OnNext(value);
+            this._backing.OnNext(value);
         }
 
         public override IDisposable Subscribe(IObserver<T> observer) {
-            return _backing.Subscribe(observer);
+            return this._backing.Subscribe(observer);
         }
 
     }

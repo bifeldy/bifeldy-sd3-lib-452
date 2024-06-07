@@ -48,10 +48,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private const int DerivationIterations = 1000;
 
         public CChiper(IStream stream) {
-            _stream = stream;
+            this._stream = stream;
 
             string appName = Process.GetCurrentProcess().MainModule.ModuleName.ToUpper();
-            AppName = appName.Substring(0, appName.LastIndexOf(".EXE"));
+            this.AppName = appName.Substring(0, appName.LastIndexOf(".EXE"));
         }
 
         private byte[] Generate128BitsOfRandomEntropy() {
@@ -60,6 +60,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 // Fill the array with cryptographically secure random bytes.
                 rngCsp.GetBytes(randomBytes);
             }
+
             return randomBytes;
         }
 
@@ -177,16 +178,18 @@ namespace bifeldy_sd3_lib_452.Utilities {
             if (!File.Exists(filename)) {
                 throw new FileNotFoundException(filename + " Not Found");
             }
+
             const int maxContent = 256;
             byte[] buffer = new byte[maxContent];
-            using (FileStream fs = new FileStream(filename, FileMode.Open)) {
+            using (var fs = new FileStream(filename, FileMode.Open)) {
                 if (fs.Length >= maxContent) {
                     fs.Read(buffer, 0, maxContent);
                 }
                 else {
-                    fs.Read(buffer, 0, (int)fs.Length);
+                    fs.Read(buffer, 0, (int) fs.Length);
                 }
             }
+
             IntPtr mimeTypePtr = IntPtr.Zero;
             try {
                 int result = FindMimeFromData(IntPtr.Zero, null, buffer, maxContent, null, 0, out mimeTypePtr, 0);
@@ -194,6 +197,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     Marshal.FreeCoTaskMem(mimeTypePtr);
                     throw Marshal.GetExceptionForHR(result);
                 }
+
                 string mime = Marshal.PtrToStringUni(mimeTypePtr);
                 Marshal.FreeCoTaskMem(mimeTypePtr);
                 return mime;
@@ -202,6 +206,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 if (mimeTypePtr != IntPtr.Zero) {
                     Marshal.FreeCoTaskMem(mimeTypePtr);
                 }
+
                 return "unknown/unknown";
             }
         }

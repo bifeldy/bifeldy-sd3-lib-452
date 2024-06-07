@@ -75,7 +75,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     }
                 }
             }
-            return $"{((decimal) bytes / digit):0.00} {ext}";
+
+            return $"{(decimal) bytes / digit:0.00} {ext}";
         }
 
         public Dictionary<string, T> ClassToDictionary<T>(object obj) {
@@ -88,6 +89,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                                 if (data.GetType() == typeof(DateTime)) {
                                     data = ((DateTime) data).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
                                 }
+
                                 if (typeof(T) == typeof(object)) {
                                     data = ObjectToJson(data);
                                 }
@@ -95,6 +97,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                                     data = $"{data}";
                                 }
                             }
+
                             return (T) data;
                         }
                         catch {

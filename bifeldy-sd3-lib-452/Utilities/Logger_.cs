@@ -41,73 +41,78 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private StreamWriter swError = null;
 
         public CLogger(IApplication app) {
-            _app = app;
+            this._app = app;
 
-            LogInfoFolderPath = Path.Combine(_app.AppLocation, "_data", "Info_Logs");
-            if (!Directory.Exists(LogInfoFolderPath)) {
-                Directory.CreateDirectory(LogInfoFolderPath);
+            this.LogInfoFolderPath = Path.Combine(this._app.AppLocation, "_data", "Info_Logs");
+            if (!Directory.Exists(this.LogInfoFolderPath)) {
+                Directory.CreateDirectory(this.LogInfoFolderPath);
             }
 
-            LogErrorFolderPath = Path.Combine(_app.AppLocation, "_data", "Error_Logs");
-            if (!Directory.Exists(LogErrorFolderPath)) {
-                Directory.CreateDirectory(LogErrorFolderPath);
+            this.LogErrorFolderPath = Path.Combine(this._app.AppLocation, "_data", "Error_Logs");
+            if (!Directory.Exists(this.LogErrorFolderPath)) {
+                Directory.CreateDirectory(this.LogErrorFolderPath);
             }
 
-            CheckStreamWritter();
+            this.CheckStreamWritter();
         }
 
         private void CheckStreamWritter() {
-            if (sSw != $"{DateTime.Now:yyyy-MM-dd}") {
-                sSw = $"{DateTime.Now:yyyy-MM-dd}";
-                if (swInfo != null) {
-                    swInfo.Close();
+            if (this.sSw != $"{DateTime.Now:yyyy-MM-dd}") {
+                this.sSw = $"{DateTime.Now:yyyy-MM-dd}";
+                if (this.swInfo != null) {
+                    this.swInfo.Close();
                 }
-                swInfo = new StreamWriter($"{LogInfoFolderPath}/{sSw}.log", true);
-                if (swError != null) {
-                    swError.Close();
+
+                this.swInfo = new StreamWriter($"{this.LogInfoFolderPath}/{this.sSw}.log", true);
+                if (this.swError != null) {
+                    this.swError.Close();
                 }
-                swError = new StreamWriter($"{LogErrorFolderPath}/{sSw}.log", true);
+
+                this.swError = new StreamWriter($"{this.LogErrorFolderPath}/{this.sSw}.log", true);
             }
         }
 
         public void SetLogReporter(IProgress<string> logReporter) {
-            LogReporter = logReporter;
+            this.LogReporter = logReporter;
         }
 
         public void WriteInfo(string subject, string body, bool newLine = false, bool force = false) {
             try {
-                CheckStreamWritter();
+                this.CheckStreamWritter();
                 string content = $"[{DateTime.Now:HH:mm:ss tt zzz}] {subject} :: {body} {Environment.NewLine}";
                 if (newLine) {
                     content += Environment.NewLine;
                 }
-                if (LogReporter != null) {
-                    LogReporter.Report(content);
+
+                if (this.LogReporter != null) {
+                    this.LogReporter.Report(content);
                 }
-                if (_app.DebugMode || force) {
-                    swInfo.WriteLine(content);
-                    swInfo.Flush();
+
+                if (this._app.DebugMode || force) {
+                    this.swInfo.WriteLine(content);
+                    this.swInfo.Flush();
                 }
             }
             catch (Exception ex) {
-                WriteError(ex);
+                this.WriteError(ex);
             }
         }
 
         public void WriteError(string errorMessage, int skipFrame = 1) {
             try {
-                CheckStreamWritter();
-                StackFrame fromsub = new StackFrame(skipFrame, false);
+                this.CheckStreamWritter();
+                var fromsub = new StackFrame(skipFrame, false);
                 string content = $"##" + Environment.NewLine;
                 content += $"#  ErrDate : {DateTime.Now:dd-MM-yyyy HH:mm:ss}" + Environment.NewLine;
                 content += $"#  ErrFunc : {fromsub.GetMethod().Name}" + Environment.NewLine;
                 content += $"#  ErrInfo : {errorMessage}" + Environment.NewLine;
                 content += $"##" + Environment.NewLine;
-                if (LogReporter != null) {
-                    LogReporter.Report(content);
+                if (this.LogReporter != null) {
+                    this.LogReporter.Report(content);
                 }
-                swError.WriteLine(content);
-                swError.Flush();
+
+                this.swError.WriteLine(content);
+                this.swError.Flush();
             }
             catch (Exception ex) {
                 // Nyerah ~~
@@ -120,7 +125,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public void WriteError(Exception errorException, int skipFrame = 2) {
-            WriteError(errorException.Message, skipFrame);
+            this.WriteError(errorException.Message, skipFrame);
         }
 
     }

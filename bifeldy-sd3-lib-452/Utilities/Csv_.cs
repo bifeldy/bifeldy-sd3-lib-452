@@ -32,24 +32,24 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public string CsvFolderPath { get; }
 
         public CCsv(IApplication app, ILogger logger, IConfig config) {
-            _app = app;
-            _logger = logger;
-            _config = config;
+            this._app = app;
+            this._logger = logger;
+            this._config = config;
 
-            CsvFolderPath = _config.Get<string>("CsvFolderPath", Path.Combine(_app.AppLocation, "_data", "Csv_Files"));
-            if (!Directory.Exists(CsvFolderPath)) {
-                Directory.CreateDirectory(CsvFolderPath);
+            this.CsvFolderPath = this._config.Get<string>("CsvFolderPath", Path.Combine(this._app.AppLocation, "_data", "Csv_Files"));
+            if (!Directory.Exists(this.CsvFolderPath)) {
+                Directory.CreateDirectory(this.CsvFolderPath);
             }
         }
 
         public bool DataTable2CSV(DataTable table, string filename, string separator, string outputPath = null) {
             bool res = false;
-            string path = Path.Combine(outputPath ?? CsvFolderPath, filename);
+            string path = Path.Combine(outputPath ?? this.CsvFolderPath, filename);
             StreamWriter writer = null;
             try {
                 writer = new StreamWriter(path);
                 string sep = string.Empty;
-                StringBuilder builder = new StringBuilder();
+                var builder = new StringBuilder();
                 foreach (DataColumn col in table.Columns) {
                     builder.Append(sep).Append(col.ColumnName);
                     sep = separator;
@@ -63,19 +63,22 @@ namespace bifeldy_sd3_lib_452.Utilities {
                         builder.Append(sep).Append(row[col.ColumnName]);
                         sep = separator;
                     }
+
                     writer.WriteLine(builder.ToString());
                 }
-                _logger.WriteInfo($"{GetType().Name}Dt2Csv", path);
+
+                this._logger.WriteInfo($"{this.GetType().Name}Dt2Csv", path);
                 res = true;
             }
             catch (Exception ex) {
-                _logger.WriteError(ex.Message);
+                this._logger.WriteError(ex.Message);
             }
             finally {
                 if (writer != null) {
                     writer.Close();
                 }
             }
+
             return res;
         }
 

@@ -30,7 +30,7 @@ namespace bifeldy_sd3_lib_452 {
         private IContainer container = null;
 
         public Bifeldy() {
-            _builder = new ContainerBuilder();
+            this._builder = new ContainerBuilder();
 
             /* Other Solution Project */
             // builder.RegisterAssemblyTypes(Assembly.Load(nameof(nama_project_lain_yang_mau_di_import)))
@@ -38,7 +38,7 @@ namespace bifeldy_sd3_lib_452 {
             //     .As(c => c.GetInterfaces().FirstOrDefault(i => i.Name == "I" + c.Name);
 
             // Inject CClass As IInterface Using Namespace
-            RegisterDiClassAsInterfaceByNamespace(Assembly.GetExecutingAssembly(), new string[] {
+            this.RegisterDiClassAsInterfaceByNamespace(Assembly.GetExecutingAssembly(), new string[] {
                 "bifeldy_sd3_lib_452.Databases",
                 "bifeldy_sd3_lib_452.Handlers",
                 "bifeldy_sd3_lib_452.Utilities"
@@ -62,7 +62,7 @@ namespace bifeldy_sd3_lib_452 {
                 CClass,
                 ConcreteReflectionActivatorData,
                 SingleRegistrationStyle
-            > registrationBuilder = _builder
+            > registrationBuilder = this._builder
                                         .RegisterType<CClass>();
             if (singleton) {
                 registrationBuilder.SingleInstance();
@@ -77,12 +77,12 @@ namespace bifeldy_sd3_lib_452 {
                 object,
                 Autofac.Features.Scanning.ScanningActivatorData,
                 DynamicRegistrationStyle
-            > registrationBuilder = _builder
+            > registrationBuilder = this._builder
                                         .RegisterAssemblyTypes(assembly)
                                         .Where(type => !string.IsNullOrEmpty(type.Namespace)
                                                         && namespaces.Any(type.Namespace.Contains)
                                                         && type.IsClass
-                                                        && Regex.IsMatch(type.Name, _acceptableIndentifierName));
+                                                        && Regex.IsMatch(type.Name, this._acceptableIndentifierName));
             if (singleton) {
                 registrationBuilder.SingleInstance();
             }
@@ -96,7 +96,7 @@ namespace bifeldy_sd3_lib_452 {
                 CClass,
                 ConcreteReflectionActivatorData,
                 SingleRegistrationStyle
-            > registrationBuilder = _builder
+            > registrationBuilder = this._builder
                                         .RegisterType<CClass>()
                                         .Named<object>(typeof(CClass).Name);
             if (singleton) {
@@ -112,12 +112,12 @@ namespace bifeldy_sd3_lib_452 {
                 object,
                 Autofac.Features.Scanning.ScanningActivatorData,
                 DynamicRegistrationStyle
-            > registrationBuilder = _builder
+            > registrationBuilder = this._builder
                                         .RegisterAssemblyTypes(assembly)
                                         .Where(type => !string.IsNullOrEmpty(type.Namespace)
                                                         && namespaces.Any(type.Namespace.Contains)
                                                         && type.IsClass
-                                                        && Regex.IsMatch(type.Name, _acceptableIndentifierName))
+                                                        && Regex.IsMatch(type.Name, this._acceptableIndentifierName))
                                         .Named<object>(c => c.Name);
             if (singleton) {
                 registrationBuilder.SingleInstance();
@@ -132,7 +132,7 @@ namespace bifeldy_sd3_lib_452 {
                 CClass,
                 ConcreteReflectionActivatorData,
                 SingleRegistrationStyle
-            > registrationBuilder = _builder.RegisterType<CClass>().As<IInterface>();
+            > registrationBuilder = this._builder.RegisterType<CClass>().As<IInterface>();
             if (singleton) {
                 registrationBuilder.SingleInstance();
             }
@@ -146,12 +146,12 @@ namespace bifeldy_sd3_lib_452 {
                 object,
                 Autofac.Features.Scanning.ScanningActivatorData,
                 DynamicRegistrationStyle
-            > registrationBuilder = _builder
+            > registrationBuilder = this._builder
                                         .RegisterAssemblyTypes(assembly)
                                         .Where(type => !string.IsNullOrEmpty(type.Namespace)
                                                         && namespaces.Any(type.Namespace.Contains)
                                                         && type.IsClass
-                                                        && Regex.IsMatch(type.Name, _acceptableIndentifierName))
+                                                        && Regex.IsMatch(type.Name, this._acceptableIndentifierName))
                                         .As(c => c.GetInterfaces().Where(i => i.Name == "I" + c.Name.Substring(1)).First());
             if (singleton) {
                 registrationBuilder.SingleInstance();
@@ -162,18 +162,19 @@ namespace bifeldy_sd3_lib_452 {
         }
 
         public CClass ResolveClass<CClass>() {
-            return container.Resolve<CClass>();
+            return this.container.Resolve<CClass>();
         }
 
         public CClass ResolveNamed<CClass>(string name) {
-            return (CClass) container.ResolveNamed<object>(name);
+            return (CClass) this.container.ResolveNamed<object>(name);
         }
 
         public dynamic BeginLifetimeScope() {
-            if (container == null) {
-                container = _builder.Build();
+            if (this.container == null) {
+                this.container = this._builder.Build();
             }
-            return container.BeginLifetimeScope();
+
+            return this.container.BeginLifetimeScope();
         }
 
     }

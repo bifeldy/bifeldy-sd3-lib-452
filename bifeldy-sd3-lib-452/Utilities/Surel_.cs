@@ -41,36 +41,34 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private readonly IDbHandler _db;
 
         public CSurel(IApplication app, ILogger logger, IConfig config, IDbHandler db) {
-            _app = app;
-            _logger = logger;
-            _config = config;
-            _db = db;
+            this._app = app;
+            this._logger = logger;
+            this._config = config;
+            this._db = db;
         }
 
         private async Task<SmtpClient> CreateSmtpClient() {
-            int port = int.Parse(await _db.OraPg_GetMailInfo<string>("MAIL_PORT"));
+            int port = int.Parse(await this._db.OraPg_GetMailInfo<string>("MAIL_PORT"));
             return new SmtpClient() {
-                Host = await _db.OraPg_GetMailInfo<string>("MAIL_IP") ?? _config.Get<string>("SmtpServerIpDomain", _app.GetConfig("smtp_server_ip_domain")),
-                Port = (port > 0) ? port : _config.Get<int>("SmtpServerPort", int.Parse(_app.GetConfig("smtp_server_port"))),
+                Host = await this._db.OraPg_GetMailInfo<string>("MAIL_IP") ?? this._config.Get<string>("SmtpServerIpDomain", this._app.GetConfig("smtp_server_ip_domain")),
+                Port = (port > 0) ? port : this._config.Get<int>("SmtpServerPort", int.Parse(this._app.GetConfig("smtp_server_port"))),
                 Credentials = new NetworkCredential(
-                    await _db.OraPg_GetMailInfo<string>("MAIL_USERNAME") ?? _config.Get<string>("SmtpServerUsername", _app.GetConfig("smtp_server_username"), true),
-                    await _db.OraPg_GetMailInfo<string>("MAIL_PASSWORD") ?? _config.Get<string>("SmtpServerPassword", _app.GetConfig("smtp_server_password"), true)
+                    await this._db.OraPg_GetMailInfo<string>("MAIL_USERNAME") ?? this._config.Get<string>("SmtpServerUsername", this._app.GetConfig("smtp_server_username"), true),
+                    await this._db.OraPg_GetMailInfo<string>("MAIL_PASSWORD") ?? this._config.Get<string>("SmtpServerPassword", this._app.GetConfig("smtp_server_password"), true)
                 )
             };
         }
 
         public MailAddress CreateEmailAddress(string address, string displayName = null) {
-            if (string.IsNullOrEmpty(displayName)) {
-                return new MailAddress(address);
-            }
-            return new MailAddress(address, displayName, Encoding.UTF8);
+            return string.IsNullOrEmpty(displayName) ? new MailAddress(address) : new MailAddress(address, displayName, Encoding.UTF8);
         }
 
         public List<MailAddress> CreateEmailAddress(string[] address) {
-            List<MailAddress> addresses = new List<MailAddress>();
+            var addresses = new List<MailAddress>();
             foreach(string a in address) {
-                addresses.Add(CreateEmailAddress(a));
+                addresses.Add(this.CreateEmailAddress(a));
             }
+
             return addresses;
         }
 
@@ -79,15 +77,16 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public List<Attachment> CreateEmailAttachment(string[] filePath) {
-            List<Attachment> attachments = new List<Attachment>();
+            var attachments = new List<Attachment>();
             foreach(string path in filePath) {
-                attachments.Add(CreateEmailAttachment(path));
+                attachments.Add(this.CreateEmailAttachment(path));
             }
+
             return attachments;
         }
 
         public MailAddress GetDefaultBotSenderFromAddress() {
-            return CreateEmailAddress("sd3@indomaret.co.id", $"[SD3_BOT] 📧 {_app.AppName} v{_app.AppVersion}");
+            return this.CreateEmailAddress("sd3@indomaret.co.id", $"[SD3_BOT] 📧 {this._app.AppName} v{this._app.AppVersion}");
         }
 
         public MailMessage CreateEmailMessage(
@@ -99,37 +98,41 @@ namespace bifeldy_sd3_lib_452.Utilities {
             List<Attachment> attachments = null,
             MailAddress from = null
         ) {
-            MailMessage mailMessage = new MailMessage() {
+            var mailMessage = new MailMessage() {
                 Subject = subject,
                 SubjectEncoding = Encoding.UTF8,
                 Body = body,
                 BodyEncoding = Encoding.UTF8,
-                From = from ?? GetDefaultBotSenderFromAddress(),
+                From = from ?? this.GetDefaultBotSenderFromAddress(),
                 IsBodyHtml = true
             };
             foreach (MailAddress t in to) {
                 mailMessage.To.Add(t);
             }
+
             if (cc != null) {
                 foreach (MailAddress c in cc) {
                     mailMessage.CC.Add(c);
                 }
             }
+
             if (bcc != null) {
                 foreach (MailAddress b in bcc) {
                     mailMessage.Bcc.Add(b);
                 }
             }
+
             if (attachments != null) {
                 foreach (Attachment a in attachments) {
                     mailMessage.Attachments.Add(a);
                 }
             }
+
             return mailMessage;
         }
 
         public async Task SendEmailMessage(MailMessage mailMessage) {
-            SmtpClient smtpClient = await CreateSmtpClient();
+            SmtpClient smtpClient = await this.CreateSmtpClient();
             await smtpClient.SendMailAsync(mailMessage);
         }
 
@@ -144,22 +147,23 @@ namespace bifeldy_sd3_lib_452.Utilities {
         ) {
             Exception e = null;
             try {
-                await SendEmailMessage(
-                    CreateEmailMessage(
+                await this.SendEmailMessage(
+                    this.CreateEmailMessage(
                         subject,
                         body,
                         to,
                         cc,
                         bcc,
                         attachments,
-                        from ?? GetDefaultBotSenderFromAddress()
+                        from ?? this.GetDefaultBotSenderFromAddress()
                     )
                 );
             }
             catch (Exception ex) {
-                _logger.WriteError(ex);
+                this._logger.WriteError(ex);
                 e = ex;
             }
+
             if (e != null) {
                 throw e;
             }

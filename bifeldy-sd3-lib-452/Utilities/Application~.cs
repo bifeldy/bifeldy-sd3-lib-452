@@ -65,28 +65,28 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private AppSettingsSection AppSettings = null;
 
         public CApplication(IConfig config) {
-            _config = config;
+            this._config = config;
 
-            CurrentProcess = Process.GetCurrentProcess();
+            this.CurrentProcess = Process.GetCurrentProcess();
             string[] args = Environment.GetCommandLineArgs();
             for (int i = 0; i < args.Length; i++) {
                 if (args[i].ToUpper() == "--SKIP-UPDATE") {
-                    IsSkipUpdate = true;
+                    this.IsSkipUpdate = true;
                 }
             }
 
             #if DEBUG
-                DebugMode = true;
+                this.DebugMode = true;
             #endif
 
-            _SettingLib = new SettingLib.Class1();
-            _SettingLibRest = new SettingLibRest.Class1();
+            this._SettingLib = new SettingLib.Class1();
+            this._SettingLibRest = new SettingLibRest.Class1();
 
-            AppPath = Process.GetCurrentProcess().MainModule.FileName;
+            this.AppPath = Process.GetCurrentProcess().MainModule.FileName;
             string appName = Process.GetCurrentProcess().MainModule.ModuleName.ToUpper();
-            AppName = appName.Substring(0, appName.LastIndexOf(".EXE"));
-            AppLocation = AppDomain.CurrentDomain.BaseDirectory;
-            AppVersion = string.Join("", Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion.Split('.'));
+            this.AppName = appName.Substring(0, appName.LastIndexOf(".EXE"));
+            this.AppLocation = AppDomain.CurrentDomain.BaseDirectory;
+            this.AppVersion = string.Join("", Process.GetCurrentProcess().MainModule.FileVersionInfo.FileVersion.Split('.'));
         }
 
         public void Shutdown() => Application.Current.Shutdown();
@@ -94,18 +94,19 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public string GetConfig(string key) {
             try {
                 // App.config -- Build Action: Embedded Resource
-                if (AppSettings == null) {
-                    Assembly asm = Assembly.LoadFile(AppPath);
+                if (this.AppSettings == null) {
+                    var asm = Assembly.LoadFile(this.AppPath);
                     string ns = asm.GetManifestResourceNames().FirstOrDefault(n => n.EndsWith(".App.config"));
                     using (Stream strm = asm.GetManifestResourceStream(ns)) {
-                        using (StreamReader sr = new StreamReader(strm)) {
-                            File.WriteAllText($"{AppPath}.config", sr.ReadToEnd());
-                            AppSettings = ConfigurationManager.OpenExeConfiguration(AppPath).AppSettings;
-                            File.Delete($"{AppPath}.config");
+                        using (var sr = new StreamReader(strm)) {
+                            File.WriteAllText($"{this.AppPath}.config", sr.ReadToEnd());
+                            this.AppSettings = ConfigurationManager.OpenExeConfiguration(this.AppPath).AppSettings;
+                            File.Delete($"{this.AppPath}.config");
                         }
                     }
                 }
-                return AppSettings.Settings[key].Value;
+
+                return this.AppSettings.Settings[key].Value;
             }
             catch {
                 return null;
@@ -114,31 +115,25 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public string GetVariabel(string key) {
             string id = string.Empty;
-            if (DebugMode) {
-                id = _config.Get<string>("SettingDebug", GetConfig("setting_debug"));
+            if (this.DebugMode) {
+                id = this._config.Get<string>("SettingDebug", this.GetConfig("setting_debug"));
             }
             
-            bool localDbOnly = _config.Get<bool>("LocalDbOnly", bool.Parse(GetConfig("local_db_only")));
+            bool localDbOnly = this._config.Get<bool>("LocalDbOnly", bool.Parse(this.GetConfig("local_db_only")));
             if (localDbOnly) {
                 return null;
             }
 
             try {
                 // http://xxx.xxx.xxx.xxx/KunciGxxx/Service.asmx
-                string result = _SettingLib.GetVariabel(key, id);
-                if (result.ToUpper().Contains("ERROR")) {
-                    throw new Exception("SettingLib Gagal");
-                }
-                return result;
+                string result = this._SettingLib.GetVariabel(key, id);
+                return result.ToUpper().Contains("ERROR") ? throw new Exception("SettingLib Gagal") : result;
             }
             catch {
                 try {
                     // http://xxx.xxx.xxx.xxx/KunciGxxx
-                    string result = _SettingLibRest.GetVariabel(key);
-                    if (result.ToUpper().Contains("ERROR")) {
-                        throw new Exception("SettingLibRest Gagal");
-                    }
-                    return result;
+                    string result = this._SettingLibRest.GetVariabel(key);
+                    return result.ToUpper().Contains("ERROR") ? throw new Exception("SettingLibRest Gagal") : result;
                 }
                 catch {
                     return null;
@@ -147,7 +142,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public CIpMacAddress[] GetIpMacAddress() {
-            List<CIpMacAddress> IpMacAddress = new List<CIpMacAddress>();
+            var IpMacAddress = new List<CIpMacAddress>();
             NetworkInterface[] nics = NetworkInterface.GetAllNetworkInterfaces();
             foreach (NetworkInterface nic in nics) {
                 if (nic.OperationalStatus == OperationalStatus.Up && nic.NetworkInterfaceType != NetworkInterfaceType.Loopback) {
@@ -165,6 +160,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                             }
                         }
                     }
+
                     IpMacAddress.Add(new CIpMacAddress {
                         NAME = nic.Name,
                         DESCRIPTION = nic.Description,
@@ -174,12 +170,13 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     });
                 }
             }
+
             return IpMacAddress.ToArray();
         }
 
         public string[] GetAllIpAddress() {
-            string[] iv4 = GetIpMacAddress().Where(d => !string.IsNullOrEmpty(d.IP_V4_ADDRESS)).Select(d => d.IP_V4_ADDRESS.ToUpper()).ToArray();
-            string[] iv6 = GetIpMacAddress().Where(d => !string.IsNullOrEmpty(d.IP_V6_ADDRESS)).Select(d => d.IP_V6_ADDRESS.ToUpper()).ToArray();
+            string[] iv4 = this.GetIpMacAddress().Where(d => !string.IsNullOrEmpty(d.IP_V4_ADDRESS)).Select(d => d.IP_V4_ADDRESS.ToUpper()).ToArray();
+            string[] iv6 = this.GetIpMacAddress().Where(d => !string.IsNullOrEmpty(d.IP_V6_ADDRESS)).Select(d => d.IP_V6_ADDRESS.ToUpper()).ToArray();
             string[] ip = new string[iv4.Length + iv6.Length];
             iv4.CopyTo(ip, 0);
             iv6.CopyTo(ip, iv4.Length);
@@ -187,7 +184,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public string[] GetAllMacAddress() {
-            return GetIpMacAddress().Where(d => !string.IsNullOrEmpty(d.MAC_ADDRESS)).Select(d => d.MAC_ADDRESS.ToUpper()).ToArray();
+            return this.GetIpMacAddress().Where(d => !string.IsNullOrEmpty(d.MAC_ADDRESS)).Select(d => d.MAC_ADDRESS.ToUpper()).ToArray();
         }
 
     }

@@ -28,54 +28,55 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private readonly IConverter _converter;
         private readonly IChiper _chiper;
 
-        private string ConfigPath = null;
+        private readonly string ConfigPath = null;
 
         private IDictionary<string, dynamic> AppConfig = null;
 
         public CConfig(IConverter converter, IChiper chiper) {
-            _converter = converter;
-            _chiper = chiper;
+            this._converter = converter;
+            this._chiper = chiper;
 
-            ConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "_data", "configuration.json");
-            Load();
+            this.ConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "_data", "configuration.json");
+            this.Load();
         }
 
         private void Load() {
-            FileInfo fi = new FileInfo(ConfigPath);
+            var fi = new FileInfo(this.ConfigPath);
             if (fi.Exists) {
-                using (StreamReader reader = new StreamReader(ConfigPath)) {
+                using (var reader = new StreamReader(this.ConfigPath)) {
                     string fileContents = reader.ReadToEnd();
-                    AppConfig = _converter.JsonToObject<Dictionary<string, dynamic>>(fileContents);
+                    this.AppConfig = this._converter.JsonToObject<Dictionary<string, dynamic>>(fileContents);
                 }
             }
-            else if (AppConfig == null) {
-                AppConfig = new ExpandoObject();
+            else if (this.AppConfig == null) {
+                this.AppConfig = new ExpandoObject();
             }
         }
 
         private void Save() {
-            string json = _converter.ObjectToJson(AppConfig);
-            File.WriteAllText(ConfigPath, json);
+            string json = this._converter.ObjectToJson(this.AppConfig);
+            File.WriteAllText(this.ConfigPath, json);
         }
 
         public T Get<T>(string keyName, dynamic defaultValue = null, bool encrypted = false) {
-            Load();
+            this.Load();
             try {
-                dynamic value = AppConfig[keyName];
+                dynamic value = this.AppConfig[keyName];
                 if (value.GetType() == typeof(string) && encrypted) {
-                    value = _chiper.DecryptText((string) value);
+                    value = this._chiper.DecryptText((string) value);
                 }
+
                 return (T) Convert.ChangeType(value, typeof(T));
             }
             catch {
                 Set(keyName, defaultValue, encrypted);
-                return Get<T>(keyName);
+                return this.Get<T>(keyName);
             }
         }
 
         public void Set(string keyName, dynamic value, bool encrypted = false) {
-            AppConfig[keyName] = (value.GetType() == typeof(string) && encrypted) ? _chiper.EncryptText(value) : value;
-            Save();
+            this.AppConfig[keyName] = (value.GetType() == typeof(string) && encrypted) ? this._chiper.EncryptText(value) : value;
+            this.Save();
         }
 
     }

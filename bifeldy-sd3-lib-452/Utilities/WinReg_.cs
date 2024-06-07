@@ -29,8 +29,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private readonly IConfig _config;
 
         public CWinReg (IApplication app, IConfig config) {
-            _app = app;
-            _config = config;
+            this._app = app;
+            this._config = config;
         }
 
         public void SetWindowsStartup(bool startAtBoot) {
@@ -40,14 +40,15 @@ namespace bifeldy_sd3_lib_452.Utilities {
             RegistryKeyPermissionCheck rkpc = RegistryKeyPermissionCheck.ReadWriteSubTree;
             RegistryRights rr = RegistryRights.FullControl;
             RegistryValueKind rvk = RegistryValueKind.String;
-            using (RegistryKey bk = RegistryKey.OpenBaseKey(rh, rv)) {
+            using (var bk = RegistryKey.OpenBaseKey(rh, rv)) {
                 using (RegistryKey sk = bk.OpenSubKey(registryKeyPath, rkpc, rr)) {
                     if (sk != null) {
-                        if (sk.GetValue(_app.AppName) != null) {
-                            sk.DeleteValue(_app.AppName, false);
+                        if (sk.GetValue(this._app.AppName) != null) {
+                            sk.DeleteValue(this._app.AppName, false);
                         }
+
                         if (startAtBoot) {
-                            sk.SetValue(_app.AppName, _app.AppPath, rvk);
+                            sk.SetValue(this._app.AppName, this._app.AppPath, rvk);
                         }
                     }
                 }
@@ -55,7 +56,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public void ReSetConfigWindowsStartup() {
-            SetWindowsStartup(_config.Get<bool>("WindowsStartup", bool.Parse(_app.GetConfig("windows_startup"))));
+            this.SetWindowsStartup(this._config.Get<bool>("WindowsStartup", bool.Parse(this._app.GetConfig("windows_startup"))));
         }
 
     }

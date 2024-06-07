@@ -32,6 +32,7 @@ namespace bifeldy_sd3_lib_452.Extensions {
                     array[i] = Convert.ToByte(arr[i], 16);
                 }
             }
+
             return array;
         }
 

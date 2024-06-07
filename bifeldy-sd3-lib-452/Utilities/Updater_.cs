@@ -48,28 +48,29 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private string ConnectionString { get; }
 
         public CUpdater(IApplication app, ILogger logger, IConfig config, IConverter converter, IDbHandler db) {
-            _app = app;
-            _logger = logger;
-            _config = config;
-            _converter = converter;
-            _db = db;
+            this._app = app;
+            this._logger = logger;
+            this._config = config;
+            this._converter = converter;
+            this._db = db;
 
-            UpdaterFtpIpDomain = _config.Get<string>("UpdaterFtpIpDomain", _app.GetConfig("updater_ftp_ip_domain"));
-            UpdaterFtpPort = _config.Get<int>("UpdaterFtpPort", int.Parse(_app.GetConfig("updater_ftp_port")));
-            UpdaterFtpUsername = _config.Get<string>("UpdaterFtpUsername", _app.GetConfig("updater_ftp_username"), true);
-            UpdaterFtpPassword = _config.Get<string>("UpdaterFtpPassword", _app.GetConfig("updater_ftp_password"), true);
-            ConnectionString = $"ftp://{UpdaterFtpUsername}:{UpdaterFtpPassword}@{UpdaterFtpIpDomain}:{UpdaterFtpPort}/{UpdaterWorkDir}";
+            this.UpdaterFtpIpDomain = this._config.Get<string>("UpdaterFtpIpDomain", this._app.GetConfig("updater_ftp_ip_domain"));
+            this.UpdaterFtpPort = this._config.Get<int>("UpdaterFtpPort", int.Parse(this._app.GetConfig("updater_ftp_port")));
+            this.UpdaterFtpUsername = this._config.Get<string>("UpdaterFtpUsername", this._app.GetConfig("updater_ftp_username"), true);
+            this.UpdaterFtpPassword = this._config.Get<string>("UpdaterFtpPassword", this._app.GetConfig("updater_ftp_password"), true);
+            this.ConnectionString = $"ftp://{this.UpdaterFtpUsername}:{this.UpdaterFtpPassword}@{this.UpdaterFtpIpDomain}:{this.UpdaterFtpPort}/{this.UpdaterWorkDir}";
         }
 
         public bool CheckUpdater(int newVersionTargetRequested = 0) {
             try {
-                string localUpdaterPath = Path.Combine(_app.AppLocation, UpdaterExeName);
-                Uri uriUpdaterAppPath = new Uri($"{ConnectionString}/{UpdaterExeName}");
-                Uri uriUpdaterAppVer = new Uri($"{ConnectionString}/{UpdaterVersion}");
-                WebClient webClient = new WebClient();
+                string localUpdaterPath = Path.Combine(this._app.AppLocation, this.UpdaterExeName);
+                var uriUpdaterAppPath = new Uri($"{this.ConnectionString}/{this.UpdaterExeName}");
+                var uriUpdaterAppVer = new Uri($"{this.ConnectionString}/{this.UpdaterVersion}");
+                var webClient = new WebClient();
                 if (!File.Exists(localUpdaterPath)) {
                     webClient.DownloadFile(uriUpdaterAppPath, localUpdaterPath);
                 }
+
                 int retry = 0;
                 do {
                     retry++;
@@ -78,46 +79,50 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     if (updaterRemoteVersion == updaterLocalVersion) {
                         break;
                     }
+
                     webClient.DownloadFile(uriUpdaterAppPath, localUpdaterPath);
                 }
                 while (retry < 3);
                 int currentPid = Process.GetCurrentProcess().Id;
-                Process updater = Process.Start(localUpdaterPath, $"--name \"{_app.AppName}\" --version {newVersionTargetRequested} --pid {currentPid}");
+                var updater = Process.Start(localUpdaterPath, $"--name \"{this._app.AppName}\" --version {newVersionTargetRequested} --pid {currentPid}");
                 updater.WaitForExit();
             }
             catch (Exception ex) {
-                _logger.WriteError(ex);
+                this._logger.WriteError(ex);
             }
+
             return false;
         }
 
         public async Task UpdateSqliteDatabase() {
-            List<string> Directories = new List<string>();
-            FtpWebRequest ftpRequest = (FtpWebRequest)WebRequest.Create(new Uri(ConnectionString));
+            var Directories = new List<string>();
+            var ftpRequest = (FtpWebRequest) WebRequest.Create(new Uri(this.ConnectionString));
             ftpRequest.Method = WebRequestMethods.Ftp.ListDirectory;
-            FtpWebResponse response = (FtpWebResponse)ftpRequest.GetResponse();
-            using (StreamReader streamReader = new StreamReader(response.GetResponseStream())) {
+            var response = (FtpWebResponse) ftpRequest.GetResponse();
+            using (var streamReader = new StreamReader(response.GetResponseStream())) {
                 string line = streamReader.ReadLine();
                 while (!string.IsNullOrEmpty(line)) {
                     Directories.Add(line);
                     line = streamReader.ReadLine();
                 }
             }
-            string jsonDbPath = Directories.Find(d => d.ToUpper().Contains($"{_app.AppName}.json".ToUpper()));
+
+            string jsonDbPath = Directories.Find(d => d.ToUpper().Contains($"{this._app.AppName}.json".ToUpper()));
             if (string.IsNullOrEmpty(jsonDbPath)) {
                 return;
             }
-            string ftpPathFile = ConnectionString.Replace(UpdaterWorkDir, "") + jsonDbPath;
+
+            string ftpPathFile = this.ConnectionString.Replace(this.UpdaterWorkDir, "") + jsonDbPath;
             string jsonDb = new WebClient().DownloadString(new Uri(ftpPathFile));
-            IDictionary<string, dynamic> dict = _converter.JsonToObject<IDictionary<string, dynamic>>(jsonDb);
+            IDictionary<string, dynamic> dict = this._converter.JsonToObject<IDictionary<string, dynamic>>(jsonDb);
             foreach (KeyValuePair<string, dynamic> kvp in dict) {
                 IDictionary<string, dynamic>[] tblRows = kvp.Value.ToObject<IDictionary<string, dynamic>[]>();
                 foreach (IDictionary<string, dynamic> tblRow in tblRows) {
                     string sqlInsertColumnQuery = $" INSERT INTO {kvp.Key} ( ";
                     string sqlInsertValuesQuery = $" ) VALUES ( ";
-                    List<CDbQueryParamBind> sqlInsertParam = new List<CDbQueryParamBind>();
+                    var sqlInsertParam = new List<CDbQueryParamBind>();
                     string sqlUpdateQuery = $" UPDATE {kvp.Key} SET ";
-                    List<CDbQueryParamBind> sqlUpdateParam = new List<CDbQueryParamBind>();
+                    var sqlUpdateParam = new List<CDbQueryParamBind>();
                     string sqlUpdateCondition = $" WHERE ";
                     long i = 0;
                     foreach (KeyValuePair<string, dynamic> row in tblRow) {
@@ -129,6 +134,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                         else {
                             sqlUpdateQuery += $" {column} = :{column} ";
                         }
+
                         sqlUpdateParam.Add(new CDbQueryParamBind { NAME = column, VALUE = value });
                         if (i > 0) {
                             sqlInsertColumnQuery += " , ";
@@ -137,18 +143,20 @@ namespace bifeldy_sd3_lib_452.Utilities {
                         else if (i > 1) {
                             sqlUpdateQuery += " , ";
                         }
+
                         sqlInsertColumnQuery += $" {column} ";
                         sqlInsertValuesQuery += $" :{column} ";
                         sqlInsertParam.Add(new CDbQueryParamBind { NAME = column, VALUE = value });
                         i++;
                     }
+
                     try {
                         string sql = sqlInsertColumnQuery + sqlInsertValuesQuery + " ) ";
-                        await _db.SQLite_ExecQuery(sql, sqlInsertParam);
+                        await this._db.SQLite_ExecQuery(sql, sqlInsertParam);
                     }
                     catch {
                         string sql = sqlUpdateQuery + sqlUpdateCondition;
-                        await _db.SQLite_ExecQuery(sql, sqlUpdateParam);
+                        await this._db.SQLite_ExecQuery(sql, sqlUpdateParam);
                     }
                 }
             }

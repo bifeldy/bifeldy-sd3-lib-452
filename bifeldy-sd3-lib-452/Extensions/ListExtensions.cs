@@ -23,7 +23,8 @@ namespace bifeldy_sd3_lib_452.Extensions {
             if (string.IsNullOrEmpty(tableName)) {
                 tableName = typeof(T).Name;
             }
-            DataTable table = new DataTable(tableName);
+
+            var table = new DataTable(tableName);
 
             //
             // Special handling for value types and string
@@ -40,7 +41,7 @@ namespace bifeldy_sd3_lib_452.Extensions {
                     throw new Exception("Nama Kolom Tabel Wajib Diisi");
                 }
 
-                DataColumn dc = new DataColumn(arrayListSingleValueColumnName, typeof(T));
+                var dc = new DataColumn(arrayListSingleValueColumnName, typeof(T));
                 table.Columns.Add(dc);
                 foreach (T item in listData) {
                     DataRow dr = table.NewRow();
@@ -64,6 +65,7 @@ namespace bifeldy_sd3_lib_452.Extensions {
                             row[prop.Name] = DBNull.Value;
                         }
                     }
+
                     table.Rows.Add(row);
                 }
             }

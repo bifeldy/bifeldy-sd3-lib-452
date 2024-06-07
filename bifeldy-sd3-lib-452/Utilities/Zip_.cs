@@ -38,72 +38,80 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public List<string> ListFileForZip { get; } = new List<string>();
 
         public CZip(IApplication app, ILogger logger, IConfig config) {
-            _app = app;
-            _logger = logger;
-            _config = config;
+            this._app = app;
+            this._logger = logger;
+            this._config = config;
 
-            ZipFolderPath = _config.Get<string>("ZipFolderPath", Path.Combine(_app.AppLocation, "_data", "Zip_Files"));
-            if (!Directory.Exists(ZipFolderPath)) {
-                Directory.CreateDirectory(ZipFolderPath);
+            this.ZipFolderPath = this._config.Get<string>("ZipFolderPath", Path.Combine(this._app.AppLocation, "_data", "Zip_Files"));
+            if (!Directory.Exists(this.ZipFolderPath)) {
+                Directory.CreateDirectory(this.ZipFolderPath);
             }
         }
 
         public int ZipListFileInFolder(string zipFileName, string folderPath, List<string> listFileName = null, string password = null, string outputPath = null) {
             int totalFileInZip = 0;
-            List<string> ls = listFileName ?? ListFileForZip;
-            string path = Path.Combine(outputPath ?? ZipFolderPath, zipFileName);
+            List<string> ls = listFileName ?? this.ListFileForZip;
+            string path = Path.Combine(outputPath ?? this.ZipFolderPath, zipFileName);
             try {
-                ZipFile zip = new ZipFile();
+                var zip = new ZipFile();
                 if (!string.IsNullOrEmpty(password)) {
                     zip.Password = password;
                     zip.CompressionLevel = CompressionLevel.BestCompression;
                 }
+
                 foreach (string targetFileName in ls) {
                     string filePath = Path.Combine(folderPath, targetFileName);
                     ZipEntry zipEntry = zip.AddFile(filePath, "");
                     if (zipEntry != null) {
                         totalFileInZip++;
                     }
-                    _logger.WriteInfo($"{GetType().Name}ZipAdd{(zipEntry == null ? "Fail" : "Ok")}", filePath);
+
+                    this._logger.WriteInfo($"{this.GetType().Name}ZipAdd{(zipEntry == null ? "Fail" : "Ok")}", filePath);
                 }
+
                 zip.Save(path);
-                _logger.WriteInfo($"{GetType().Name}ZipSave", path);
+                this._logger.WriteInfo($"{this.GetType().Name}ZipSave", path);
             }
             catch (Exception ex) {
-                _logger.WriteError(ex.Message);
+                this._logger.WriteError(ex.Message);
             }
             finally {
                 if (listFileName == null) {
                     ls.Clear();
                 }
             }
+
             return totalFileInZip;
         }
 
         public int ZipAllFileInFolder(string zipFileName, string folderPath, string password = null, string outputPath = null) {
             int totalFileInZip = 0;
-            string path = Path.Combine(outputPath ?? ZipFolderPath, zipFileName);
+            string path = Path.Combine(outputPath ?? this.ZipFolderPath, zipFileName);
             try {
-                ZipFile zip = new ZipFile();
+                var zip = new ZipFile();
                 if (!string.IsNullOrEmpty(password)) {
                     zip.Password = password;
                     zip.CompressionLevel = CompressionLevel.BestCompression;
                 }
-                DirectoryInfo directoryInfo = new DirectoryInfo(folderPath);
+
+                var directoryInfo = new DirectoryInfo(folderPath);
                 FileInfo[] fileInfos = directoryInfo.GetFiles();
                 foreach (FileInfo fileInfo in fileInfos) {
                     ZipEntry zipEntry = zip.AddFile(fileInfo.FullName, "");
                     if (zipEntry != null) {
                         totalFileInZip++;
                     }
-                    _logger.WriteInfo($"{GetType().Name}ZipAdd{(zipEntry == null ? "Fail" : "Ok")}", fileInfo.FullName);
+
+                    this._logger.WriteInfo($"{this.GetType().Name}ZipAdd{(zipEntry == null ? "Fail" : "Ok")}", fileInfo.FullName);
                 }
+
                 zip.Save(path);
-                _logger.WriteInfo($"{GetType().Name}ZipSave", path);
+                this._logger.WriteInfo($"{this.GetType().Name}ZipSave", path);
             }
             catch (Exception ex) {
-                _logger.WriteError(ex.Message);
+                this._logger.WriteError(ex.Message);
             }
+
             return totalFileInZip;
         }
 

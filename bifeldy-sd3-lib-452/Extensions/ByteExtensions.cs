@@ -29,6 +29,7 @@ namespace bifeldy_sd3_lib_452.Extensions {
             if (value.Length % bufferLength > 0) {
                 countOfArray++;
             }
+
             for (int i = 0; i < countOfArray; i++) {
                 yield return value.Skip(i * bufferLength).Take(bufferLength).ToArray();
             }

@@ -30,15 +30,14 @@ namespace bifeldy_sd3_lib_452.Utilities {
     public sealed class CPubSub : IPubSub {
 
         private readonly IConverter _converter;
-
-        IDictionary<string, dynamic> keyValuePairs = new ExpandoObject();
+        readonly IDictionary<string, dynamic> keyValuePairs = new ExpandoObject();
 
         public CPubSub(IConverter converter) {
-            _converter = converter;
+            this._converter = converter;
         }
 
         public bool IsExist(string key) {
-            return keyValuePairs.ContainsKey(key);
+            return this.keyValuePairs.ContainsKey(key);
         }
 
         public RxBehaviorSubject<T> CreateNewBehaviorSubject<T>(T initialValue) {
@@ -46,29 +45,27 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public RxBehaviorSubject<T> GetGlobalAppBehaviorSubject<T>(string key) {
-            if (string.IsNullOrEmpty(key)) {
-                throw new Exception("Nama Key Wajib Diisi");
-            }
-            if (!keyValuePairs.ContainsKey(key)) {
-                return CreateGlobalAppBehaviorSubject(key, default(T));
-            }
-            return keyValuePairs[key];
+            return string.IsNullOrEmpty(key)
+                ? throw new Exception("Nama Key Wajib Diisi")
+                : !this.keyValuePairs.ContainsKey(key) ? this.CreateGlobalAppBehaviorSubject(key, default(T)) : (RxBehaviorSubject<T>)this.keyValuePairs[key];
         }
 
         public RxBehaviorSubject<T> CreateGlobalAppBehaviorSubject<T>(string key, T initialValue) {
             if (string.IsNullOrEmpty(key)) {
                 throw new Exception("Nama Key Wajib Diisi");
             }
-            if (!keyValuePairs.ContainsKey(key)) {
-                keyValuePairs.Add(key, CreateNewBehaviorSubject(initialValue));
+
+            if (!this.keyValuePairs.ContainsKey(key)) {
+                this.keyValuePairs.Add(key, this.CreateNewBehaviorSubject(initialValue));
             }
-            return keyValuePairs[key];
+
+            return this.keyValuePairs[key];
         }
 
         public void DisposeAndRemoveSubscriber(string key) {
-            if (keyValuePairs.ContainsKey(key)) {
-                keyValuePairs[key].Dispose();
-                keyValuePairs.Remove(key);
+            if (this.keyValuePairs.ContainsKey(key)) {
+                this.keyValuePairs[key].Dispose();
+                this.keyValuePairs.Remove(key);
             }
         }
 
