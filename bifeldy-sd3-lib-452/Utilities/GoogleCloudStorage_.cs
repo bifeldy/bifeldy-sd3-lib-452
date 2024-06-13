@@ -14,6 +14,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -37,7 +38,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         GcsMediaUpload GenerateUploadMedia(FileInfo fileInfo, string bucketName, Stream stream);
         Task<Uri> CreateUploadUri(GcsMediaUpload mediaUpload);
         Task<CGcsUploadProgress> UploadFile(GcsMediaUpload mediaUpload, Uri uploadSession = null, Action<CGcsUploadProgress> uploadProgress = null);
-        Task<CGcsDownloadProgress> DownloadFile(GcsObject fileObj, string fileLocalPath, Action<CGcsDownloadProgress> downloadProgress = null);
+        Task DownloadFile(GcsObject fileObj, string fileLocalPath, Action<CGcsDownloadProgress> downloadProgress = null);
         Task<string> CreateDownloadUrlSigned(GcsObject fileObj, TimeSpan expiredDurationFromNow);
         Task<string> CreateDownloadUrlSigned(GcsObject fileObj, DateTime expiryDateTime);
     }
@@ -47,6 +48,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private readonly ILogger _logger;
         private readonly IChiper _chiper;
         private readonly IConverter _converter;
+        private readonly IBerkas _berkas;
 
         private string credentialPath = string.Empty;
         private string projectId = string.Empty;
@@ -55,10 +57,11 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private StorageService storageService = null;
         private UrlSigner urlSigner = null;
 
-        public CGoogleCloudStorage(ILogger logger, IChiper chiper, IConverter converter) {
+        public CGoogleCloudStorage(ILogger logger, IChiper chiper, IConverter converter, IBerkas berkas) {
             this._logger = logger;
             this._chiper = chiper;
             this._converter = converter;
+            this._berkas = berkas;
         }
 
         public void LoadCredential(string pathFile, bool isEncrypted = false) {
@@ -287,35 +290,38 @@ namespace bifeldy_sd3_lib_452.Utilities {
             };
         }
 
-        public async Task<CGcsDownloadProgress> DownloadFile(GcsObject fileObj, string fileLocalPath, Action<CGcsDownloadProgress> downloadProgress = null) {
-            ObjectsResource.GetRequest request = this.storageService.Objects.Get(fileObj.Bucket, fileObj.Name);
+        public async Task DownloadFile(GcsObject fileObj, string fileLocalPath, Action<CGcsDownloadProgress> downloadProgress = null) {
+            string fileTempPath = Path.Combine(this._berkas.DownloadFolderPath, fileObj.Name);
 
-            request.MediaDownloader.ChunkSize = ResumableUpload.MinimumChunkSize;
-
-            if (downloadProgress != null) {
-                request.MediaDownloader.ProgressChanged += (progressNew) => {
-                    Enum.TryParse(progressNew.Status.ToString(), out EGcsDownloadStatus progressStatus);
-                    var dwPrgs = new CGcsDownloadProgress {
-                        Status = progressStatus,
-                        BytesDownloaded = progressNew.BytesDownloaded,
-                        Exception = progressNew.Exception
-                    };
-                    downloadProgress(dwPrgs);
-                };
+            long lastDownloadedBytes = 0;
+            if (File.Exists(fileTempPath)) {
+                lastDownloadedBytes = new FileInfo(fileTempPath).Length;
+                // lastDownloadedBytes++;
             }
+
+            var doo = new DownloadObjectOptions() {
+                ChunkSize = ResumableUpload.MinimumChunkSize,
+                Range = new RangeHeaderValue(lastDownloadedBytes, null)
+            };
+
+            var idp = new Progress<IDownloadProgress>(progressNew => {
+                Enum.TryParse(progressNew.Status.ToString(), out EGcsDownloadStatus progressStatus);
+                var dwPrgs = new CGcsDownloadProgress {
+                    Status = progressStatus,
+                    BytesDownloaded = progressNew.BytesDownloaded,
+                    Exception = progressNew.Exception
+                };
+                downloadProgress(dwPrgs);
+            });
+
+            StorageClient storage = await StorageClient.CreateAsync(this.googleCredential);
 
             this._logger.WriteInfo($"{this.GetType().Name}DownloadStart", $"{fileObj.Bucket}/{fileObj.Name} <<<=== {fileLocalPath} :: {fileObj.Size} Bytes");
 
-            using (var fs = new FileStream(fileLocalPath, FileMode.Create, FileAccess.Write)) {
-                IDownloadProgress result = await request.DownloadAsync(fs);
-                this._logger.WriteInfo($"{this.GetType().Name}DownloadCompleted", $"{fileObj.Bucket}/{fileObj.Name} <<<=== {fileLocalPath} :: 100 %");
+            using (var fs = new FileStream(fileTempPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite)) {
+                await storage.DownloadObjectAsync(fileObj.Bucket, fileObj.Name, fs, doo, progress: idp);
 
-                Enum.TryParse(result.Status.ToString(), out EGcsDownloadStatus downloadStatus);
-                return new CGcsDownloadProgress {
-                    BytesDownloaded = result.BytesDownloaded,
-                    Exception = result.Exception,
-                    Status = downloadStatus
-                };
+                this._logger.WriteInfo($"{this.GetType().Name}DownloadCompleted", $"{fileObj.Bucket}/{fileObj.Name} <<<=== {fileLocalPath} :: 100 %");
             }
         }
 
