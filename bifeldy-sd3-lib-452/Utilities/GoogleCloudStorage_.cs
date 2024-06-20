@@ -316,12 +316,12 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
             StorageClient storage = await StorageClient.CreateAsync(this.googleCredential);
 
-            this._logger.WriteInfo($"{this.GetType().Name}DownloadStart", $"{fileObj.Bucket}/{fileObj.Name} <<<=== {fileLocalPath} :: {fileObj.Size} Bytes");
+            this._logger.WriteInfo($"{this.GetType().Name}DownloadStart", $"{fileLocalPath} <<<=== {fileObj.Bucket}/{fileObj.Name} :: {fileObj.Size} Bytes");
 
             using (var fs = new FileStream(fileTempPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite)) {
                 await storage.DownloadObjectAsync(fileObj.Bucket, fileObj.Name, fs, doo, progress: idp);
 
-                this._logger.WriteInfo($"{this.GetType().Name}DownloadCompleted", $"{fileObj.Bucket}/{fileObj.Name} <<<=== {fileLocalPath} :: 100 %");
+                this._logger.WriteInfo($"{this.GetType().Name}DownloadCompleted", $"{fileLocalPath} <<<=== {fileObj.Bucket}/{fileObj.Name} :: 100 %");
             }
         }
 
