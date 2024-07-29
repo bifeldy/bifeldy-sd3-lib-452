@@ -37,8 +37,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
         Task<List<GcsObject>> ListAllObjects(string path, string prefix = "", string delimiter = "");
         GcsMediaUpload GenerateUploadMedia(FileInfo fileInfo, string bucketName, Stream stream);
         Task<Uri> CreateUploadUri(GcsMediaUpload mediaUpload);
-        Task<CGcsUploadProgress> UploadFile(GcsMediaUpload mediaUpload, Uri uploadSession = null, Action<CGcsUploadProgress> uploadProgress = null);
-        Task DownloadFile(GcsObject fileObj, string fileLocalPath, Action<CGcsDownloadProgress> downloadProgress = null);
+        Task<CGcsUploadProgress> UploadFile(GcsMediaUpload mediaUpload, Uri uploadSession = null, Action<CGcsUploadProgress> uploadProgress = null, bool forceLogging = false);
+        Task DownloadFile(GcsObject fileObj, string fileLocalPath, Action<CGcsDownloadProgress> downloadProgress = null, bool forceLogging = false);
         Task<string> CreateDownloadUrlSigned(GcsObject fileObj, TimeSpan expiredDurationFromNow);
         Task<string> CreateDownloadUrlSigned(GcsObject fileObj, DateTime expiryDateTime);
     }
@@ -261,7 +261,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return await mediaUpload.InitiateSessionAsync();
         }
 
-        public async Task<CGcsUploadProgress> UploadFile(GcsMediaUpload mediaUpload, Uri uploadSession = null, Action<CGcsUploadProgress> uploadProgress = null) {
+        public async Task<CGcsUploadProgress> UploadFile(GcsMediaUpload mediaUpload, Uri uploadSession = null, Action<CGcsUploadProgress> uploadProgress = null, bool forceLogging = false) {
             if (uploadSession == null) {
                 uploadSession = await this.CreateUploadUri(mediaUpload);
             }
@@ -278,9 +278,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 };
             }
 
-            this._logger.WriteInfo($"{this.GetType().Name}UploadStart", $"{mediaUpload.Body.Name} ===>>> {mediaUpload.Bucket} :: {mediaUpload.Body.Size} Bytes");
+            this._logger.WriteInfo($"{this.GetType().Name}UploadStart", $"{mediaUpload.Body.Name} ===>>> {mediaUpload.Bucket} :: {mediaUpload.Body.Size} Bytes", force: forceLogging);
             IUploadProgress result = await mediaUpload.ResumeAsync(uploadSession);
-            this._logger.WriteInfo($"{this.GetType().Name}UploadCompleted", $"{mediaUpload.Body.Name} ===>>> {mediaUpload.Bucket} :: 100 %");
+            this._logger.WriteInfo($"{this.GetType().Name}UploadCompleted", $"{mediaUpload.Body.Name} ===>>> {mediaUpload.Bucket} :: 100 %", force: forceLogging);
 
             Enum.TryParse(result.Status.ToString(), out EGcsUploadStatus uploadStatus);
             return  new CGcsUploadProgress {
@@ -290,7 +290,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             };
         }
 
-        public async Task DownloadFile(GcsObject fileObj, string fileLocalPath, Action<CGcsDownloadProgress> downloadProgress = null) {
+        public async Task DownloadFile(GcsObject fileObj, string fileLocalPath, Action<CGcsDownloadProgress> downloadProgress = null, bool forceLogging = false) {
             string fileTempPath = Path.Combine(this._berkas.DownloadFolderPath, fileObj.Name);
 
             long lastDownloadedBytes = 0;
@@ -316,12 +316,12 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
             StorageClient storage = await StorageClient.CreateAsync(this.googleCredential);
 
-            this._logger.WriteInfo($"{this.GetType().Name}DownloadStart", $"{fileLocalPath} <<<=== {fileObj.Bucket}/{fileObj.Name} :: {fileObj.Size} Bytes");
+            this._logger.WriteInfo($"{this.GetType().Name}DownloadStart", $"{fileLocalPath} <<<=== {fileObj.Bucket}/{fileObj.Name} :: {fileObj.Size} Bytes", force: forceLogging);
 
             using (var fs = new FileStream(fileTempPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite)) {
                 await storage.DownloadObjectAsync(fileObj.Bucket, fileObj.Name, fs, doo, progress: idp);
 
-                this._logger.WriteInfo($"{this.GetType().Name}DownloadCompleted", $"{fileLocalPath} <<<=== {fileObj.Bucket}/{fileObj.Name} :: 100 %");
+                this._logger.WriteInfo($"{this.GetType().Name}DownloadCompleted", $"{fileLocalPath} <<<=== {fileObj.Bucket}/{fileObj.Name} :: 100 %", force: forceLogging);
             }
         }
 
