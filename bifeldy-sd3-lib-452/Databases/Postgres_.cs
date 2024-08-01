@@ -198,7 +198,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                 string[] fieldNames = new string[colCount];
 
                 this.DatabaseCommand.CommandText = $"SELECT * FROM {tableName} LIMIT 1";
-                using (var rdr = (NpgsqlDataReader) await this.DatabaseCommand.ExecuteReaderAsync()) {
+                using (var rdr = (NpgsqlDataReader) await this.ExecReaderAsync(this.DatabaseCommand)) {
                     if (rdr.FieldCount != colCount) {
                         throw new Exception("Jumlah Kolom Tabel Tidak Sama");
                     }
