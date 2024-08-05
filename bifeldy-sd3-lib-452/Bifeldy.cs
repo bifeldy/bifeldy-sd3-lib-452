@@ -31,9 +31,6 @@ namespace bifeldy_sd3_lib_452 {
         private IContainer container = null;
 
         public Bifeldy() {
-            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
-            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
-
             this._builder = new ContainerBuilder();
 
             /* Other Solution Project */
@@ -179,6 +176,11 @@ namespace bifeldy_sd3_lib_452 {
             }
 
             return this.container.BeginLifetimeScope();
+        }
+
+        public void ForcedUseInvariantCulture() {
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
         }
 
     }
