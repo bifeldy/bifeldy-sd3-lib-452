@@ -178,7 +178,7 @@ namespace bifeldy_sd3_lib_452 {
             return this.container.BeginLifetimeScope();
         }
 
-        public void ForcedUseInvariantCulture() {
+        public void UseInvariantCulture() {
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
         }
