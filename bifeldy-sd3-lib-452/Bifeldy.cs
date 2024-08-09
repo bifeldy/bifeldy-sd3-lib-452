@@ -54,7 +54,7 @@ namespace bifeldy_sd3_lib_452 {
             }
         }
 
-        /// <summary>Di Panggil Sebelum ResolveClass();</summary>
+        /// <summary>Di Panggil Sebelum Resolve();</summary>
         /// <typeparam name="CClass">Nama Class Yang Ingin Di Daftarkan</typeparam>
         /// <typeparam name="IInterface">Nama Interface Dari Class Yang Ingin Di Daftarkan</typeparam>
         /// <param name="singleton">Menggunakan Instance Yang Sama Untuk Keseluruhan Program</param>
@@ -162,12 +162,12 @@ namespace bifeldy_sd3_lib_452 {
             }
         }
 
-        public CClass ResolveClass<CClass>() {
-            return this.container.Resolve<CClass>();
+        public IC Resolve<IC>() {
+            return this.container.Resolve<IC>();
         }
 
-        public CClass ResolveNamed<CClass>(string name) {
-            return (CClass) this.container.ResolveNamed<object>(name);
+        public IC ResolveNamed<IC>(string name) {
+            return (IC) this.container.ResolveNamed<object>(name);
         }
 
         public dynamic BeginLifetimeScope() {
