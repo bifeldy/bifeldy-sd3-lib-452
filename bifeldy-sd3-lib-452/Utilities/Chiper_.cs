@@ -20,6 +20,7 @@ using System.Security.Cryptography;
 using System.Runtime.InteropServices;
 
 using Ionic.Crc;
+
 using bifeldy_sd3_lib_452.Extensions;
 
 namespace bifeldy_sd3_lib_452.Utilities {
