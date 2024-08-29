@@ -30,7 +30,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
         string CalculateMD5(string filePath);
         string CalculateCRC32(string filePath);
         string CalculateSHA1(string filePath);
-        string GetMimeFromFile(string filename);
+        string GetMime(string filePath);
+        string HashByte(byte[] data);
+        string HashText(string textMessage);
     }
 
     public sealed class CChiper : IChiper {
@@ -174,14 +176,14 @@ namespace bifeldy_sd3_lib_452.Utilities {
             int dwReserved
         );
 
-        public string GetMimeFromFile(string filename) {
-            if (!File.Exists(filename)) {
-                throw new FileNotFoundException(filename + " Not Found");
+        public string GetMime(string filePath) {
+            if (!File.Exists(filePath)) {
+                throw new FileNotFoundException(filePath + " Not Found");
             }
 
             const int maxContent = 256;
             byte[] buffer = new byte[maxContent];
-            using (var fs = new FileStream(filename, FileMode.Open)) {
+            using (var fs = new FileStream(filePath, FileMode.Open)) {
                 if (fs.Length >= maxContent) {
                     fs.Read(buffer, 0, maxContent);
                 }
@@ -211,11 +213,16 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
-        public string HashText(string text) {
+        public string HashByte(byte[] data) {
             using (var sha1 = SHA1.Create()) {
-                byte[] hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(text));
+                byte[] hash = sha1.ComputeHash(data);
                 return hash.ToStringHex();
             }
+        }
+
+        public string HashText(string textMessage) {
+            byte[] data = Encoding.UTF8.GetBytes(textMessage);
+            return this.HashByte(data);
         }
 
     }
