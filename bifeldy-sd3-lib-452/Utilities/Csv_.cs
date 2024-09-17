@@ -94,7 +94,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
                 if (skipHeader && csvColumn != null) {
                     i++;
-                    _ = reader.ReadLine();
+                    reader.ReadLine();
                 }
 
                 while (!reader.EndOfStream) {

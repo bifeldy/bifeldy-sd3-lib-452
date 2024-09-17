@@ -213,7 +213,7 @@ namespace bifeldy_sd3_lib_452.Databases {
 
                 var sB = new StringBuilder(fieldNames[0]);
                 for (int p = 1; p < colCount; p++) {
-                    _ = sB.Append(", " + fieldNames[p]);
+                    sB.Append(", " + fieldNames[p]);
                 }
 
                 using (NpgsqlBinaryImporter writer = ((NpgsqlConnection) this.DatabaseConnection).BeginBinaryImport($"COPY {tableName} ({sB}) FROM STDIN (FORMAT BINARY)")) {

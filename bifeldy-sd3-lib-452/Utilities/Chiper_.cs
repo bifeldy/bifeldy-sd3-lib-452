@@ -157,7 +157,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     byte[] hash = sha1.ComputeHash(ms.ToArray());
                     var sb = new StringBuilder(hash.Length * 2);
                     foreach (byte b in hash) {
-                        _ = sb.Append(b.ToString("x"));
+                        sb.Append(b.ToString("x"));
                     }
 
                     return sb.ToString();
