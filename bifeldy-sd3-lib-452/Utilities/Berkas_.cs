@@ -12,6 +12,7 @@
  */
 
 using System;
+using System.Globalization;
 using System.IO;
 
 namespace bifeldy_sd3_lib_452.Utilities {
@@ -25,6 +26,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         void CleanUp(bool clearPendingFileForZip = true);
         void CopyAllFilesAndDirectories(DirectoryInfo source, DirectoryInfo target, bool isInRecursive = false);
         void BackupAllFilesInFolder(string folderPath);
+        bool CheckSign(FileInfo fileInfo, string signFull, bool isRequired = true);
     }
 
     public sealed class CBerkas : IBerkas {
@@ -123,6 +125,46 @@ namespace bifeldy_sd3_lib_452.Utilities {
             var diSource = new DirectoryInfo(folderPath);
             var diTarget = new DirectoryInfo(this.BackupFolderPath);
             this.CopyAllFilesAndDirectories(diSource, diTarget);
+        }
+
+        public bool CheckSign(FileInfo fileInfo, string signFull, bool isRequired = true) {
+            if (isRequired && string.IsNullOrEmpty(signFull)) {
+                throw new Exception("Tidak ada tanda tangan file");
+            }
+            else if (!isRequired && string.IsNullOrEmpty(signFull)) {
+                return true;
+            }
+
+            string[] signSplit = signFull.Split(' ');
+            int minFileSize = signSplit.Length;
+            if (fileInfo.Length < minFileSize) {
+                throw new Exception("Isi konten file tidak sesuai");
+            }
+
+            int[] intList = new int[minFileSize];
+            for (int i = 0; i < intList.Length; i++) {
+                if (signSplit[i] == "??") {
+                    intList[i] = -1;
+                }
+                else {
+                    intList[i] = int.Parse(signSplit[i], NumberStyles.HexNumber);
+                }
+            }
+
+            using (var reader = new BinaryReader(new FileStream(fileInfo.FullName, FileMode.Open))) {
+                byte[] buff = new byte[minFileSize];
+                reader.BaseStream.Seek(0, SeekOrigin.Begin);
+                reader.Read(buff, 0, buff.Length);
+                for (int i = 0; i < intList.Length; i++) {
+                    if (intList[i] == -1 || buff[i] == intList[i]) {
+                        continue;
+                    }
+
+                    return false;
+                }
+            }
+
+            return true;
         }
 
     }
