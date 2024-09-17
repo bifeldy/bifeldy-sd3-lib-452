@@ -152,9 +152,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             return await this.ExecQueryAsync(this.DatabaseCommand);
         }
 
-#pragma warning disable CS1998 // This async method lacks 'await' operators and will run synchronously. Consider using the 'await' operator to await non-blocking API calls, or 'await Task.Run(...)' to do CPU-bound work on a background thread.
         public override async Task<CDbExecProcResult> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null) {
-#pragma warning restore CS1998 // This async method lacks 'await' operators and will run synchronously. Consider using the 'await' operator to await non-blocking API calls, or 'await Task.Run(...)' to do CPU-bound work on a background thread.
             throw new Exception("SQLite Tidak Memiliki Stored Procedure");
             // string sqlTextQueryParameters = "(";
             // if (bindParam != null) {
@@ -184,7 +182,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                 int[] lengths = new int[colCount];
                 string[] fieldNames = new string[colCount];
 
-                this.DatabaseCommand.CommandText = $"SELECT * FROM {tableName} LIMIT 1";
+                this.DatabaseCommand.CommandText = $"SELECT * FROM {tableName} WHERE 1 = 0";
                 using (var rdr = (SQLiteDataReader) await this.ExecReaderAsync(this.DatabaseCommand)) {
                     if (rdr.FieldCount != colCount) {
                         throw new Exception("Jumlah Kolom Tabel Tidak Sama");
