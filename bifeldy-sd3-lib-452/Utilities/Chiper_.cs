@@ -28,17 +28,15 @@ namespace bifeldy_sd3_lib_452.Utilities {
     public interface IChiper {
         string EncryptText(string plainText, string passPhrase = null);
         string DecryptText(string cipherText, string passPhrase = null);
-        string CalculateMD5(string filePath);
-        string CalculateCRC32(string filePath);
-        string CalculateSHA1(string filePath);
+        string CalculateMD5File(string filePath);
+        string CalculateCRC32File(string filePath);
+        string CalculateSHA1File(string filePath);
         string GetMime(string filePath);
         string HashByte(byte[] data);
         string HashText(string textMessage);
     }
 
     public sealed class CChiper : IChiper {
-
-        private readonly IStream _stream;
 
         private string AppName { get; }
 
@@ -50,9 +48,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         // This constant determines the number of iterations for the password bytes generation function.
         private const int DerivationIterations = 1000;
 
-        public CChiper(IStream stream) {
-            this._stream = stream;
-
+        public CChiper() {
             string appName = Process.GetCurrentProcess().MainModule.ModuleName.ToUpper();
             this.AppName = appName.Substring(0, appName.LastIndexOf(".EXE"));
         }
@@ -133,34 +129,24 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
-        public string CalculateMD5(string filePath) {
+        public string CalculateMD5File(string filePath) {
             using (var md5 = MD5.Create()) {
-                using (MemoryStream ms = this._stream.ReadFileAsBinaryStream(filePath)) {
-                    byte[] hash = md5.ComputeHash(ms.ToArray());
-                    return hash.ToStringHex();
+                using (FileStream stream = File.OpenRead(filePath)) {
+                    return md5.ComputeHash(stream).ToStringHex();
                 }
             }
         }
 
-        public string CalculateCRC32(string filePath) {
-            var crc32 = new CRC32();
-            using (MemoryStream ms = this._stream.ReadFileAsBinaryStream(filePath)) {
-                byte[] data = ms.ToArray();
-                crc32.SlurpBlock(data, 0, data.Length);
-                return crc32.Crc32Result.ToString("x");
+        public string CalculateCRC32File(string filePath) {
+            using (FileStream stream = File.OpenRead(filePath)) {
+                return new CRC32().GetCrc32(stream).ToString("x");
             }
         }
 
-        public string CalculateSHA1(string filePath) {
+        public string CalculateSHA1File(string filePath) {
             using (var sha1 = SHA1.Create()) {
-                using (MemoryStream ms = this._stream.ReadFileAsBinaryStream(filePath)) {
-                    byte[] hash = sha1.ComputeHash(ms.ToArray());
-                    var sb = new StringBuilder(hash.Length * 2);
-                    foreach (byte b in hash) {
-                        sb.Append(b.ToString("x"));
-                    }
-
-                    return sb.ToString();
+                using (FileStream stream = File.OpenRead(filePath)) {
+                    return sha1.ComputeHash(stream).ToStringHex();
                 }
             }
         }
