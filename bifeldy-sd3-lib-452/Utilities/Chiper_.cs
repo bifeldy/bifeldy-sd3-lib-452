@@ -19,7 +19,7 @@ using System.Text;
 using System.Security.Cryptography;
 using System.Runtime.InteropServices;
 
-using Ionic.Crc;
+using Force.Crc32;
 
 using bifeldy_sd3_lib_452.Extensions;
 
@@ -138,8 +138,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public string CalculateCRC32File(string filePath) {
-            using (FileStream stream = File.OpenRead(filePath)) {
-                return new CRC32().GetCrc32(stream).ToString("x");
+            using (HashAlgorithm crc32 = Crc32Algorithm.Create()) {
+                using (FileStream stream = File.OpenRead(filePath)) {
+                    return crc32.ComputeHash(stream).ToStringHex();
+                }
             }
         }
 

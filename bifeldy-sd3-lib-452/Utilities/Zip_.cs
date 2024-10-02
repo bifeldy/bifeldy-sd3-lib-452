@@ -15,8 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-using Ionic.Zip;
-using Ionic.Zlib;
+using ICSharpCode.SharpZipLib.Zip;
 
 namespace bifeldy_sd3_lib_452.Utilities {
 
@@ -53,24 +52,36 @@ namespace bifeldy_sd3_lib_452.Utilities {
             List<string> ls = listFileName ?? this.ListFileForZip;
             string path = Path.Combine(outputPath ?? this.ZipFolderPath, zipFileName);
             try {
-                var zip = new ZipFile();
-                if (!string.IsNullOrEmpty(password)) {
-                    zip.Password = password;
-                    zip.CompressionLevel = CompressionLevel.BestCompression;
-                }
-
-                foreach (string targetFileName in ls) {
-                    string filePath = Path.Combine(folderPath, targetFileName);
-                    ZipEntry zipEntry = zip.AddFile(filePath, "");
-                    if (zipEntry != null) {
-                        totalFileInZip++;
+                using (var zip = new ZipOutputStream(File.Create(path))) {
+                    zip.SetLevel(9); // 0 - store only to 9 - means best compression
+                    if (!string.IsNullOrEmpty(password)) {
+                        zip.Password = password;
                     }
 
-                    this._logger.WriteInfo($"{this.GetType().Name}ZipAdd{(zipEntry == null ? "Fail" : "Ok")}", filePath);
-                }
+                    byte[] buffer = new byte[4096];
+                    foreach (string targetFileName in ls) {
+                        string filePath = Path.Combine(folderPath, targetFileName);
+                        var zipEntry = new ZipEntry(filePath) {
+                            DateTime = DateTime.Now
+                        };
+                        zip.PutNextEntry(zipEntry);
 
-                zip.Save(path);
-                this._logger.WriteInfo($"{this.GetType().Name}ZipSave", path);
+                        using (FileStream fs = File.OpenRead(filePath)) {
+                            int sourceBytes;
+                            do {
+                                sourceBytes = fs.Read(buffer, 0, buffer.Length);
+                                zip.Write(buffer, 0, sourceBytes);
+                            }
+                            while (sourceBytes > 0);
+                        }
+
+                        this._logger.WriteInfo($"{this.GetType().Name}ZipAdd{(zipEntry == null ? "Fail" : "Ok")}", filePath);
+                    }
+
+                    zip.Finish();
+                    zip.Close();
+                    this._logger.WriteInfo($"{this.GetType().Name}ZipSave", path);
+                }
             }
             catch (Exception ex) {
                 this._logger.WriteError(ex.Message);
@@ -88,27 +99,38 @@ namespace bifeldy_sd3_lib_452.Utilities {
             int totalFileInZip = 0;
             string path = Path.Combine(outputPath ?? this.ZipFolderPath, zipFileName);
             try {
-                var zip = new ZipFile {
-                    CompressionLevel = CompressionLevel.BestCompression
-                };
-                if (!string.IsNullOrEmpty(password)) {
-                    zip.Password = password;
-                    zip.Encryption = EncryptionAlgorithm.PkzipWeak;
-                }
-
-                var directoryInfo = new DirectoryInfo(folderPath);
-                FileInfo[] fileInfos = directoryInfo.GetFiles();
-                foreach (FileInfo fileInfo in fileInfos) {
-                    ZipEntry zipEntry = zip.AddFile(fileInfo.FullName, "");
-                    if (zipEntry != null) {
-                        totalFileInZip++;
+                using (var zip = new ZipOutputStream(File.Create(path))) {
+                    zip.SetLevel(9); // 0 - store only to 9 - means best compression
+                    if (!string.IsNullOrEmpty(password)) {
+                        zip.Password = password;
                     }
 
-                    this._logger.WriteInfo($"{this.GetType().Name}ZipAdd{(zipEntry == null ? "Fail" : "Ok")}", fileInfo.FullName);
-                }
+                    byte[] buffer = new byte[4096];
+                    var directoryInfo = new DirectoryInfo(folderPath);
+                    FileInfo[] fileInfos = directoryInfo.GetFiles();
+                    foreach (FileInfo fileInfo in fileInfos) {
+                        var zipEntry = new ZipEntry(fileInfo.FullName) {
+                            DateTime = DateTime.Now
+                        };
+                        zip.PutNextEntry(zipEntry);
+                        totalFileInZip++;
 
-                zip.Save(path);
-                this._logger.WriteInfo($"{this.GetType().Name}ZipSave", path);
+                        using (FileStream fs = File.OpenRead(fileInfo.FullName)) {
+                            int sourceBytes;
+                            do {
+                                sourceBytes = fs.Read(buffer, 0, buffer.Length);
+                                zip.Write(buffer, 0, sourceBytes);
+                            }
+                            while (sourceBytes > 0);
+                        }
+
+                        this._logger.WriteInfo($"{this.GetType().Name}ZipAdd{(zipEntry == null ? "Fail" : "Ok")}", fileInfo.FullName);
+                    }
+
+                    zip.Finish();
+                    zip.Close();
+                    this._logger.WriteInfo($"{this.GetType().Name}ZipSave", path);
+                }
             }
             catch (Exception ex) {
                 this._logger.WriteError(ex.Message);
