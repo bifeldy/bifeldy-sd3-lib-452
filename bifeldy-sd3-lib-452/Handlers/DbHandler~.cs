@@ -381,7 +381,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
                             dc_security_t c
                         WHERE
                             a.user_name = b.ip_fk_user_name AND
-                            a.user_name = c.fk_user_name AND
+                            b.ip_fk_group_name = c.fk_user_name AND
                             UPPER(a.user_name) = UPPER(:user_name) AND
                             (UPPER(b.ip_addr) IN (:ip_v4_v6) OR UPPER(b.ip_addr) IN (:mac_addr)) AND
                             UPPER(c.sec_app_name) LIKE :app_name
