@@ -138,7 +138,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public string CalculateCRC32File(string filePath) {
-            using (HashAlgorithm crc32 = Crc32Algorithm.Create()) {
+            using (var crc32 = Crc32Algorithm.Create()) {
                 using (FileStream stream = File.OpenRead(filePath)) {
                     return crc32.ComputeHash(stream).ToStringHex();
                 }
