@@ -28,6 +28,8 @@ using Npgsql.Schema;
 using bifeldy_sd3_lib_452.Abstractions;
 using bifeldy_sd3_lib_452.Models;
 using bifeldy_sd3_lib_452.Utilities;
+using System.IO;
+using System.Linq;
 
 namespace bifeldy_sd3_lib_452.Databases {
 
@@ -39,13 +41,15 @@ namespace bifeldy_sd3_lib_452.Databases {
 
         private readonly IApplication _app;
         private readonly ILogger _logger;
+        private readonly ICsv _csv;
 
         private NpgsqlCommand DatabaseCommand { get; set; }
         private NpgsqlDataAdapter DatabaseAdapter { get; set; }
 
-        public CPostgres(IApplication app, ILogger logger, IConverter converter) : base(logger, converter) {
+        public CPostgres(IApplication app, ILogger logger, IConverter converter, ICsv csv) : base(logger, converter) {
             this._app = app;
             this._logger = logger;
+            this._csv = csv;
 
             this.InitializePostgresDatabase();
             this.SettingUpDatabase();
@@ -73,6 +77,12 @@ namespace bifeldy_sd3_lib_452.Databases {
                 }
 
                 this.DatabaseConnection = new NpgsqlConnection(this.DbConnectionString);
+                if (this._app.DebugMode) {
+                    ((NpgsqlConnection) this.DatabaseConnection).Notice += (_, evt) => {
+                        this._logger.WriteInfo(this.GetType().Name, evt.Notice.MessageText);
+                    };
+                }
+
                 this.DatabaseCommand = new NpgsqlCommand {
                     Connection = (NpgsqlConnection) this.DatabaseConnection,
                     CommandTimeout = 1800 // 30 menit
@@ -335,6 +345,49 @@ namespace bifeldy_sd3_lib_452.Databases {
                 }
 
                 result = true;
+            }
+            catch (Exception ex) {
+                this._logger.WriteError(ex, 3);
+                exception = ex;
+            }
+            finally {
+                this.CloseConnection();
+            }
+
+            return (exception == null) ? result : throw exception;
+        }
+
+        public override async Task<string> BulkGetCsv(string rawQuery, string delimiter, string filename, string outputPath = null) {
+            string result = null;
+            Exception exception = null;
+            try {
+                string path = Path.Combine(outputPath ?? this._csv.CsvFolderPath, filename);
+                if (File.Exists(path)) {
+                    File.Delete(path);
+                }
+
+                if (string.IsNullOrEmpty(rawQuery) || string.IsNullOrEmpty(delimiter)) {
+                    throw new Exception("Select Raw Query + Delimiter Harus Di Isi");
+                }
+
+                string sqlQuery = $"SELECT * FROM ({rawQuery}) alias_{DateTime.Now.Ticks} WHERE 1 = 0";
+                using (var rdr = (NpgsqlDataReader) await this.ExecReaderAsync(sqlQuery)) {
+                    ReadOnlyCollection<NpgsqlDbColumn> columns = rdr.GetColumnSchema();
+                    string struktur = columns.Select(c => c.ColumnName).Aggregate((i, j) => $"{i}{delimiter}{j}");
+                    using (var streamWriter = new StreamWriter(path, true)) {
+                        streamWriter.WriteLine(struktur.ToUpper());
+                        streamWriter.Flush();
+                    }
+                }
+
+                sqlQuery = $"COPY ({rawQuery}) TO STDOUT WITH CSV DELIMITER '{delimiter}'";
+                sqlQuery = sqlQuery.Replace($"\r\n", " ");
+                sqlQuery = Regex.Replace(sqlQuery, @"\s+", " ");
+                this._logger.WriteInfo(this.GetType().Name, sqlQuery);
+
+                using (TextReader reader = ((NpgsqlConnection) this.DatabaseConnection).BeginTextExport(sqlQuery)) {
+                    result = this._csv.WriteCsv(reader, filename, outputPath);
+                }
             }
             catch (Exception ex) {
                 this._logger.WriteError(ex, 3);

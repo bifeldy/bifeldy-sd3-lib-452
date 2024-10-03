@@ -76,6 +76,12 @@ namespace bifeldy_sd3_lib_452.Databases {
                 }
 
                 this.DatabaseConnection = new OracleConnection(this.DbConnectionString);
+                if (this._app.DebugMode) {
+                    ((OracleConnection) this.DatabaseConnection).InfoMessage += (_, evt) => {
+                        this._logger.WriteInfo(this.GetType().Name, evt.Message);
+                    };
+                }
+
                 this.DatabaseCommand = new OracleCommand {
                     Connection = (OracleConnection) this.DatabaseConnection,
                     BindByName = true,
@@ -202,6 +208,10 @@ namespace bifeldy_sd3_lib_452.Databases {
             }
 
             return (exception == null) ? result : throw exception;
+        }
+
+        public override async Task<string> BulkGetCsv(string rawQuery, string delimiter, string filename, string outputPath = null) {
+            throw new Exception("Oracle Tidak Memiliki Bulk Get Csv");
         }
 
         /// <summary> Jangan Lupa Di Close Koneksinya (Wajib) </summary>

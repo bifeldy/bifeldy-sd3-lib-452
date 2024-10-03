@@ -66,6 +66,12 @@ namespace bifeldy_sd3_lib_452.Databases {
                 }
 
                 this.DatabaseConnection = new SqlConnection(this.DbConnectionString);
+                if (this._app.DebugMode) {
+                    ((SqlConnection) this.DatabaseConnection).InfoMessage += (_, evt) => {
+                        this._logger.WriteInfo(this.GetType().Name, evt.Message);
+                    };
+                }
+
                 this.DatabaseCommand = new SqlCommand {
                     Connection = (SqlConnection) this.DatabaseConnection,
                     CommandTimeout = 1800 // 30 menit
@@ -189,6 +195,10 @@ namespace bifeldy_sd3_lib_452.Databases {
             }
 
             return (exception == null) ? result : throw exception;
+        }
+
+        public override async Task<string> BulkGetCsv(string rawQuery, string delimiter, string filename, string outputPath = null) {
+            throw new Exception("MsSql Tidak Memiliki Bulk Get Csv");
         }
 
         /// <summary> Jangan Lupa Di Close Koneksinya (Wajib) </summary>

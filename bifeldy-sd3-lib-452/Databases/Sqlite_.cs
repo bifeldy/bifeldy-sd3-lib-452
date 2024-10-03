@@ -250,6 +250,10 @@ namespace bifeldy_sd3_lib_452.Databases {
             return (exception == null) ? result : throw exception;
         }
 
+        public override async Task<string> BulkGetCsv(string rawQuery, string delimiter, string filename, string outputPath = null) {
+            throw new Exception("SQLite Tidak Memiliki Bulk Get Csv");
+        }
+
         /// <summary> Jangan Lupa Di Close Koneksinya (Wajib) </summary>
         public override async Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
             this.DatabaseCommand.CommandText = queryString;

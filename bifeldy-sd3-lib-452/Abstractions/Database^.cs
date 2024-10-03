@@ -42,6 +42,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         Task<bool> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         Task<CDbExecProcResult> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null);
         Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
+        Task<string> BulkGetCsv(string rawQuery, string delimiter, string filename, string outputPath = null);
         Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         Task<List<string>> RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null);
     }
@@ -354,6 +355,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         public abstract Task<bool> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         public abstract Task<CDbExecProcResult> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null);
         public abstract Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
+        public abstract Task<string> BulkGetCsv(string rawQuery, string delimiter, string filename, string outputPath = null);
         public abstract Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         public abstract Task<List<string>> RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null);
 
