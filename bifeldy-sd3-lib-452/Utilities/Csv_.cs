@@ -19,12 +19,18 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
+using ChoETL;
+
+using bifeldy_sd3_lib_452.Models;
+
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface ICsv {
         string CsvFolderPath { get; }
+        string WriteCsv(TextReader textReader, string filename, string outputPath = null);
         bool DataTable2CSV(DataTable table, string filename, string separator, string outputPath = null);
         List<T> CsvToList<T>(Stream stream, char delimiter = ',', bool skipHeader = false, List<string> csvColumn = null, List<string> requiredColumn = null);
+        string CsvToJson(string filePath, string delimiter, List<CCsv2Json> csvColumn = null);
     }
 
     public sealed class CCsv : ICsv {
@@ -44,6 +50,27 @@ namespace bifeldy_sd3_lib_452.Utilities {
             if (!Directory.Exists(this.CsvFolderPath)) {
                 Directory.CreateDirectory(this.CsvFolderPath);
             }
+        }
+
+        public string WriteCsv(TextReader textReader, string filename, string outputPath = null) {
+            if (string.IsNullOrEmpty(filename)) {
+                throw new Exception("Nama File + Extensi Harus Di Isi");
+            }
+
+            string path = Path.Combine(outputPath ?? this.CsvFolderPath, filename);
+            using (var streamWriter = new StreamWriter(path, true)) {
+                string line = null;
+                do {
+                    line = textReader.ReadLine()?.Trim();
+                    if (!string.IsNullOrEmpty(line)) {
+                        streamWriter.WriteLine(line.ToUpper());
+                        streamWriter.Flush();
+                    }
+                }
+                while (!string.IsNullOrEmpty(line));
+            }
+
+            return path;
         }
 
         public bool DataTable2CSV(DataTable table, string filename, string separator, string outputPath = null) {
@@ -161,6 +188,31 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
                 return row;
             }
+        }
+
+        public string CsvToJson(string filePath, string delimiter, List<CCsv2Json> csvColumn = null) {
+            if (csvColumn == null || csvColumn?.Count <= 0) {
+                throw new Exception("Daftar Kolom Harus Di Isi");
+            }
+
+            var sb = new StringBuilder();
+            using (ChoCSVReader<dynamic> csv = new ChoCSVReader(filePath).WithDelimiter(delimiter)) {
+                ChoCSVReader<dynamic> _data = csv;
+
+                if (csvColumn != null) {
+                    for (int i = 0; i < csvColumn.Count; i++) {
+                        int pos = csvColumn[i].Position;
+                        _data = _data.WithField(csvColumn[i].ColumnName, (pos > 0) ? pos : (i + 1), csvColumn[i].DataType);
+                    }
+                    _data = _data.WithFirstLineHeader(true);
+                }
+
+                using (var w = new ChoJSONWriter(sb)) {
+                    w.Write(csv);
+                }
+            }
+
+            return sb.ToString();
         }
 
     }
