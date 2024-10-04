@@ -208,6 +208,7 @@
     <Compile Include="Extensions\DataTableExtensions.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
+    <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\TimeSpanExtensions.cs" />
     <Compile Include="Handlers\DbHandler~.cs" />
@@ -231,6 +232,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\Api_.cs" />
     <Compile Include="Utilities\Application~.cs" />
+    <Compile Include="Utilities\Dbf_.cs" />
     <Compile Include="Utilities\Zip_.cs" />
     <Compile Include="Utilities\Csv_.cs" />
     <Compile Include="Utilities\Berkas_.cs" />
