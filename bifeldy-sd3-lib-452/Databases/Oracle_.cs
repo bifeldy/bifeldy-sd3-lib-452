@@ -192,9 +192,8 @@ namespace bifeldy_sd3_lib_452.Databases {
                     DestinationTableName = tableName
                 }) {
                     dbBulkCopy.WriteToServer(dataTable);
+                    result = true;
                 }
-
-                result = true;
             }
             catch (Exception ex) {
                 this._logger.WriteError(ex, 4);
