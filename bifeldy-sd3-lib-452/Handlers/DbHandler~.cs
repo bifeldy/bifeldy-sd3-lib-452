@@ -55,7 +55,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<bool> OraPg_AlterTable_AddColumnIfNotExist(string tableName, string columnName, string columnType);
         Task<bool> OraPg_TruncateTable(string TableName);
         Task<bool> OraPg_BulkInsertInto(string tableName, DataTable dataTable);
-        Task<string> OraPg_BulkGetCsv(string rawQuery, string delimiter, string filename, string outputPath = null);
+        Task<string> OraPg_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null);
         Task<T> OraPg_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<bool> OraPg_ExecQuery(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<DbDataReader> OraPg_ExecReaderAsync(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
@@ -512,8 +512,8 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return await this.OraPg?.ExecProcedureAsync(procedureName, bindParam);
         }
 
-        public async Task<string> OraPg_BulkGetCsv(string rawQuery, string delimiter, string filename, string outputPath = null) {
-            return await this.OraPg?.BulkGetCsv(rawQuery, delimiter, filename, outputPath);
+        public async Task<string> OraPg_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null) {
+            return await this.OraPg?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputPath);
         }
 
         /* ** */
