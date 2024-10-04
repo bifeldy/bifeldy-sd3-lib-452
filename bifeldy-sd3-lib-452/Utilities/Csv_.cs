@@ -21,15 +21,16 @@ using System.Text;
 
 using ChoETL;
 
+using bifeldy_sd3_lib_452.Extensions;
 using bifeldy_sd3_lib_452.Models;
 
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface ICsv {
         string CsvFolderPath { get; }
-        bool DataTable2CSV(DataTable table, string filename, string separator, string outputPath = null);
-        List<T> CsvToList<T>(Stream stream, char delimiter = ',', bool skipHeader = false, List<string> csvColumn = null, List<string> requiredColumn = null);
-        string CsvToJson(string filePath, string delimiter, List<CCsv2Json> csvColumn = null);
+        void DataTable2CSV(DataTable dt, string filename, string separator, string outputPath = null);
+        List<T> Csv2List<T>(Stream stream, char delimiter = ',', bool skipHeader = false, List<string> csvColumn = null, List<string> requiredColumn = null);
+        string Csv2Json(string filePath, string delimiter, List<CCsv2Json> csvColumn = null);
     }
 
     public sealed class CCsv : ICsv {
@@ -51,47 +52,19 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
-        public bool DataTable2CSV(DataTable table, string filename, string separator, string outputPath = null) {
-            bool res = false;
-            string path = Path.Combine(outputPath ?? this.CsvFolderPath, filename);
-            StreamWriter writer = null;
+        public void DataTable2CSV(DataTable dt, string filename, string separator, string outputPath = null) {
             try {
-                writer = new StreamWriter(path);
-                string sep = string.Empty;
-                var builder = new StringBuilder();
-                foreach (DataColumn col in table.Columns) {
-                    builder.Append(sep).Append(col.ColumnName);
-                    sep = separator;
-                }
-                // Untuk Export *.CSV Di Buat NAMA_KOLOM Besar Semua Tanpa Petik "NAMA_KOLOM"
-                writer.WriteLine(builder.ToString().ToUpper());
-                foreach (DataRow row in table.Rows) {
-                    sep = string.Empty;
-                    builder = new StringBuilder();
-                    foreach (DataColumn col in table.Columns) {
-                        builder.Append(sep).Append(row[col.ColumnName]);
-                        sep = separator;
-                    }
-
-                    writer.WriteLine(builder.ToString());
-                }
-
+                string path = Path.Combine(outputPath ?? this.CsvFolderPath, filename);
+                dt.ToCsv(separator, path);
                 this._logger.WriteInfo($"{this.GetType().Name}Dt2Csv", path);
-                res = true;
             }
             catch (Exception ex) {
                 this._logger.WriteError(ex.Message);
+                throw ex;
             }
-            finally {
-                if (writer != null) {
-                    writer.Close();
-                }
-            }
-
-            return res;
         }
 
-        public List<T> CsvToList<T>(Stream stream, char delimiter = ',', bool skipHeader = false, List<string> csvColumn = null, List<string> requiredColumn = null) {
+        public List<T> Csv2List<T>(Stream stream, char delimiter = ',', bool skipHeader = false, List<string> csvColumn = null, List<string> requiredColumn = null) {
             using (var reader = new StreamReader(stream)) {
                 int i = 0;
                 List<string> col = csvColumn ?? new List<string>();
@@ -168,7 +141,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
-        public string CsvToJson(string filePath, string delimiter, List<CCsv2Json> csvColumn = null) {
+        public string Csv2Json(string filePath, string delimiter, List<CCsv2Json> csvColumn = null) {
             if (csvColumn == null || csvColumn?.Count <= 0) {
                 throw new Exception("Daftar Kolom Harus Di Isi");
             }
