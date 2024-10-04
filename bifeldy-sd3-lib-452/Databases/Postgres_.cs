@@ -46,7 +46,7 @@ namespace bifeldy_sd3_lib_452.Databases {
         private NpgsqlCommand DatabaseCommand { get; set; }
         private NpgsqlDataAdapter DatabaseAdapter { get; set; }
 
-        public CPostgres(IApplication app, ILogger logger, IConverter converter, ICsv csv) : base(logger, converter) {
+        public CPostgres(IApplication app, ILogger logger, IConverter converter, ICsv csv) : base(logger, converter, csv) {
             this._app = app;
             this._logger = logger;
             this._csv = csv;
@@ -371,6 +371,9 @@ namespace bifeldy_sd3_lib_452.Databases {
                 }
 
                 string sqlQuery = $"SELECT * FROM ({rawQuery}) alias_{DateTime.Now.Ticks} WHERE 1 = 0";
+                sqlQuery = sqlQuery.Replace($"\r\n", " ");
+                sqlQuery = Regex.Replace(sqlQuery, @"\s+", " ");
+                this._logger.WriteInfo(this.GetType().Name, sqlQuery);
                 using (var rdr = (NpgsqlDataReader) await this.ExecReaderAsync(sqlQuery)) {
                     ReadOnlyCollection<NpgsqlDbColumn> columns = rdr.GetColumnSchema();
                     string struktur = columns.Select(c => c.ColumnName).Aggregate((i, j) => $"{i}{delimiter}{j}");
@@ -386,7 +389,18 @@ namespace bifeldy_sd3_lib_452.Databases {
                 this._logger.WriteInfo(this.GetType().Name, sqlQuery);
 
                 using (TextReader reader = ((NpgsqlConnection) this.DatabaseConnection).BeginTextExport(sqlQuery)) {
-                    result = this._csv.WriteCsv(reader, filename, outputPath);
+                    using (var streamWriter = new StreamWriter(path, true)) {
+                        string line = null;
+                        do {
+                            line = reader.ReadLine()?.Trim();
+                            if (!string.IsNullOrEmpty(line)) {
+                                streamWriter.WriteLine(line.ToUpper());
+                                streamWriter.Flush();
+                            }
+                        }
+                        while (!string.IsNullOrEmpty(line));
+                        result = path;
+                    }
                 }
             }
             catch (Exception ex) {

@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -42,7 +43,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         Task<bool> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         Task<CDbExecProcResult> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null);
         Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
-        Task<string> BulkGetCsv(string rawQuery, string delimiter, string filename, string outputPath = null);
+        Task<string> BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null);
         Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         Task<List<string>> RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null);
     }
@@ -51,6 +52,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
 
         private readonly ILogger _logger;
         private readonly IConverter _converter;
+        private readonly ICsv _csv;
 
         protected DbConnection DatabaseConnection { get; set; }
         protected DbTransaction DatabaseTransaction { get; set; }
@@ -66,9 +68,10 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         public bool Available => this.DatabaseConnection != null;
         public bool HasUnCommitRollbackSqlQuery => this.DatabaseTransaction != null;
 
-        public CDatabase(ILogger logger, IConverter converter) {
+        public CDatabase(ILogger logger, IConverter converter, ICsv csv) {
             this._logger = logger;
             this._converter = converter;
+            this._csv = csv;
         }
 
         public object Clone() {
@@ -345,6 +348,64 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             return (exception == null) ? result : throw exception;
         }
 
+        public virtual async Task<string> BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null) {
+            string result = null;
+            Exception exception = null;
+            try {
+                string path = Path.Combine(outputPath ?? this._csv.CsvFolderPath, filename);
+                if (File.Exists(path)) {
+                    File.Delete(path);
+                }
+
+                if (string.IsNullOrEmpty(rawQueryVulnerableSqlInjection) || string.IsNullOrEmpty(delimiter)) {
+                    throw new Exception("Select Raw Query + Delimiter Harus Di Isi");
+                }
+
+                string sqlQuery = $"SELECT * FROM ({rawQueryVulnerableSqlInjection}) alias_{DateTime.Now.Ticks}";
+                sqlQuery = sqlQuery.Replace($"\r\n", " ");
+                sqlQuery = Regex.Replace(sqlQuery, @"\s+", " ");
+                this._logger.WriteInfo(this.GetType().Name, sqlQuery);
+                using (DbDataReader rdr = await this.ExecReaderAsync(sqlQuery)) {
+                    DataColumnCollection columns = rdr.GetSchemaTable().Columns;
+                    var __cols = new List<DataColumn>();
+                    foreach (DataColumn column in columns) {
+                        __cols.Add(column);
+                    }
+
+                    IOrderedEnumerable<DataColumn> _cols = __cols.OrderBy(c => c.Ordinal);
+                    using (var streamWriter = new StreamWriter(path, true)) {
+                        string struktur = _cols.Select(c => c.ColumnName).Aggregate((i, j) => $"{i}{delimiter}{j}");
+                        streamWriter.WriteLine(struktur.ToUpper());
+                        streamWriter.Flush();
+
+                        while (rdr.Read()) {
+                            var _colValue = new List<string>();
+                            foreach (DataColumn col in _cols) {
+                                _colValue.Add(rdr.GetString(col.Ordinal));
+                            }
+
+                            string line = _colValue.Aggregate((i, j) => $"{i}{delimiter}{j}");
+                            if (!string.IsNullOrEmpty(line)) {
+                                streamWriter.WriteLine(line.ToUpper());
+                                streamWriter.Flush();
+                            }
+                        }
+
+                        result = path;
+                    }
+                }
+            }
+            catch (Exception ex) {
+                this._logger.WriteError(ex, 3);
+                exception = ex;
+            }
+            finally {
+                this.CloseConnection();
+            }
+
+            return (exception == null) ? result : throw exception;
+        }
+
         /** Wajib di Override */
 
         protected abstract void BindQueryParameter(List<CDbQueryParamBind> parameters);
@@ -355,7 +416,6 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         public abstract Task<bool> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         public abstract Task<CDbExecProcResult> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null);
         public abstract Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
-        public abstract Task<string> BulkGetCsv(string rawQuery, string delimiter, string filename, string outputPath = null);
         public abstract Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         public abstract Task<List<string>> RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null);
 

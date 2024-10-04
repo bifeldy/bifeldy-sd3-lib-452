@@ -27,7 +27,6 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface ICsv {
         string CsvFolderPath { get; }
-        string WriteCsv(TextReader textReader, string filename, string outputPath = null);
         bool DataTable2CSV(DataTable table, string filename, string separator, string outputPath = null);
         List<T> CsvToList<T>(Stream stream, char delimiter = ',', bool skipHeader = false, List<string> csvColumn = null, List<string> requiredColumn = null);
         string CsvToJson(string filePath, string delimiter, List<CCsv2Json> csvColumn = null);
@@ -50,27 +49,6 @@ namespace bifeldy_sd3_lib_452.Utilities {
             if (!Directory.Exists(this.CsvFolderPath)) {
                 Directory.CreateDirectory(this.CsvFolderPath);
             }
-        }
-
-        public string WriteCsv(TextReader textReader, string filename, string outputPath = null) {
-            if (string.IsNullOrEmpty(filename)) {
-                throw new Exception("Nama File + Extensi Harus Di Isi");
-            }
-
-            string path = Path.Combine(outputPath ?? this.CsvFolderPath, filename);
-            using (var streamWriter = new StreamWriter(path, true)) {
-                string line = null;
-                do {
-                    line = textReader.ReadLine()?.Trim();
-                    if (!string.IsNullOrEmpty(line)) {
-                        streamWriter.WriteLine(line.ToUpper());
-                        streamWriter.Flush();
-                    }
-                }
-                while (!string.IsNullOrEmpty(line));
-            }
-
-            return path;
         }
 
         public bool DataTable2CSV(DataTable table, string filename, string separator, string outputPath = null) {

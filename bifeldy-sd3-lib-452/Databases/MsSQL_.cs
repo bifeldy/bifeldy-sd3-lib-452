@@ -38,7 +38,7 @@ namespace bifeldy_sd3_lib_452.Databases {
         private SqlCommand DatabaseCommand { get; set; }
         private SqlDataAdapter DatabaseAdapter { get; set; }
 
-        public CMsSQL(IApplication app, ILogger logger, IConverter converter) : base(logger, converter) {
+        public CMsSQL(IApplication app, ILogger logger, IConverter converter, ICsv csv) : base(logger, converter, csv) {
             this._app = app;
             this._logger = logger;
 
@@ -195,10 +195,6 @@ namespace bifeldy_sd3_lib_452.Databases {
             }
 
             return (exception == null) ? result : throw exception;
-        }
-
-        public override async Task<string> BulkGetCsv(string rawQuery, string delimiter, string filename, string outputPath = null) {
-            throw new Exception("MsSql Tidak Memiliki Bulk Get Csv");
         }
 
         /// <summary> Jangan Lupa Di Close Koneksinya (Wajib) </summary>

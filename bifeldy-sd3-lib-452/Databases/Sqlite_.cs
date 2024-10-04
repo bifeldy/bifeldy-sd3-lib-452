@@ -40,7 +40,7 @@ namespace bifeldy_sd3_lib_452.Databases {
         private SQLiteCommand DatabaseCommand { get; set; }
         private SQLiteDataAdapter DatabaseAdapter { get; set; }
 
-        public CSqlite(IApplication app, IConfig config, ILogger logger, IConverter converter) : base(logger, converter) {
+        public CSqlite(IApplication app, IConfig config, ILogger logger, IConverter converter, ICsv csv) : base(logger, converter, csv) {
             this._app = app;
             this._config = config;
             this._logger = logger;
@@ -153,19 +153,8 @@ namespace bifeldy_sd3_lib_452.Databases {
         }
 
         public override async Task<CDbExecProcResult> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null) {
+            await Task.Delay(0);
             throw new Exception("SQLite Tidak Memiliki Stored Procedure");
-            // string sqlTextQueryParameters = "(";
-            // if (bindParam != null) {
-            //     for (int i = 0; i < bindParam.Count; i++) {
-            //         sqlTextQueryParameters += $":{bindParam[i].NAME}";
-            //         if (i + 1 < bindParam.Count) sqlTextQueryParameters += ",";
-            //     }
-            // }
-            // sqlTextQueryParameters += ")";
-            // DatabaseCommand.CommandText = $"CALL {procedureName} {sqlTextQueryParameters}";
-            // DatabaseCommand.CommandType = CommandType.StoredProcedure;
-            // BindQueryParameter(bindParam);
-            // return await ExecProcedureAsync(DatabaseCommand);
         }
 
         public override async Task<bool> BulkInsertInto(string tableName, DataTable dataTable) {
@@ -248,10 +237,6 @@ namespace bifeldy_sd3_lib_452.Databases {
             }
 
             return (exception == null) ? result : throw exception;
-        }
-
-        public override async Task<string> BulkGetCsv(string rawQuery, string delimiter, string filename, string outputPath = null) {
-            throw new Exception("SQLite Tidak Memiliki Bulk Get Csv");
         }
 
         /// <summary> Jangan Lupa Di Close Koneksinya (Wajib) </summary>
