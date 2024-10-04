@@ -333,8 +333,6 @@ namespace bifeldy_sd3_lib_452.Abstractions {
 
                         result.Add(filePath);
                     }
-
-                    rdrGetBlob.Close();
                 }
             }
             catch (Exception ex) {

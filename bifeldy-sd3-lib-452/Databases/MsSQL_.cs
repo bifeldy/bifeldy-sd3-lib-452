@@ -173,13 +173,14 @@ namespace bifeldy_sd3_lib_452.Databases {
         public override async Task<bool> BulkInsertInto(string tableName, DataTable dataTable) {
             bool result = false;
             Exception exception = null;
-            SqlBulkCopy dbBulkCopy = null;
             try {
                 await this.OpenConnection();
-                dbBulkCopy = new SqlBulkCopy((SqlConnection) this.DatabaseConnection) {
+                using (var dbBulkCopy = new SqlBulkCopy((SqlConnection) this.DatabaseConnection) {
                     DestinationTableName = tableName
-                };
-                await dbBulkCopy.WriteToServerAsync(dataTable);
+                }) {
+                    await dbBulkCopy.WriteToServerAsync(dataTable);
+                }
+
                 result = true;
             }
             catch (Exception ex) {
@@ -187,10 +188,6 @@ namespace bifeldy_sd3_lib_452.Databases {
                 exception = ex;
             }
             finally {
-                if (dbBulkCopy != null) {
-                    dbBulkCopy.Close();
-                }
-
                 this.CloseConnection();
             }
 

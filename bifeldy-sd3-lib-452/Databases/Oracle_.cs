@@ -186,13 +186,14 @@ namespace bifeldy_sd3_lib_452.Databases {
         public override async Task<bool> BulkInsertInto(string tableName, DataTable dataTable) {
             bool result = false;
             Exception exception = null;
-            OracleBulkCopy dbBulkCopy = null;
             try {
                 await this.OpenConnection();
-                dbBulkCopy = new OracleBulkCopy((OracleConnection) this.DatabaseConnection) {
+                using (var dbBulkCopy = new OracleBulkCopy((OracleConnection)this.DatabaseConnection) {
                     DestinationTableName = tableName
-                };
-                dbBulkCopy.WriteToServer(dataTable);
+                }) {
+                    dbBulkCopy.WriteToServer(dataTable);
+                }
+
                 result = true;
             }
             catch (Exception ex) {
@@ -200,10 +201,6 @@ namespace bifeldy_sd3_lib_452.Databases {
                 exception = ex;
             }
             finally {
-                if (dbBulkCopy != null) {
-                    dbBulkCopy.Close();
-                }
-
                 this.CloseConnection();
             }
 

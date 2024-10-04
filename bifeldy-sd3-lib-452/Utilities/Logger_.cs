@@ -59,13 +59,15 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private void CheckStreamWritter() {
             if (this.sSw != $"{DateTime.Now:yyyy-MM-dd}") {
                 this.sSw = $"{DateTime.Now:yyyy-MM-dd}";
+
                 if (this.swInfo != null) {
-                    this.swInfo.Close();
+                    this.swInfo.Dispose();
                 }
 
                 this.swInfo = new StreamWriter($"{this.LogInfoFolderPath}/{this.sSw}.log", true);
+
                 if (this.swError != null) {
-                    this.swError.Close();
+                    this.swError.Dispose();
                 }
 
                 this.swError = new StreamWriter($"{this.LogErrorFolderPath}/{this.sSw}.log", true);
