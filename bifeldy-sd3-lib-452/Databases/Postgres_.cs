@@ -264,7 +264,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                                             writer.Write(value, types[i]);
                                         }
                                         else if (lengths[i] > 1) {
-                                            writer.Write((char[])dR[fieldNames[i]], types[i]);
+                                            writer.Write((char[]) dR[fieldNames[i]], types[i]);
                                         }
                                         else {
                                             char[] s = dR[fieldNames[i]].ToString().ToCharArray();

@@ -47,7 +47,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public RxBehaviorSubject<T> GetGlobalAppBehaviorSubject<T>(string key) {
             return string.IsNullOrEmpty(key)
                 ? throw new Exception("Nama Key Wajib Diisi")
-                : !this.keyValuePairs.ContainsKey(key) ? this.CreateGlobalAppBehaviorSubject(key, default(T)) : (RxBehaviorSubject<T>)this.keyValuePairs[key];
+                : !this.keyValuePairs.ContainsKey(key) ? this.CreateGlobalAppBehaviorSubject(key, default(T)) : (RxBehaviorSubject<T>) this.keyValuePairs[key];
         }
 
         public RxBehaviorSubject<T> CreateGlobalAppBehaviorSubject<T>(string key, T initialValue) {

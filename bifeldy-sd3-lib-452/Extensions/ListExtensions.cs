@@ -14,6 +14,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.IO;
+using System.Reflection;
 
 namespace bifeldy_sd3_lib_452.Extensions {
 
@@ -71,6 +73,29 @@ namespace bifeldy_sd3_lib_452.Extensions {
             }
 
             return table;
+        }
+
+        public static void ToCsv<T>(this List<T> listData, string separator, string outputFilePath = null) {
+            using (var sw = new StreamWriter(outputFilePath)) {
+                PropertyInfo[] col = typeof(T).GetProperties();
+                for (int i = 0; i < col.Length - 1; i++) {
+                    sw.Write(col[i].Name + separator);
+                }
+
+                string hdr = col[col.Length - 1].Name;
+                sw.Write(hdr + sw.NewLine);
+
+                foreach (T item in listData) {
+                    PropertyInfo[] row = typeof(T).GetProperties();
+                    for (int i = 0; i < row.Length - 1; i++) {
+                        PropertyInfo prop = row[i];
+                        sw.Write(prop.GetValue(item) + separator);
+                    }
+
+                    PropertyInfo dtl = row[row.Length - 1];
+                    sw.Write(dtl.GetValue(item) + sw.NewLine);
+                }
+            }
         }
 
     }

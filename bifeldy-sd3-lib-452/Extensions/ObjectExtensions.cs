@@ -62,7 +62,7 @@ namespace bifeldy_sd3_lib_452.Extensions {
 
             // Khusus collection / yang bisa di looping (list, array, enum, dict)
             if (!propertyType.Equals(typeof(string)) && typeof(IEnumerable).IsAssignableFrom(propertyType)) {
-                return ConvertIEnumerableToDictionary((IEnumerable)propertyInfo.GetValue(owner));
+                return ConvertIEnumerableToDictionary((IEnumerable) propertyInfo.GetValue(owner));
             }
 
             // Khusus tipe data standar (int, bool, ...) + string, udahan

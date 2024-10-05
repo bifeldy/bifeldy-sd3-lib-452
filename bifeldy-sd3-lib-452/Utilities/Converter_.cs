@@ -11,11 +11,8 @@
  * 
  */
 
-using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Reflection;
 
 using Newtonsoft.Json;
 
@@ -27,7 +24,6 @@ namespace bifeldy_sd3_lib_452.Utilities {
         T JsonToObject<T>(string j2o);
         string ObjectToJson(object body);
         string FormatByteSizeHumanReadable(long bytes, string forceUnit = null);
-        Dictionary<string, T> ClassToDictionary<T>(object obj);
     }
 
     public sealed class CConverter : IConverter {
@@ -77,33 +73,6 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
 
             return $"{(decimal) bytes / digit:0.00} {ext}";
-        }
-
-        public Dictionary<string, T> ClassToDictionary<T>(object obj) {
-            return obj.GetType()
-                .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                    .ToDictionary(prop => prop.Name, prop => {
-                        try {
-                            dynamic data = prop.GetValue(obj, null);
-                            if (typeof(T) == typeof(string)) {
-                                if (data.GetType() == typeof(DateTime)) {
-                                    data = ((DateTime) data).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
-                                }
-
-                                if (typeof(T) == typeof(object)) {
-                                    data = ObjectToJson(data);
-                                }
-                                else {
-                                    data = $"{data}";
-                                }
-                            }
-
-                            return (T) data;
-                        }
-                        catch {
-                            return default;
-                        }
-                    });
         }
 
     }

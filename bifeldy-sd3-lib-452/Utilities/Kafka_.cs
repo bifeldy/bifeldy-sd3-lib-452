@@ -24,6 +24,7 @@ using Confluent.Kafka.Admin;
 
 using bifeldy_sd3_lib_452.Handlers;
 using bifeldy_sd3_lib_452.Models;
+using System.Reflection;
 
 namespace bifeldy_sd3_lib_452.Utilities {
 
@@ -186,7 +187,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     ConsumeResult<string, string> result = consumer.Consume(this.timeout);
                     this._logger.WriteInfo($"{this.GetType().Name}Consume", $"{result.Message.Key} :: {result.Message.Value}");
                     var message = new KafkaMessage<string, T> {
-                        Headers = this._converter.ClassToDictionary<string>(result.Message.Headers),
+                        Headers = this.MessageToDictionary<string>(result.Message.Headers),
                         Key = result.Message.Key,
                         Timestamp = result.Message.Timestamp,
                         Value = typeof(T) == typeof(string) ? (dynamic) result.Message.Value : this._converter.JsonToObject<T>(result.Message.Value)
@@ -280,7 +281,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 ulong i = 0;
                 while (!stoppingToken.IsCancellationRequested) {
                     ConsumeResult<string, string> result = consumer.Consume(stoppingToken);
-                    IDictionary<string, string> resMsgHdr = this._converter.ClassToDictionary<string>(result.Message.Headers);
+                    IDictionary<string, string> resMsgHdr = this.MessageToDictionary<string>(result.Message.Headers);
                     try {
                         var msg = new KafkaMessage<string, string> {
                             Headers = resMsgHdr,
@@ -310,6 +311,33 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
                 this._pubSub.DisposeAndRemoveSubscriber(key);
             }
+        }
+
+        private Dictionary<string, T> MessageToDictionary<T>(object obj) {
+            return obj.GetType()
+                .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                .ToDictionary(prop => prop.Name, prop => {
+                    try {
+                        dynamic data = prop.GetValue(obj, null);
+                        if (typeof(T) == typeof(string)) {
+                            if (data.GetType() == typeof(DateTime)) {
+                                data = ((DateTime) data).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+                            }
+
+                            if (typeof(T) == typeof(object)) {
+                                data = this._converter.ObjectToJson(data);
+                            }
+                            else {
+                                data = $"{data}";
+                            }
+                        }
+
+                        return (T) data;
+                    }
+                    catch {
+                        return default;
+                    }
+                });
         }
 
     }

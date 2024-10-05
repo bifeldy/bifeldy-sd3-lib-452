@@ -86,7 +86,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             try {
                 using (var sftp = new SftpClient(hostname, port, username, password)) {
                     sftp.Connect();
-                    response = (List<SftpFile>)sftp.ListDirectory(remotePath);
+                    response = (List<SftpFile>) sftp.ListDirectory(remotePath);
                     sftp.Disconnect();
                 }
             }

@@ -14,10 +14,10 @@ using System;
 
 namespace bifeldy_sd3_lib_452.Models {
 
-    public sealed class CCsv2Json {
+    public sealed class CCsvColumn {
         public string ColumnName { get; set; }
         public Type DataType { get; set; }
-        public int Position { get; set; } = 0;
+        public int Position { get; set; }
     }
 
 }
