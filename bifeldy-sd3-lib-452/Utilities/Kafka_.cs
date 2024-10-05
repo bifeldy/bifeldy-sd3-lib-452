@@ -35,6 +35,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         void CreateKafkaProducerListener(string hostPort, string topicName, short replication = -1, int partition = -1, bool suffixKodeDc = false, CancellationToken stoppingToken = default, string pubSubName = null);
         void DisposeAndRemoveKafkaProducerListener(string hostPort, string topicName, bool suffixKodeDc = false, string pubSubName = null);
         void CreateKafkaConsumerListener<T>(string hostPort, string topicName, string groupId, short replication = -1, int partition = -1, bool suffixKodeDc = false, CancellationToken stoppingToken = default, Action<KafkaMessage<string, T>> execLambda = null, string pubSubName = null);
+        Dictionary<string, T> MessageToDictionary<T>(object obj);
     }
 
     public sealed class CKafka : IKafka {
@@ -313,7 +314,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
-        private Dictionary<string, T> MessageToDictionary<T>(object obj) {
+        public Dictionary<string, T> MessageToDictionary<T>(object obj) {
             return obj.GetType()
                 .GetProperties(BindingFlags.Instance | BindingFlags.Public)
                 .ToDictionary(prop => prop.Name, prop => {
