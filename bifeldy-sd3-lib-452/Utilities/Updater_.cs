@@ -135,18 +135,22 @@ namespace bifeldy_sd3_lib_452.Utilities {
                             if (i > 1) {
                                 sqlUpdateQuery += " , ";
                             }
+
                             sqlUpdateQuery += $" {column} = :{column} ";
                         }
+
                         sqlUpdateParam.Add(new CDbQueryParamBind { NAME = column, VALUE = value });
                         if (i > 0) {
                             sqlInsertColumnQuery += " , ";
                             sqlInsertValuesQuery += " , ";
                         }
+
                         sqlInsertColumnQuery += $" {column} ";
                         sqlInsertValuesQuery += $" :{column} ";
                         sqlInsertParam.Add(new CDbQueryParamBind { NAME = column, VALUE = value });
                         i++;
                     }
+
                     try {
                         string sql = sqlInsertColumnQuery + sqlInsertValuesQuery + " ) ";
                         await this._db.SQLite_ExecQuery(sql, sqlInsertParam);

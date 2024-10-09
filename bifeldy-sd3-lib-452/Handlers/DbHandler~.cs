@@ -55,6 +55,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<bool> OraPg_AlterTable_AddColumnIfNotExist(string tableName, string columnName, string columnType);
         Task<bool> OraPg_TruncateTable(string TableName);
         Task<bool> OraPg_BulkInsertInto(string tableName, DataTable dataTable);
+        Task<List<string>> OraPg_RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null);
         Task<string> OraPg_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null);
         Task<T> OraPg_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<bool> OraPg_ExecQuery(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
@@ -62,17 +63,25 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<DataTable> OraPg_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<List<T>> OraPg_GetList<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<CDbExecProcResult> OraPg_CALL_(string procName, List<CDbQueryParamBind> bindParam = null);
+        Task<bool> MsSql_TruncateTable(string TableName);
+        Task<bool> MsSql_BulkInsertInto(string tableName, DataTable dataTable);
         Task<T> MsSql_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<bool> MsSql_ExecQuery(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<DbDataReader> MsSql_ExecReaderAsync(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<DataTable> MsSql_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<List<T>> MsSql_GetList<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<CDbExecProcResult> MsSql_CALL_(string procedureName, List<CDbQueryParamBind> bindParam = null);
+        Task<List<string>> MsSql_RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null);
+        Task<string> MsSql_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null);
+        Task<bool> SQLite_TruncateTable(string TableName);
+        Task<bool> SQLite_BulkInsertInto(string tableName, DataTable dataTable);
         Task<T> SQLite_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<bool> SQLite_ExecQuery(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<DbDataReader> Sqlite_ExecReaderAsync(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<DataTable> SQLite_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<List<T>> SQLite_GetList<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
+        Task<List<string>> SQLite_RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null);
+        Task<string> SQLite_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null);
     }
 
     public class CDbHandler : IDbHandler {
@@ -108,7 +117,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
                     return null;
                 }
 
-                IOracle ret = (bool) this._oracle?.Available ? this._oracle : null;
+                IOracle ret = (bool)this._oracle?.Available ? this._oracle : null;
                 return ret ?? throw new Exception("Gagal Membaca Dan Mengambil `Kunci` Oracle Database");
             }
         }
@@ -119,12 +128,12 @@ namespace bifeldy_sd3_lib_452.Handlers {
                     return null;
                 }
 
-                IPostgres ret = (bool) this._postgres?.Available ? this._postgres : null;
+                IPostgres ret = (bool)this._postgres?.Available ? this._postgres : null;
                 return ret ?? throw new Exception("Gagal Membaca Dan Mengambil `Kunci` Postgres Database");
             }
         }
 
-        protected IDatabase OraPg => this.LocalDbOnly ? null : this._app.IsUsingPostgres ? this.Postgres : (IDatabase) this.Oracle;
+        protected IDatabase OraPg => this.LocalDbOnly ? null : this._app.IsUsingPostgres ? this.Postgres : (IDatabase)this.Oracle;
 
         protected IMsSQL MsSql {
             get {
@@ -132,14 +141,14 @@ namespace bifeldy_sd3_lib_452.Handlers {
                     return null;
                 }
 
-                IMsSQL ret = (bool) this._mssql?.Available ? this._mssql : null;
+                IMsSQL ret = (bool)this._mssql?.Available ? this._mssql : null;
                 return ret ?? throw new Exception("Gagal Membaca Dan Mengambil `Kunci` Ms. SQL Server Database");
             }
         }
 
         protected ISqlite Sqlite {
             get {
-                ISqlite ret = (bool) this._sqlite?.Available ? this._sqlite : null;
+                ISqlite ret = (bool)this._sqlite?.Available ? this._sqlite : null;
                 return ret ?? throw new Exception("Gagal Membaca Dan Mengambil `Kunci` SQLite Database");
             }
         }
@@ -226,7 +235,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
                 return "NONDC";
             }
 
-            if ((bool) this.OraPg?.DbUsername.ToUpper().Contains("DCHO")) {
+            if ((bool)this.OraPg?.DbUsername.ToUpper().Contains("DCHO")) {
                 return "HO";
             }
 
@@ -242,7 +251,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
                 return "GXXX";
             }
 
-            if ((bool) this.OraPg?.DbUsername.ToUpper().Contains("DCHO")) {
+            if ((bool)this.OraPg?.DbUsername.ToUpper().Contains("DCHO")) {
                 return "DCHO";
             }
 
@@ -258,7 +267,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
                 return "NON DC";
             }
 
-            if ((bool) this.OraPg?.DbUsername.ToUpper().Contains("DCHO")) {
+            if ((bool)this.OraPg?.DbUsername.ToUpper().Contains("DCHO")) {
                 return "DC HEAD OFFICE";
             }
 
@@ -469,8 +478,6 @@ namespace bifeldy_sd3_lib_452.Handlers {
             });
         }
 
-        /* ** */
-
         // Bisa Kena SQL Injection
         public async Task<bool> OraPg_AlterTable_AddColumnIfNotExist(string tableName, string columnName, string columnType) {
             var cols = new List<string>();
@@ -486,6 +493,8 @@ namespace bifeldy_sd3_lib_452.Handlers {
                     {(this._app.IsUsingPostgres ? "" : ")")}
             ");
         }
+
+        /* ** */
 
         public async Task<bool> OraPg_TruncateTable(string TableName) {
             return await this.OraPg?.ExecQueryAsync($@"TRUNCATE TABLE {TableName}");
@@ -519,26 +528,38 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return await this.OraPg?.ExecProcedureAsync(procedureName, bindParam);
         }
 
+        public async Task<List<string>> OraPg_RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null) {
+            return await this.OraPg?.RetrieveBlob(stringPathDownload, queryString, bindParam, stringCustomSingleFileName);
+        }
+
         public async Task<string> OraPg_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null) {
             return await this.OraPg?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputPath);
         }
 
         /* ** */
 
+        public async Task<bool> MsSql_TruncateTable(string TableName) {
+            return await this.MsSql?.ExecQueryAsync($@"TRUNCATE TABLE {TableName}");
+        }
+
+        public async Task<bool> MsSql_BulkInsertInto(string tableName, DataTable dataTable) {
+            return await this.MsSql?.BulkInsertInto(tableName, dataTable);
+        }
+
         public async Task<T> MsSql_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
-            return await this.MsSql.ExecScalarAsync<T>(sqlQuery, bindParam);
+            return await this.MsSql?.ExecScalarAsync<T>(sqlQuery, bindParam);
         }
 
         public async Task<bool> MsSql_ExecQuery(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
-            return await this.MsSql.ExecQueryAsync(sqlQuery, bindParam);
+            return await this.MsSql?.ExecQueryAsync(sqlQuery, bindParam);
         }
 
         public async Task<DbDataReader> MsSql_ExecReaderAsync(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
-            return await this.MsSql.ExecReaderAsync(sqlQuery, bindParam);
+            return await this.MsSql?.ExecReaderAsync(sqlQuery, bindParam);
         }
 
         public async Task<DataTable> MsSql_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
-            return await this.MsSql.GetDataTableAsync(sqlQuery, bindParam);
+            return await this.MsSql?.GetDataTableAsync(sqlQuery, bindParam);
         }
 
         public async Task<List<T>> MsSql_GetList<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
@@ -546,10 +567,26 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         public async Task<CDbExecProcResult> MsSql_CALL_(string procedureName, List<CDbQueryParamBind> bindParam = null) {
-            return await this.MsSql.ExecProcedureAsync(procedureName, bindParam);
+            return await this.MsSql?.ExecProcedureAsync(procedureName, bindParam);
+        }
+
+        public async Task<List<string>> MsSql_RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null) {
+            return await this.MsSql?.RetrieveBlob(stringPathDownload, queryString, bindParam, stringCustomSingleFileName);
+        }
+
+        public async Task<string> MsSql_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null) {
+            return await this.MsSql?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputPath);
         }
 
         /* ** */
+
+        public async Task<bool> SQLite_TruncateTable(string TableName) {
+            return await this.Sqlite?.ExecQueryAsync($@"TRUNCATE TABLE {TableName}");
+        }
+
+        public async Task<bool> SQLite_BulkInsertInto(string tableName, DataTable dataTable) {
+            return await this.Sqlite?.BulkInsertInto(tableName, dataTable);
+        }
 
         public async Task<T> SQLite_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
             return await this.Sqlite.ExecScalarAsync<T>(sqlQuery, bindParam);
@@ -569,6 +606,14 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         public async Task<List<T>> SQLite_GetList<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
             return await this.Sqlite?.GetListAsync<T>(sqlQuery, bindParam);
+        }
+
+        public async Task<List<string>> SQLite_RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null) {
+            return await this.Sqlite?.RetrieveBlob(stringPathDownload, queryString, bindParam, stringCustomSingleFileName);
+        }
+
+        public async Task<string> SQLite_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null) {
+            return await this.Sqlite?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputPath);
         }
 
     }
