@@ -60,16 +60,19 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<bool> OraPg_ExecQuery(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<DbDataReader> OraPg_ExecReaderAsync(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<DataTable> OraPg_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
+        Task<List<T>> OraPg_GetList<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<CDbExecProcResult> OraPg_CALL_(string procName, List<CDbQueryParamBind> bindParam = null);
         Task<T> MsSql_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<bool> MsSql_ExecQuery(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<DbDataReader> MsSql_ExecReaderAsync(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<DataTable> MsSql_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
+        Task<List<T>> MsSql_GetList<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<CDbExecProcResult> MsSql_CALL_(string procedureName, List<CDbQueryParamBind> bindParam = null);
         Task<T> SQLite_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<bool> SQLite_ExecQuery(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<DbDataReader> Sqlite_ExecReaderAsync(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<DataTable> SQLite_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
+        Task<List<T>> SQLite_GetList<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
     }
 
     public class CDbHandler : IDbHandler {
@@ -508,6 +511,10 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return await this.OraPg?.GetDataTableAsync(sqlQuery, bindParam);
         }
 
+        public async Task<List<T>> OraPg_GetList<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
+            return await this.OraPg?.GetListAsync<T>(sqlQuery, bindParam);
+        }
+
         public async Task<CDbExecProcResult> OraPg_CALL_(string procedureName, List<CDbQueryParamBind> bindParam = null) {
             return await this.OraPg?.ExecProcedureAsync(procedureName, bindParam);
         }
@@ -534,6 +541,10 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return await this.MsSql.GetDataTableAsync(sqlQuery, bindParam);
         }
 
+        public async Task<List<T>> MsSql_GetList<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
+            return await this.MsSql?.GetListAsync<T>(sqlQuery, bindParam);
+        }
+
         public async Task<CDbExecProcResult> MsSql_CALL_(string procedureName, List<CDbQueryParamBind> bindParam = null) {
             return await this.MsSql.ExecProcedureAsync(procedureName, bindParam);
         }
@@ -554,6 +565,10 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         public async Task<DataTable> SQLite_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
             return await this.Sqlite.GetDataTableAsync(sqlQuery, bindParam);
+        }
+
+        public async Task<List<T>> SQLite_GetList<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null) {
+            return await this.Sqlite?.GetListAsync<T>(sqlQuery, bindParam);
         }
 
     }

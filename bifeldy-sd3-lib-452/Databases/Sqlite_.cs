@@ -138,6 +138,13 @@ namespace bifeldy_sd3_lib_452.Databases {
             return await this.GetDataTableAsync(this.DatabaseCommand);
         }
 
+        public override async Task<List<T>> GetListAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null) {
+            this.DatabaseCommand.CommandText = queryString;
+            this.DatabaseCommand.CommandType = CommandType.Text;
+            this.BindQueryParameter(bindParam);
+            return await this.GetListAsync<T>(this.DatabaseCommand);
+        }
+
         public override async Task<T> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null) {
             this.DatabaseCommand.CommandText = queryString;
             this.DatabaseCommand.CommandType = CommandType.Text;
@@ -240,11 +247,11 @@ namespace bifeldy_sd3_lib_452.Databases {
         }
 
         /// <summary> Jangan Lupa Di Close Koneksinya (Wajib) </summary>
-        public override async Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
+        public override async Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null, CommandBehavior commandBehavior = CommandBehavior.Default) {
             this.DatabaseCommand.CommandText = queryString;
             this.DatabaseCommand.CommandType = CommandType.Text;
             this.BindQueryParameter(bindParam);
-            return await this.ExecReaderAsync(this.DatabaseCommand);
+            return await this.ExecReaderAsync(this.DatabaseCommand, commandBehavior);
         }
 
         public override async Task<List<string>> RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null) {

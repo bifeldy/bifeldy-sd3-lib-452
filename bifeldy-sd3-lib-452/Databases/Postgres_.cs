@@ -160,6 +160,13 @@ namespace bifeldy_sd3_lib_452.Databases {
             return await this.GetDataTableAsync(this.DatabaseCommand);
         }
 
+        public override async Task<List<T>> GetListAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null) {
+            this.DatabaseCommand.CommandText = queryString;
+            this.DatabaseCommand.CommandType = CommandType.Text;
+            this.BindQueryParameter(bindParam);
+            return await this.GetListAsync<T>(this.DatabaseCommand);
+        }
+
         public override async Task<T> ExecScalarAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null) {
             this.DatabaseCommand.CommandText = queryString;
             this.DatabaseCommand.CommandType = CommandType.Text;
@@ -365,11 +372,11 @@ namespace bifeldy_sd3_lib_452.Databases {
                 if (File.Exists(path)) {
                     File.Delete(path);
                 }
-
+            
                 if (string.IsNullOrEmpty(rawQuery) || string.IsNullOrEmpty(delimiter)) {
                     throw new Exception("Select Raw Query + Delimiter Harus Di Isi");
                 }
-
+            
                 string sqlQuery = $"SELECT * FROM ({rawQuery}) alias_{DateTime.Now.Ticks} WHERE 1 = 0";
                 sqlQuery = sqlQuery.Replace($"\r\n", " ");
                 sqlQuery = Regex.Replace(sqlQuery, @"\s+", " ");
@@ -382,12 +389,12 @@ namespace bifeldy_sd3_lib_452.Databases {
                         streamWriter.Flush();
                     }
                 }
-
+            
                 sqlQuery = $"COPY ({rawQuery}) TO STDOUT WITH CSV DELIMITER '{delimiter}'";
                 sqlQuery = sqlQuery.Replace($"\r\n", " ");
                 sqlQuery = Regex.Replace(sqlQuery, @"\s+", " ");
                 this._logger.WriteInfo(this.GetType().Name, sqlQuery);
-
+            
                 using (TextReader reader = ((NpgsqlConnection) this.DatabaseConnection).BeginTextExport(sqlQuery)) {
                     using (var streamWriter = new StreamWriter(path, true)) {
                         string line = null;
@@ -410,16 +417,16 @@ namespace bifeldy_sd3_lib_452.Databases {
             finally {
                 this.CloseConnection();
             }
-
+            
             return (exception == null) ? result : throw exception;
         }
 
         /// <summary> Jangan Lupa Di Close Koneksinya (Wajib) </summary>
-        public override async Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
+        public override async Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null, CommandBehavior commandBehavior = CommandBehavior.Default) {
             this.DatabaseCommand.CommandText = queryString;
             this.DatabaseCommand.CommandType = CommandType.Text;
             this.BindQueryParameter(bindParam);
-            return await this.ExecReaderAsync(this.DatabaseCommand);
+            return await this.ExecReaderAsync(this.DatabaseCommand, commandBehavior);
         }
 
         public override async Task<List<string>> RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null) {

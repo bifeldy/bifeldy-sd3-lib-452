@@ -14,9 +14,9 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 
 using ChoETL;
@@ -89,30 +89,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public List<T> Csv2List<T>(string filePath, string delimiter, List<CCsvColumn> csvColumn) {
             csvColumn = csvColumn.OrderBy(c => c.Position).ToList();
             using (ChoCSVReader<dynamic> csv = this.ChoEtlSetupCsv(filePath, delimiter, csvColumn)) {
-                using (IDataReader rdr = csv.AsDataReader()) {
-                    DataColumnCollection columns = rdr.GetSchemaTable().Columns;
-                    PropertyInfo[] properties = typeof(T).GetProperties();
-                    var row = new List<T>();
-
-                    while (rdr.Read()) {
-                        T objT = Activator.CreateInstance<T>();
-                        foreach (DataColumn column in columns) {
-                            foreach (PropertyInfo pro in properties) {
-                                if (pro.Name.ToUpper() == column.ColumnName.ToUpper()) {
-                                    try {
-                                        pro.SetValue(objT, rdr[column.ColumnName]);
-                                    }
-                                    catch {
-                                        //
-                                    }
-                                }
-                            }
-                        }
-
-                        row.Add(objT);
-                    }
-
-                    return row;
+                using (var rdr = (DbDataReader) csv.AsDataReader()) {
+                    return rdr.ToList<T>();
                 }
             }
         }

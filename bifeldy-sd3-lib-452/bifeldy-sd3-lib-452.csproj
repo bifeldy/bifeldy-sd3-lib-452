@@ -203,6 +203,7 @@
     <Compile Include="Abstractions\Database^.cs" />
     <Compile Include="Databases\Sqlite_.cs" />
     <Compile Include="Extensions\ByteExtensions.cs" />
+    <Compile Include="Extensions\DbDataReaderExtensions.cs" />
     <Compile Include="Extensions\DataTableExtensions.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
