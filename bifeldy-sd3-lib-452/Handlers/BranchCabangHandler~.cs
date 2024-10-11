@@ -17,7 +17,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 
 using bifeldy_sd3_lib_452.Abstractions;
-using bifeldy_sd3_lib_452.Models;
+using bifeldy_sd3_lib_452.TableView;
 using bifeldy_sd3_lib_452.Utilities;
 
 namespace bifeldy_sd3_lib_452.Handlers {

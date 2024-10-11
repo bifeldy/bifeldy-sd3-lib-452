@@ -6,12 +6,12 @@
  * Department   :: IT SD 03
  * Mail         :: bias@indomaret.co.id
  * 
- * Catatan      :: Model Tabel DC_TABEL_V
+ * Catatan      :: View DC_TABEL_V
  *              :: Seharusnya Tidak Untuk Didaftarkan Ke DI Container
  * 
  */
 
-namespace bifeldy_sd3_lib_452.Models {
+namespace bifeldy_sd3_lib_452.TableView {
 
     public sealed class DC_TABEL_V {
         public string TBL_DC_KODE { get; set; }

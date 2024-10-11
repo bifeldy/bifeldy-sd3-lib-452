@@ -6,14 +6,14 @@
  * Department   :: IT SD 03
  * Mail         :: bias@indomaret.co.id
  * 
- * Catatan      :: Model Tabel DC_KAFKA_CONSUMER_T
+ * Catatan      :: Tabel DC_KAFKA_CONSUMER_T
  *              :: Seharusnya Tidak Untuk Didaftarkan Ke DI Container
  * 
  */
 
 using System;
 
-namespace bifeldy_sd3_lib_452.Models {
+namespace bifeldy_sd3_lib_452.TableView {
 
     public sealed class DC_KAFKA_CONSUMER_T {
         public string TPC { set; get; }
