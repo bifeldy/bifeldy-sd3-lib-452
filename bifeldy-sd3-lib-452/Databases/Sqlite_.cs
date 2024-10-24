@@ -152,11 +152,11 @@ namespace bifeldy_sd3_lib_452.Databases {
             return await this.ExecScalarAsync<T>(this.DatabaseCommand);
         }
 
-        public override async Task<bool> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null) {
+        public override async Task<bool> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null, int minRowsAffected = 1) {
             this.DatabaseCommand.CommandText = queryString;
             this.DatabaseCommand.CommandType = CommandType.Text;
             this.BindQueryParameter(bindParam);
-            return await this.ExecQueryAsync(this.DatabaseCommand);
+            return await this.ExecQueryAsync(this.DatabaseCommand, minRowsAffected);
         }
 
         public override async Task<CDbExecProcResult> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null) {
