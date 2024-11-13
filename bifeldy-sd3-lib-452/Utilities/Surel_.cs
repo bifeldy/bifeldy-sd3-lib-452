@@ -28,7 +28,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         Attachment CreateEmailAttachment(string filePath);
         List<Attachment> CreateEmailAttachment(string[] filePath);
         MailMessage CreateEmailMessage(string subject, string body, List<MailAddress> to, List<MailAddress> cc = null, List<MailAddress> bcc = null, List<Attachment> attachments = null, MailAddress from = null);
-        Task SendEmailMessage(MailMessage mailMessage);
+        Task SendEmailMessage(MailMessage mailMessage, bool paksaDariHo = false);
         MailAddress GetDefaultBotSenderFromAddress();
         Task CreateAndSend(string subject, string body, List<MailAddress> to, List<MailAddress> cc = null, List<MailAddress> bcc = null, List<Attachment> attachments = null, MailAddress from = null);
     }
@@ -47,15 +47,24 @@ namespace bifeldy_sd3_lib_452.Utilities {
             this._db = db;
         }
 
-        private async Task<SmtpClient> CreateSmtpClient() {
-            int port = int.Parse(await this._db.OraPg_GetMailInfo<string>("MAIL_PORT"));
+        private async Task<SmtpClient> CreateSmtpClient(bool paksaDariHo = false) {
+            string host = await this._db.OraPg_GetMailInfo<string>("MAIL_IP");
+            string _port = await this._db.OraPg_GetMailInfo<string>("MAIL_PORT");
+            int port = string.IsNullOrEmpty(_port) ? 0 : int.Parse(_port);
+            string uname = await this._db.OraPg_GetMailInfo<string>("MAIL_USERNAME");
+            string upass = await this._db.OraPg_GetMailInfo<string>("MAIL_PASSWORD");
+
+            if (string.IsNullOrEmpty(host) || port <= 0 || string.IsNullOrEmpty(uname) || string.IsNullOrEmpty(upass) || paksaDariHo) {
+                host = this._config.Get<string>("SmtpServerIpDomain", this._app.GetConfig("smtp_server_ip_domain"));
+                port = this._config.Get<int>("SmtpServerPort", int.Parse(this._app.GetConfig("smtp_server_port")));
+                uname = this._config.Get<string>("SmtpServerUsername", this._app.GetConfig("smtp_server_username"), true);
+                upass = this._config.Get<string>("SmtpServerPassword", this._app.GetConfig("smtp_server_password"), true);
+            }
+
             return new SmtpClient() {
-                Host = await this._db.OraPg_GetMailInfo<string>("MAIL_IP") ?? this._config.Get<string>("SmtpServerIpDomain", this._app.GetConfig("smtp_server_ip_domain")),
-                Port = (port > 0) ? port : this._config.Get<int>("SmtpServerPort", int.Parse(this._app.GetConfig("smtp_server_port"))),
-                Credentials = new NetworkCredential(
-                    await this._db.OraPg_GetMailInfo<string>("MAIL_USERNAME") ?? this._config.Get<string>("SmtpServerUsername", this._app.GetConfig("smtp_server_username"), true),
-                    await this._db.OraPg_GetMailInfo<string>("MAIL_PASSWORD") ?? this._config.Get<string>("SmtpServerPassword", this._app.GetConfig("smtp_server_password"), true)
-                )
+                Host = host,
+                Port = port,
+                Credentials = new NetworkCredential(uname, upass)
             };
         }
 
@@ -131,8 +140,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return mailMessage;
         }
 
-        public async Task SendEmailMessage(MailMessage mailMessage) {
-            SmtpClient smtpClient = await this.CreateSmtpClient();
+        public async Task SendEmailMessage(MailMessage mailMessage, bool paksaDariHo = false) {
+            SmtpClient smtpClient = await this.CreateSmtpClient(paksaDariHo);
             await smtpClient.SendMailAsync(mailMessage);
         }
 
@@ -147,17 +156,18 @@ namespace bifeldy_sd3_lib_452.Utilities {
         ) {
             Exception e = null;
             try {
-                await this.SendEmailMessage(
-                    this.CreateEmailMessage(
-                        subject,
-                        body,
-                        to,
-                        cc,
-                        bcc,
-                        attachments,
-                        from ?? this.GetDefaultBotSenderFromAddress()
-                    )
+                MailMessage mail = this.CreateEmailMessage(
+                    subject, body, to, cc, bcc, attachments,
+                    from ?? this.GetDefaultBotSenderFromAddress()
                 );
+                try {
+                    // Pakai Regional
+                    await this.SendEmailMessage(mail);
+                }
+                catch {
+                    // Via DCHO
+                    await this.SendEmailMessage(mail, true);
+                }
             }
             catch (Exception ex) {
                 this._logger.WriteError(ex);

@@ -307,7 +307,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                 }
 
                 databaseCommand.CommandText = _oldCmdTxt;
-                using(DbDataReader rdrGetBlob = await this.ExecReaderAsync(databaseCommand, CommandBehavior.SequentialAccess)) {
+                using (DbDataReader rdrGetBlob = await this.ExecReaderAsync(databaseCommand, CommandBehavior.SequentialAccess)) {
                     if (string.IsNullOrEmpty(stringFileName) && rdrGetBlob.FieldCount != 2) {
                         throw new Exception($"Jika Nama File Kosong Maka Harus Berjumlah 2 Kolom{Environment.NewLine}SELECT kolom_blob_data, kolom_nama_file FROM ...");
                     }
