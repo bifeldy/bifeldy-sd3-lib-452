@@ -285,7 +285,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                                         writer.Write(Convert.ToDateTime(_obj), types[i]);
                                         break;
                                     case NpgsqlDbType.Bytea:
-                                        writer.Write((byte[])_obj, types[i]);
+                                        writer.Write((byte[]) _obj, types[i]);
                                         break;
                                     default:
                                         writer.Write(_obj, types[i]);
