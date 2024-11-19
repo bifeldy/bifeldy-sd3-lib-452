@@ -192,18 +192,17 @@ namespace bifeldy_sd3_lib_452.Abstractions {
 
         protected virtual async Task<List<T>> GetListAsync<T>(DbCommand databaseCommand) {
             var result = new List<T>();
-            DbDataReader dr = null;
             Exception exception = null;
             try {
-                dr = await this.ExecReaderAsync(databaseCommand, CommandBehavior.SequentialAccess);
-                result = dr.ToList<T>();
+                using (DbDataReader dr = await this.ExecReaderAsync(databaseCommand, CommandBehavior.SequentialAccess)) {
+                    result = dr.ToList<T>();
+                }
             }
             catch (Exception ex) {
                 this._logger.WriteError(ex, 4);
                 exception = ex;
             }
             finally {
-                dr?.Close();
                 this.CloseConnection();
             }
 
