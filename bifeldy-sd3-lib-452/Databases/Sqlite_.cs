@@ -29,6 +29,7 @@ namespace bifeldy_sd3_lib_452.Databases {
 
     public interface ISqlite : IDatabase {
         CSqlite NewExternalConnection(string dbName);
+        CSqlite CloneConnection();
     }
 
     public sealed class CSqlite : CDatabase, ISqlite {
@@ -262,10 +263,17 @@ namespace bifeldy_sd3_lib_452.Databases {
         }
 
         public CSqlite NewExternalConnection(string dbName) {
-            var postgres = (CSqlite) this.Clone();
-            postgres.InitializeSqliteDatabase(dbName);
-            postgres.SettingUpDatabase();
-            return postgres;
+            var sqlite = (CSqlite) this.Clone();
+            sqlite.InitializeSqliteDatabase(dbName);
+            sqlite.SettingUpDatabase();
+            return sqlite;
+        }
+
+        public CSqlite CloneConnection() {
+            var sqlite = (CSqlite) this.Clone();
+            sqlite.InitializeSqliteDatabase(this.DbName);
+            sqlite.SettingUpDatabase();
+            return sqlite;
         }
 
     }

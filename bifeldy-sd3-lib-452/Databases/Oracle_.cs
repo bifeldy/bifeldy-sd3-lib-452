@@ -29,6 +29,7 @@ namespace bifeldy_sd3_lib_452.Databases {
 
     public interface IOracle : IDatabase {
         COracle NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid);
+        COracle CloneConnection();
     }
 
     public sealed class COracle : CDatabase, IOracle {
@@ -232,6 +233,13 @@ namespace bifeldy_sd3_lib_452.Databases {
             var oracle = (COracle) this.Clone();
             string dbTnsOdp = $"(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST={dbIpAddrss})(PORT={dbPort})))(CONNECT_DATA=(SERVICE_NAME={dbNameSid})))";
             oracle.InitializeOracleDatabase(dbUsername, dbPassword, dbTnsOdp);
+            oracle.SettingUpDatabase();
+            return oracle;
+        }
+
+        public COracle CloneConnection() {
+            var oracle = (COracle) this.Clone();
+            oracle.InitializeOracleDatabase(this.DbUsername, this.DbPassword, this.DbTnsOdp);
             oracle.SettingUpDatabase();
             return oracle;
         }
