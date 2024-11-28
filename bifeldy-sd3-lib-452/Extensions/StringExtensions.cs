@@ -11,6 +11,7 @@
  */
 
 using System;
+using System.Text.RegularExpressions;
 
 namespace bifeldy_sd3_lib_452.Extensions {
 
@@ -34,6 +35,13 @@ namespace bifeldy_sd3_lib_452.Extensions {
             }
 
             return array;
+        }
+
+        public static string MaskStringUrl(this string urlText) {
+            urlText = Regex.Replace(urlText, "secret=([^&#]+)", "secret=***");
+            urlText = Regex.Replace(urlText, "key=([^&#]+)", "key=***");
+            urlText = Regex.Replace(urlText, "token=([^&#]+)", "token=***");
+            return urlText;
         }
 
     }

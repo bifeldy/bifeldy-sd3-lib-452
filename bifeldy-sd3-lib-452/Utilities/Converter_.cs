@@ -16,6 +16,8 @@ using System.Drawing;
 
 using Newtonsoft.Json;
 
+using bifeldy_sd3_lib_452.Libraries;
+
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IConverter {
@@ -41,11 +43,19 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public T JsonToObject<T>(string j2o) {
-            return JsonConvert.DeserializeObject<T>(j2o);
+            return JsonConvert.DeserializeObject<T>(j2o, new JsonSerializerSettings {
+                Converters = new[] {
+                    new DecimalNewtonsoftJsonConverter()
+                }
+            });
         }
 
         public string ObjectToJson(object o2j) {
-            return JsonConvert.SerializeObject(o2j);
+            return JsonConvert.SerializeObject(o2j, new JsonSerializerSettings {
+                Converters = new[] {
+                    new DecimalNewtonsoftJsonConverter()
+                }
+            });
         }
 
         public string FormatByteSizeHumanReadable(long bytes, string forceUnit = null) {

@@ -206,6 +206,7 @@
     <Compile Include="Extensions\DbDataReaderExtensions.cs" />
     <Compile Include="Extensions\DataTableExtensions.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
+    <Compile Include="Extensions\DecimalExtensions.cs" />
     <Compile Include="Extensions\ListExtensions.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
@@ -216,6 +217,7 @@
     <Compile Include="Databases\Oracle_.cs" />
     <Compile Include="Databases\Postgres_.cs" />
     <Compile Include="Handlers\BranchCabangHandler~.cs" />
+    <Compile Include="Libraries\DecimalJsonConverter.cs" />
     <Compile Include="Libraries\DefaultIcons.cs" />
     <Compile Include="Models\DbExecProcResult_.cs" />
     <Compile Include="Models\DbQueryParamBind_.cs" />

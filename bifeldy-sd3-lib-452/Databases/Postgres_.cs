@@ -30,6 +30,7 @@ using Npgsql.Schema;
 using bifeldy_sd3_lib_452.Abstractions;
 using bifeldy_sd3_lib_452.Models;
 using bifeldy_sd3_lib_452.Utilities;
+using bifeldy_sd3_lib_452.Extensions;
 
 namespace bifeldy_sd3_lib_452.Databases {
 
@@ -210,6 +211,10 @@ namespace bifeldy_sd3_lib_452.Databases {
                 }
 
                 int colCount = dataTable.Columns.Count;
+                var lsCol = dataTable.Columns.Cast<DataColumn>().Select(c => c.ColumnName.ToUpper()).ToList();
+                if (colCount != lsCol.Count) {
+                    throw new Exception($"Jumlah Kolom Mapping Tabel Aneh Tidak Sesuai");
+                }
 
                 var types = new NpgsqlDbType[colCount];
                 int[] lengths = new int[colCount];
@@ -217,15 +222,17 @@ namespace bifeldy_sd3_lib_452.Databases {
 
                 this.DatabaseCommand.CommandText = $"SELECT * FROM {tableName} WHERE 1 = 0";
                 using (var rdr = (NpgsqlDataReader) await this.ExecReaderAsync(this.DatabaseCommand)) {
-                    if (rdr.FieldCount != colCount) {
-                        throw new Exception($"Jumlah Kolom Tabel Tujuan {tableName} Tidak Sama Dengan Input DataTable {dataTable.TableName}");
-                    }
-
                     ReadOnlyCollection<NpgsqlDbColumn> columns = rdr.GetColumnSchema();
+
                     for (int i = 0; i < colCount; i++) {
-                        types[i] = (NpgsqlDbType) columns[i].NpgsqlDbType;
-                        lengths[i] = columns[i].ColumnSize == null ? 0 : (int) columns[i].ColumnSize;
-                        fieldNames[i] = columns[i].ColumnName;
+                        NpgsqlDbColumn column = columns.FirstOrDefault(c => c.ColumnName.ToUpper() == lsCol[i]);
+                        if (column == null) {
+                            throw new Exception($"Kolom {lsCol[i]} Tidak Tersedia Di Tabel Tujuan {tableName}");
+                        }
+
+                        types[i] = (NpgsqlDbType) column.NpgsqlDbType;
+                        lengths[i] = column.ColumnSize == null ? 0 : (int) column.ColumnSize;
+                        fieldNames[i] = column.ColumnName;
                     }
                 }
 
@@ -257,7 +264,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                                         break;
                                     case NpgsqlDbType.Money:
                                     case NpgsqlDbType.Numeric:
-                                        writer.Write(Convert.ToDecimal(_obj), types[i]);
+                                        writer.Write(((decimal) Convert.ToDecimal(_obj)).RemoveTrail(), types[i]);
                                         break;
                                     case NpgsqlDbType.Double:
                                         writer.Write(Convert.ToDouble(_obj), types[i]);
