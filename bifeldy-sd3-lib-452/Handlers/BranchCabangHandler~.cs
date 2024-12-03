@@ -63,8 +63,9 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         //
-        // Sepertinya Yang Ini Akan Kurang Berguna
-        // Karena Dapat Akses Langsung Ke Database
+        // Akses Langsung Ke Database Cabang
+        // Tembak Ambil Info Dari Service Mas Edwin :) HO
+        // Atur URL Di `App.config` -> ws_syncho
         //
         // Item1 => bool :: Apakah Menggunakan Postgre
         // Item2 => CDatabase :: Koneksi Ke Database
@@ -72,7 +73,6 @@ namespace bifeldy_sd3_lib_452.Handlers {
         // IDictionary<string, (bool, CDatabase)> dbCon = await GetListBranchDbConnection("G001");
         // var res = dbCon["G055"].Item2.ExecScalarAsync<...>(...);
         //
-
         public async Task<IDictionary<string, (bool, CDatabase)>> GetListBranchDbConnection(string kodeDcInduk) {
             if (!this.BranchConnectionInfo.ContainsKey(kodeDcInduk)) {
                 IDictionary<string, (bool, CDatabase)> dbCons = new Dictionary<string, (bool, CDatabase)>();
