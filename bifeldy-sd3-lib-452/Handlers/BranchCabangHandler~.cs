@@ -68,7 +68,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         // Atur URL Di `App.config` -> ws_syncho
         //
         // Item1 => bool :: Apakah Menggunakan Postgre
-        // Item2 => CDatabase :: Koneksi Ke Database
+        // Item2 => CDatabase :: Koneksi Ke Database Oracle / Postgre (Tidak Ada SqlServer)
         //
         // IDictionary<string, (bool, CDatabase)> dbCon = await GetListBranchDbConnection("G001");
         // var res = dbCon["G055"].Item2.ExecScalarAsync<...>(...);
