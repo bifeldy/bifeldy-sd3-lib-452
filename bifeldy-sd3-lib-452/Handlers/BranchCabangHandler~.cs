@@ -24,7 +24,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
     public interface IBranchCabangHandler {
         Task<List<DC_TABEL_V>> GetListBranchDbInformation(string kodeDcInduk);
-        Task<IDictionary<string, CDatabase>> GetListBranchDbConnection(string kodeDcInduk);
+        Task<IDictionary<string, (bool, CDatabase)>> GetListBranchDbConnection(string kodeDcInduk);
     }
 
     public class CBranchCabangHandler : IBranchCabangHandler {
@@ -38,11 +38,11 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         private IDictionary<
             string, IDictionary<
-                string, CDatabase
+                string, (bool, CDatabase)
             >
         > BranchConnectionInfo { get; } = new Dictionary<
             string, IDictionary<
-                string, CDatabase
+                string, (bool, CDatabase)
             >
         >();
 
@@ -68,27 +68,30 @@ namespace bifeldy_sd3_lib_452.Handlers {
         //
         // Sepertinya Yang Ini Akan Kurang Berguna
         // Karena Dapat Akses Langsung Ke Database
-        // Cuma Tahu `CDatabase` Tidak Tahu Jenis `Postgre` / `Oracle`
         //
-        // IDictionary<string, CDatabase> dbCon = await GetListBranchDbConnection("G001");
-        // var res = dbCon["G055"].ExecScalarAsync<...>(...);
+        // Item1 => bool :: Apakah Menggunakan Postgre
+        // Item2 => CDatabase :: Koneksi Ke Database
+        //
+        // IDictionary<string, (bool, CDatabase)> dbCon = await GetListBranchDbConnection("G001");
+        // var res = dbCon["G055"].Item2.ExecScalarAsync<...>(...);
         //
 
-        public async Task<IDictionary<string, CDatabase>> GetListBranchDbConnection(string kodeDcInduk) {
-            IDictionary<string, CDatabase> dbCons = new Dictionary<string, CDatabase>();
+        public async Task<IDictionary<string, (bool, CDatabase)>> GetListBranchDbConnection(string kodeDcInduk) {
+            IDictionary<string, (bool, CDatabase)> dbCons = new Dictionary<string, (bool, CDatabase)>();
 
             try {
                 List<DC_TABEL_V> dbInfo = await this.GetListBranchDbInformation(kodeDcInduk);
                 foreach (DC_TABEL_V dbi in dbInfo) {
                     CDatabase dbCon;
-                    if (dbi.FLAG_DBPG == "Y") {
+                    bool isPostgre = dbi.FLAG_DBPG?.ToUpper() == "Y";
+                    if (isPostgre) {
                         dbCon = this._db.NewExternalConnectionPg(dbi.DBPG_IP, dbi.DBPG_PORT, dbi.DBPG_USER, dbi.DBPG_PASS, dbi.DBPG_NAME);
                     }
                     else {
                         dbCon = this._db.NewExternalConnectionOra(dbi.IP_DB, dbi.DB_PORT, dbi.DB_USER_NAME, dbi.DB_PASSWORD, dbi.DB_SID);
                     }
 
-                    dbCons.Add(dbi.TBL_DC_KODE, dbCon);
+                    dbCons.Add(dbi.TBL_DC_KODE, (isPostgre, dbCon));
                 }
 
                 this.BranchConnectionInfo[kodeDcInduk] = dbCons;
