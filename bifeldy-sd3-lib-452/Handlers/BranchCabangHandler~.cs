@@ -79,7 +79,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         public async Task<IDictionary<string, (bool, CDatabase)>> GetListBranchDbConnection(string kodeDcInduk) {
             IDictionary<string, (bool, CDatabase)> dbCons = new Dictionary<string, (bool, CDatabase)>();
 
-            try {
+            if (!this.BranchConnectionInfo.ContainsKey(kodeDcInduk)) {
                 List<DC_TABEL_V> dbInfo = await this.GetListBranchDbInformation(kodeDcInduk);
                 foreach (DC_TABEL_V dbi in dbInfo) {
                     CDatabase dbCon;
@@ -93,13 +93,9 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
                     dbCons.Add(dbi.TBL_DC_KODE, (isPostgre, dbCon));
                 }
-
-                this.BranchConnectionInfo[kodeDcInduk] = dbCons;
-            }
-            catch (Exception ex) {
-                this._logger.WriteError(ex);
             }
 
+            this.BranchConnectionInfo[kodeDcInduk] = dbCons;
             return this.BranchConnectionInfo[kodeDcInduk];
         }
 
