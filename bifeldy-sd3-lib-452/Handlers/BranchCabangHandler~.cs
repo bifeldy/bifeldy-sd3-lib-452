@@ -11,7 +11,6 @@
  * 
  */
 
-using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -33,7 +32,6 @@ namespace bifeldy_sd3_lib_452.Handlers {
         private readonly IConfig _config;
         private readonly IApi _api;
         private readonly IDbHandler _db;
-        private readonly ILogger _logger;
         private readonly IConverter _converter;
 
         private IDictionary<
@@ -46,12 +44,11 @@ namespace bifeldy_sd3_lib_452.Handlers {
             >
         >();
 
-        public CBranchCabangHandler(IApplication app, IConfig config, IApi api, IDbHandler db, ILogger logger, IConverter converter) {
+        public CBranchCabangHandler(IApplication app, IConfig config, IApi api, IDbHandler db, IConverter converter) {
             this._app = app;
             this._config = config;
             this._api = api;
             this._db = db;
-            this._logger = logger;
             this._converter = converter;
         }
 
@@ -77,9 +74,9 @@ namespace bifeldy_sd3_lib_452.Handlers {
         //
 
         public async Task<IDictionary<string, (bool, CDatabase)>> GetListBranchDbConnection(string kodeDcInduk) {
-            IDictionary<string, (bool, CDatabase)> dbCons = new Dictionary<string, (bool, CDatabase)>();
-
             if (!this.BranchConnectionInfo.ContainsKey(kodeDcInduk)) {
+                IDictionary<string, (bool, CDatabase)> dbCons = new Dictionary<string, (bool, CDatabase)>();
+
                 List<DC_TABEL_V> dbInfo = await this.GetListBranchDbInformation(kodeDcInduk);
                 foreach (DC_TABEL_V dbi in dbInfo) {
                     CDatabase dbCon;
@@ -93,9 +90,10 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
                     dbCons.Add(dbi.TBL_DC_KODE, (isPostgre, dbCon));
                 }
+
+                this.BranchConnectionInfo[kodeDcInduk] = dbCons;
             }
 
-            this.BranchConnectionInfo[kodeDcInduk] = dbCons;
             return this.BranchConnectionInfo[kodeDcInduk];
         }
 
