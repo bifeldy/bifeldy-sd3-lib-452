@@ -12,10 +12,12 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
 using bifeldy_sd3_lib_452.Abstractions;
+using bifeldy_sd3_lib_452.Models;
 using bifeldy_sd3_lib_452.TableView;
 using bifeldy_sd3_lib_452.Utilities;
 
@@ -24,6 +26,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
     public interface IBranchCabangHandler {
         Task<List<DC_TABEL_V>> GetListBranchDbInformation(string kodeDcInduk);
         Task<IDictionary<string, (bool, CDatabase)>> GetListBranchDbConnection(string kodeDcInduk);
+        Task<(bool, CDatabase, CDatabase)> OpenConnectionToDcFromHo(string kodeDcTarget);
     }
 
     public class CBranchCabangHandler : IBranchCabangHandler {
@@ -95,6 +98,69 @@ namespace bifeldy_sd3_lib_452.Handlers {
             }
 
             return this.BranchConnectionInfo[kodeDcInduk];
+        }
+
+        public async Task<(bool, CDatabase, CDatabase)> OpenConnectionToDcFromHo(string kodeDcTarget) {
+            CDatabase dbConHo = null;
+
+            string kodeDcSekarang = await this._db.GetKodeDc();
+            if (kodeDcSekarang.ToUpper() != "DCHO") {
+                List<DC_TABEL_V> dbInfo = await this.GetListBranchDbInformation("DCHO");
+                DC_TABEL_V dcho = dbInfo.FirstOrDefault();
+                if (dcho != null) {
+                    dbConHo = this._db.NewExternalConnectionOra(dcho.IP_DB, dcho.DB_PORT.ToString(), dcho.DB_USER_NAME, dcho.DB_PASSWORD, dcho.DB_SID);
+                }
+            }
+            else {
+                dbConHo = (CDatabase) this._db;
+            }
+
+            bool dbIsUsingPostgre = false;
+            CDatabase dbOraPgDc = null;
+            CDatabase dbSqlDc = null;
+
+            if (dbConHo != null) {
+                DC_TABEL_IP_T dbi = (await dbConHo.GetListAsync<DC_TABEL_IP_T>(
+                    $@"
+                        SELECT
+                            flag_dbpg,
+                            dbpg_ip,
+                            dbpg_port,
+                            dbpg_user,
+                            dbpg_pass,
+                            dbpg_name,
+                            ip_db,
+                            db_port,
+                            db_user_name,
+                            db_password,
+                            db_sid,
+                            db_ip_sql,
+                            db_user_sql,
+                            db_pwd_sql,
+                            schema_dpd
+                        FROM
+                            dc_tabel_ip_t
+                        WHERE
+                            UPPER(dc_kode) = :dc_kode
+                    ",
+                    new List<CDbQueryParamBind>() {
+                        new CDbQueryParamBind { NAME = "dc_kode", VALUE = kodeDcTarget.ToUpper() }
+                    }
+                )).FirstOrDefault();
+                if (dbi != null) {
+                    dbIsUsingPostgre = dbi.FLAG_DBPG?.ToUpper() == "Y";
+                    if (dbIsUsingPostgre) {
+                        dbOraPgDc = this._db.NewExternalConnectionPg(dbi.DBPG_IP, dbi.DBPG_PORT, dbi.DBPG_USER, dbi.DBPG_PASS, dbi.DBPG_NAME);
+                    }
+                    else {
+                        dbOraPgDc = this._db.NewExternalConnectionOra(dbi.IP_DB, dbi.DB_PORT.ToString(), dbi.DB_USER_NAME, dbi.DB_PASSWORD, dbi.DB_SID);
+                    }
+
+                    dbSqlDc = this._db.NewExternalConnectionMsSql(dbi.DB_IP_SQL, dbi.DB_USER_SQL, dbi.DB_PWD_SQL, dbi.SCHEMA_DPD);
+                }
+            }
+
+            return (dbIsUsingPostgre, dbOraPgDc, dbSqlDc);
         }
 
     }
