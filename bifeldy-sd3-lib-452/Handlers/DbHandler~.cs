@@ -19,6 +19,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 using bifeldy_sd3_lib_452.Abstractions;
 using bifeldy_sd3_lib_452.Databases;
@@ -35,7 +36,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         void OraPg_MsSqlLiteCloseAllConnection(bool force = false);
         Task OraPg_MsSqlLiteMarkBeforeCommitRollback();
         void OraPg_MsSqlLiteMarkSuccessCommitAndClose();
-        void OraPg_MsSqlLiteMarkFailedRollbackAndClose();
+        bool OraPg_MsSqlLiteMarkFailedRollbackAndClose();
         COracle NewExternalConnectionOra(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid);
         CPostgres NewExternalConnectionPg(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName);
         CMsSQL NewExternalConnectionMsSql(string dbIpAddrss, string dbUsername, string dbPassword, string dbName);
@@ -208,10 +209,22 @@ namespace bifeldy_sd3_lib_452.Handlers {
             this._sqlite?.MarkSuccessCommitAndClose();
         }
 
-        public void OraPg_MsSqlLiteMarkFailedRollbackAndClose() {
-            this.OraPg?.MarkFailedRollbackAndClose();
-            this._mssql?.MarkFailedRollbackAndClose();
-            this._sqlite?.MarkFailedRollbackAndClose();
+        public bool OraPg_MsSqlLiteMarkFailedRollbackAndClose() {
+            try {
+                this.OraPg?.MarkFailedRollbackAndClose();
+                this._mssql?.MarkFailedRollbackAndClose();
+                this._sqlite?.MarkFailedRollbackAndClose();
+                return true;
+            }
+            catch {
+                MessageBox.Show(
+                    "Data Tidak Tersimpan, Silahkan Ulangi Kembali ~",
+                    "Gagal ROLLBACK",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+                return false;
+            }
         }
 
         /* Perlakuan Khusus */
