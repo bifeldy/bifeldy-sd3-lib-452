@@ -215,7 +215,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                 await this.OpenConnection();
                 object _obj = await databaseCommand.ExecuteScalarAsync();
                 if (_obj != null && _obj != DBNull.Value) {
-                    result = (T) Convert.ChangeType(_obj, typeof(T));
+                    result = this._converter.ObjectToT<T>(_obj);
                 }
             }
             catch (Exception ex) {

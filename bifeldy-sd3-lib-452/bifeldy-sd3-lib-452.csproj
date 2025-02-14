@@ -218,10 +218,12 @@
     <Compile Include="Databases\Oracle_.cs" />
     <Compile Include="Databases\Postgres_.cs" />
     <Compile Include="Handlers\BranchCabangHandler~.cs" />
-    <Compile Include="Libraries\DecimalJsonConverter.cs" />
+    <Compile Include="Libraries\DecimalJsonConverter_.cs" />
     <Compile Include="Libraries\DefaultIcons.cs" />
+    <Compile Include="Libraries\DynamicClass_.cs" />
     <Compile Include="Models\DbExecProcResult_.cs" />
     <Compile Include="Models\DbQueryParamBind_.cs" />
+    <Compile Include="Models\TableClassModel_.cs" />
     <Compile Include="TableView\DC_KAFKA_CONSUMER_T.cs" />
     <Compile Include="TableView\DC_TABEL_V.cs" />
     <Compile Include="TableView\DC_TABEL_IP_T.cs" />

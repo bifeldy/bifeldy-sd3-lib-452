@@ -11,8 +11,11 @@
  * 
  */
 
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
+using System.Reflection;
 
 using Newtonsoft.Json;
 
@@ -24,6 +27,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         byte[] ImageToByte(Image x);
         Image ByteToImage(byte[] byteArray);
         T JsonToObject<T>(string j2o);
+        T ObjectToT<T>(object o2t);
         string ObjectToJson(object body);
         string FormatByteSizeHumanReadable(long bytes, string forceUnit = null);
     }
@@ -58,6 +62,16 @@ namespace bifeldy_sd3_lib_452.Utilities {
             });
         }
 
+        public T ObjectToT<T>(object o2t) {
+            TypeConverter converter = TypeDescriptor.GetConverter(typeof(T));
+            if (converter.CanConvertFrom(o2t.GetType())) {
+                return (T) converter.ConvertFrom(o2t);
+            }
+            else {
+                return (T) Convert.ChangeType(o2t, typeof(T));
+            }
+        }
+
         public string FormatByteSizeHumanReadable(long bytes, string forceUnit = null) {
             IDictionary<string, long> dict = new Dictionary<string, long> {
                 { "TB", 1000000000000 },
@@ -83,6 +97,21 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
 
             return $"{(decimal) bytes / digit:0.00} {ext}";
+        }
+
+        public List<CDynamicClassProperty> GetTableClassStructureModel<T>() {
+            var ls = new List<CDynamicClassProperty>();
+
+            foreach (PropertyInfo propertyInfo in typeof(T).GetProperties()) {
+                Type type = Nullable.GetUnderlyingType(propertyInfo.PropertyType);
+                ls.Add(new CDynamicClassProperty() {
+                    ColumnName = propertyInfo.Name,
+                    DataType = type?.FullName ?? propertyInfo.PropertyType.FullName,
+                    IsNullable = type != null
+                });
+            }
+
+            return ls;
         }
 
     }
