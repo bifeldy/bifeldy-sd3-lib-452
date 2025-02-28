@@ -58,7 +58,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             this.UpdaterFtpPort = this._config.Get<int>("UpdaterFtpPort", int.Parse(this._app.GetConfig("updater_ftp_port")));
             this.UpdaterFtpUsername = this._config.Get<string>("UpdaterFtpUsername", this._app.GetConfig("updater_ftp_username"), true);
             this.UpdaterFtpPassword = this._config.Get<string>("UpdaterFtpPassword", this._app.GetConfig("updater_ftp_password"), true);
-            this.ConnectionString = $"ftp://{this.UpdaterFtpUsername}:{this.UpdaterFtpPassword}@{this.UpdaterFtpIpDomain}:{this.UpdaterFtpPort}/{this.UpdaterWorkDir}";
+            this.ConnectionString = $"ftp://{this.UpdaterFtpIpDomain}:{this.UpdaterFtpPort}/{this.UpdaterWorkDir}";
         }
 
         public bool CheckUpdater(int newVersionTargetRequested = 0) {
@@ -66,7 +66,11 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 string localUpdaterPath = Path.Combine(this._app.AppLocation, this.UpdaterExeName);
                 var uriUpdaterAppPath = new Uri($"{this.ConnectionString}/{this.UpdaterExeName}");
                 var uriUpdaterAppVer = new Uri($"{this.ConnectionString}/{this.UpdaterVersion}");
-                var webClient = new WebClient();
+
+                var webClient = new WebClient() {
+                    Credentials = new NetworkCredential(this.UpdaterFtpUsername, this.UpdaterFtpPassword)
+                };
+
                 if (!File.Exists(localUpdaterPath)) {
                     webClient.DownloadFile(uriUpdaterAppPath, localUpdaterPath);
                 }
@@ -96,8 +100,11 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public async Task UpdateSqliteDatabase() {
             var Directories = new List<string>();
+
             var ftpRequest = (FtpWebRequest) WebRequest.Create(new Uri(this.ConnectionString));
+            ftpRequest.Credentials = new NetworkCredential(this.UpdaterFtpUsername, this.UpdaterFtpPassword);
             ftpRequest.Method = WebRequestMethods.Ftp.ListDirectory;
+
             var response = (FtpWebResponse) ftpRequest.GetResponse();
             using (var streamReader = new StreamReader(response.GetResponseStream())) {
                 string line = streamReader.ReadLine();
@@ -112,8 +119,14 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 return;
             }
 
-            string ftpPathFile = this.ConnectionString.Replace(this.UpdaterWorkDir, "") + jsonDbPath;
-            string jsonDb = new WebClient().DownloadString(new Uri(ftpPathFile));
+            string jsonDb = null;
+            using (var ftpClient = new WebClient()) {
+                ftpClient.Credentials = new NetworkCredential(this.UpdaterFtpUsername, this.UpdaterFtpPassword);
+
+                string ftpPathFile = this.ConnectionString.Replace(this.UpdaterWorkDir, "") + jsonDbPath;
+                jsonDb = ftpClient.DownloadString(new Uri(ftpPathFile));
+            }
+
             IDictionary<string, dynamic> dict = this._converter.JsonToObject<IDictionary<string, dynamic>>(jsonDb);
             foreach (KeyValuePair<string, dynamic> kvp in dict) {
                 IDictionary<string, dynamic>[] tblRows = kvp.Value.ToObject<IDictionary<string, dynamic>[]>();
