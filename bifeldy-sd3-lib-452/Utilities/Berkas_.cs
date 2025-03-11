@@ -53,12 +53,12 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
             this.BackupFolderPath = this._config.Get<string>("BackupFolderPath", Path.Combine(this._app.AppLocation, "_data", "Backup_Files"));
             if (!Directory.Exists(this.BackupFolderPath)) {
-                Directory.CreateDirectory(this.BackupFolderPath);
+                _ = Directory.CreateDirectory(this.BackupFolderPath);
             }
 
             this.DownloadFolderPath = this._config.Get<string>("DownloadFolderPath", Path.Combine(this._app.AppLocation, "_data", "Download_Files"));
             if (!Directory.Exists(this.DownloadFolderPath)) {
-                Directory.CreateDirectory(this.DownloadFolderPath);
+                _ = Directory.CreateDirectory(this.DownloadFolderPath);
             }
         }
 
@@ -109,7 +109,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public void CopyAllFilesAndDirectories(DirectoryInfo source, DirectoryInfo target, bool isInRecursive = false) {
-            Directory.CreateDirectory(target.FullName);
+            _ = Directory.CreateDirectory(target.FullName);
             foreach (FileInfo fi in source.GetFiles()) {
                 FileInfo res = fi.CopyTo(Path.Combine(target.FullName, fi.Name), true);
                 this._logger.WriteInfo($"{this.GetType().Name}CopyAndReplace", $"{fi.FullName} => {res.FullName}");
@@ -153,8 +153,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
             using (var reader = new BinaryReader(new FileStream(fileInfo.FullName, FileMode.Open))) {
                 byte[] buff = new byte[minFileSize];
-                reader.BaseStream.Seek(0, SeekOrigin.Begin);
-                reader.Read(buff, 0, buff.Length);
+                _ = reader.BaseStream.Seek(0, SeekOrigin.Begin);
+                _ = reader.Read(buff, 0, buff.Length);
                 for (int i = 0; i < intList.Length; i++) {
                     if (intList[i] == -1 || buff[i] == intList[i]) {
                         continue;

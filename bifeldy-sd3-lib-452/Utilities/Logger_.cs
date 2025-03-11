@@ -14,6 +14,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 
 namespace bifeldy_sd3_lib_452.Utilities {
 
@@ -45,12 +46,12 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
             this.LogInfoFolderPath = Path.Combine(this._app.AppLocation, "_data", "Info_Logs");
             if (!Directory.Exists(this.LogInfoFolderPath)) {
-                Directory.CreateDirectory(this.LogInfoFolderPath);
+                _ = Directory.CreateDirectory(this.LogInfoFolderPath);
             }
 
             this.LogErrorFolderPath = Path.Combine(this._app.AppLocation, "_data", "Error_Logs");
             if (!Directory.Exists(this.LogErrorFolderPath)) {
-                Directory.CreateDirectory(this.LogErrorFolderPath);
+                _ = Directory.CreateDirectory(this.LogErrorFolderPath);
             }
 
             this.CheckStreamWritter();
@@ -80,8 +81,16 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public void WriteInfo(string subject, string body, bool newLine = false, bool force = false) {
             try {
+                string threadName = Thread.CurrentThread.Name ?? string.Empty;
                 this.CheckStreamWritter();
-                string content = $"[{DateTime.Now:HH:mm:ss tt zzz}] {subject} :: {body} {Environment.NewLine}";
+
+                if (!string.IsNullOrEmpty(threadName)) {
+                    threadName += " :: ";
+                }
+
+                threadName += $"{DateTime.Now:HH:mm:ss tt zzz}";
+
+                string content = $"[{threadName}] {subject} :: {body} {Environment.NewLine}";
                 if (newLine) {
                     content += Environment.NewLine;
                 }

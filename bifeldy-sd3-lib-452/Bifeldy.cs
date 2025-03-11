@@ -40,10 +40,13 @@ namespace bifeldy_sd3_lib_452 {
 
             // Inject CClass As IInterface Using Namespace
             this.RegisterDiClassAsInterfaceByNamespace(Assembly.GetExecutingAssembly(), new string[] {
-                "bifeldy_sd3_lib_452.Databases",
-                "bifeldy_sd3_lib_452.Handlers",
                 "bifeldy_sd3_lib_452.Utilities"
             });
+
+            this.RegisterDiClassAsInterfaceByNamespace(Assembly.GetExecutingAssembly(), new string[] {
+                "bifeldy_sd3_lib_452.Databases",
+                "bifeldy_sd3_lib_452.Handlers"
+            }, false);
         }
 
         public Bifeldy(string[] args) : this() {
@@ -66,10 +69,10 @@ namespace bifeldy_sd3_lib_452 {
             > registrationBuilder = this._builder
                                         .RegisterType<CClass>();
             if (singleton) {
-                registrationBuilder.SingleInstance();
+                _ = registrationBuilder.SingleInstance();
             }
             else {
-                registrationBuilder.InstancePerDependency();
+                _ = registrationBuilder.InstancePerDependency();
             }
         }
 
@@ -85,10 +88,10 @@ namespace bifeldy_sd3_lib_452 {
                                                         && type.IsClass
                                                         && Regex.IsMatch(type.Name, this._acceptableIndentifierName));
             if (singleton) {
-                registrationBuilder.SingleInstance();
+                _ = registrationBuilder.SingleInstance();
             }
             else {
-                registrationBuilder.InstancePerDependency();
+                _ = registrationBuilder.InstancePerDependency();
             }
         }
 
@@ -101,10 +104,10 @@ namespace bifeldy_sd3_lib_452 {
                                         .RegisterType<CClass>()
                                         .Named<object>(typeof(CClass).Name);
             if (singleton) {
-                registrationBuilder.SingleInstance();
+                _ = registrationBuilder.SingleInstance();
             }
             else {
-                registrationBuilder.InstancePerDependency();
+                _ = registrationBuilder.InstancePerDependency();
             }
         }
 
@@ -121,10 +124,10 @@ namespace bifeldy_sd3_lib_452 {
                                                         && Regex.IsMatch(type.Name, this._acceptableIndentifierName))
                                         .Named<object>(c => c.Name);
             if (singleton) {
-                registrationBuilder.SingleInstance();
+                _ = registrationBuilder.SingleInstance();
             }
             else {
-                registrationBuilder.InstancePerDependency();
+                _ = registrationBuilder.InstancePerDependency();
             }
         }
 
@@ -135,10 +138,10 @@ namespace bifeldy_sd3_lib_452 {
                 SingleRegistrationStyle
             > registrationBuilder = this._builder.RegisterType<CClass>().As<IInterface>();
             if (singleton) {
-                registrationBuilder.SingleInstance();
+                _ = registrationBuilder.SingleInstance();
             }
             else {
-                registrationBuilder.InstancePerDependency();
+                _ = registrationBuilder.InstancePerDependency();
             }
         }
 
@@ -155,10 +158,10 @@ namespace bifeldy_sd3_lib_452 {
                                                         && Regex.IsMatch(type.Name, this._acceptableIndentifierName))
                                         .As(c => c.GetInterfaces().Where(i => i.Name == "I" + c.Name.Substring(1)).First());
             if (singleton) {
-                registrationBuilder.SingleInstance();
+                _ = registrationBuilder.SingleInstance();
             }
             else {
-                registrationBuilder.InstancePerDependency();
+                _ = registrationBuilder.InstancePerDependency();
             }
         }
 

@@ -95,7 +95,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                             }
 
                             bindStr += $"{pName}_{id}";
-                            this.DatabaseCommand.Parameters.Add(new SQLiteParameter {
+                            _ = this.DatabaseCommand.Parameters.Add(new SQLiteParameter {
                                 ParameterName = $"{prefix}{pName}_{id}",
                                 Value = data ?? DBNull.Value
                             });
@@ -118,7 +118,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                             param.Direction = parameters[i].DIRECTION;
                         }
 
-                        this.DatabaseCommand.Parameters.Add(param);
+                        _ = this.DatabaseCommand.Parameters.Add(param);
                     }
                 }
             }
@@ -205,7 +205,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                     sbHeader += fieldNames[c];
                 }
 
-                sB.Append(sbHeader + ") VALUES (");
+                _ = sB.Append(sbHeader + ") VALUES (");
                 string sbRow = "(";
                 for (int r = 0; r < dataTable.Rows.Count; r++) {
                     if (sbRow.EndsWith(")")) {
@@ -229,7 +229,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                     sbRow += $"{sbColumn} )";
                 }
 
-                sB.Append(sbRow);
+                _ = sB.Append(sbRow);
 
                 string query = sB.ToString();
                 await this.MarkBeforeCommitRollback();
@@ -270,10 +270,7 @@ namespace bifeldy_sd3_lib_452.Databases {
         }
 
         public CSqlite CloneConnection() {
-            var sqlite = (CSqlite) this.Clone();
-            sqlite.InitializeSqliteDatabase(this.DbName);
-            sqlite.SettingUpDatabase();
-            return sqlite;
+            return this.NewExternalConnection(this.DbName);
         }
 
     }

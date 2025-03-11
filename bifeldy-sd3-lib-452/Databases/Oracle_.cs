@@ -119,7 +119,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                             }
 
                             bindStr += $"{prefix}{pName}_{id}";
-                            this.DatabaseCommand.Parameters.Add(new OracleParameter {
+                            _ = this.DatabaseCommand.Parameters.Add(new OracleParameter {
                                 ParameterName = $"{pName}_{id}",
                                 Value = data ?? DBNull.Value
                             });
@@ -142,7 +142,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                             param.Direction = parameters[i].DIRECTION;
                         }
 
-                        this.DatabaseCommand.Parameters.Add(param);
+                        _ = this.DatabaseCommand.Parameters.Add(param);
                     }
                 }
             }

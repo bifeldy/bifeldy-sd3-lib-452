@@ -80,7 +80,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
 
             IDictionary<string, string> json = this._converter.JsonToObject<Dictionary<string, string>>(text);
-            json.TryGetValue("project_id", out this.projectId);
+            _ = json.TryGetValue("project_id", out this.projectId);
             this.googleCredential = GoogleCredential.FromJson(text).CreateScoped(StorageService.Scope.DevstorageFullControl);
             using (var ms = new MemoryStream()) {
                 using (var writer = new StreamWriter(ms)) {
@@ -268,7 +268,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
             if (uploadProgress != null) {
                 mediaUpload.ProgressChanged += (progressNew) => {
-                    Enum.TryParse(progressNew.Status.ToString(), out EGcsUploadStatus progressStatus);
+                    _ = Enum.TryParse(progressNew.Status.ToString(), out EGcsUploadStatus progressStatus);
                     var upPrgs = new CGcsUploadProgress {
                         Status = progressStatus,
                         BytesSent = progressNew.BytesSent,
@@ -282,7 +282,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             IUploadProgress result = await mediaUpload.ResumeAsync(uploadSession);
             this._logger.WriteInfo($"{this.GetType().Name}UploadCompleted", $"{mediaUpload.Body.Name} ===>>> {mediaUpload.Bucket} :: 100 %", force: forceLogging);
 
-            Enum.TryParse(result.Status.ToString(), out EGcsUploadStatus uploadStatus);
+            _ = Enum.TryParse(result.Status.ToString(), out EGcsUploadStatus uploadStatus);
             return  new CGcsUploadProgress {
                 Status = uploadStatus,
                 BytesSent = result.BytesSent,
@@ -305,7 +305,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             };
 
             var idp = new Progress<IDownloadProgress>(progressNew => {
-                Enum.TryParse(progressNew.Status.ToString(), out EGcsDownloadStatus progressStatus);
+                _ = Enum.TryParse(progressNew.Status.ToString(), out EGcsDownloadStatus progressStatus);
                 var dwPrgs = new CGcsDownloadProgress {
                     Status = progressStatus,
                     BytesDownloaded = progressNew.BytesDownloaded,

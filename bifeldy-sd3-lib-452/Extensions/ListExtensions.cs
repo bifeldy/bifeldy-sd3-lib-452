@@ -54,7 +54,7 @@ namespace bifeldy_sd3_lib_452.Extensions {
             else {
                 PropertyDescriptorCollection properties = TypeDescriptor.GetProperties(typeof(T));
                 foreach (PropertyDescriptor prop in properties) {
-                    table.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
+                    _ = table.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
                 }
 
                 foreach (T item in listData) {

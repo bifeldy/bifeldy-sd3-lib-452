@@ -170,10 +170,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
             byte[] buffer = new byte[maxContent];
             using (var fs = new FileStream(filePath, FileMode.Open)) {
                 if (fs.Length >= maxContent) {
-                    fs.Read(buffer, 0, maxContent);
+                    _ = fs.Read(buffer, 0, maxContent);
                 }
                 else {
-                    fs.Read(buffer, 0, (int) fs.Length);
+                    _ = fs.Read(buffer, 0, (int)fs.Length);
                 }
             }
 

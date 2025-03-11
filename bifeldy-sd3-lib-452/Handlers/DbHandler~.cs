@@ -217,12 +217,15 @@ namespace bifeldy_sd3_lib_452.Handlers {
                 return true;
             }
             catch {
-                MessageBox.Show(
-                    "Data Tidak Tersimpan, Silahkan Ulangi Kembali ~",
-                    "Gagal ROLLBACK",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error
-                );
+                if (Environment.UserInteractive) {
+                    _ = MessageBox.Show(
+                        "Data Tidak Tersimpan, Silahkan Ulangi Kembali ~",
+                        "Gagal ROLLBACK",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                }
+
                 return false;
             }
         }

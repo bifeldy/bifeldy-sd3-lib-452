@@ -153,11 +153,11 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
                     try {
                         string sql = sqlInsertColumnQuery + sqlInsertValuesQuery + " ) ";
-                        await this._db.SQLite_ExecQuery(sql, sqlInsertParam);
+                        _ = await this._db.SQLite_ExecQuery(sql, sqlInsertParam);
                     }
                     catch {
                         string sql = sqlUpdateQuery + sqlUpdateCondition;
-                        await this._db.SQLite_ExecQuery(sql, sqlUpdateParam);
+                        _ = await this._db.SQLite_ExecQuery(sql, sqlUpdateParam);
                     }
                 }
             }

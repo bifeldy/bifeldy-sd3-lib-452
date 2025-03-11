@@ -226,7 +226,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 this.keyValuePairs.Add(key, this.CreateKafkaProducerInstance<string, string>(hostPort));
             }
 
-            this._pubSub.GetGlobalAppBehaviorSubject<KafkaMessage<string, dynamic>>(key).Subscribe(async data => {
+            _ = this._pubSub.GetGlobalAppBehaviorSubject<KafkaMessage<string, dynamic>>(key).Subscribe(async data => {
                 if (data != null) {
                     var msg = new Message<string, string> {
                         Headers = this.CreateHeaderFromDictionary(data.Headers),
@@ -245,7 +245,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
             if (this.keyValuePairs.ContainsKey(key)) {
                 this.keyValuePairs[key].Dispose();
-                this.keyValuePairs.Remove(key);
+                _ = this.keyValuePairs.Remove(key);
             }
 
             this._pubSub.DisposeAndRemoveSubscriber(key);
@@ -290,7 +290,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                             Timestamp = result.Message.Timestamp,
                             Value = result.Message.Value
                         };
-                        await this._db.SaveKafkaToTable(result.Topic, result.Offset.Value, result.Partition.Value, msg);
+                        _ = await this._db.SaveKafkaToTable(result.Topic, result.Offset.Value, result.Partition.Value, msg);
                     }
                     catch (Exception e) {
                         this._logger.WriteError(e);
@@ -305,7 +305,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     execLambda?.Invoke(message);
                     this._pubSub.GetGlobalAppBehaviorSubject<KafkaMessage<string, T>>(key).OnNext(message);
                     if (++i % COMMIT_AFTER_N_MESSAGES == 0) {
-                        consumer.Commit();
+                        _ = consumer.Commit();
                         i = 0;
                     }
                 }

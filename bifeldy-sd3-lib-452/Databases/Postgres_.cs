@@ -118,7 +118,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                             }
 
                             bindStr += $"{prefix}{pName}_{id}";
-                            this.DatabaseCommand.Parameters.Add(new NpgsqlParameter {
+                            _ = this.DatabaseCommand.Parameters.Add(new NpgsqlParameter {
                                 ParameterName = $"{pName}_{id}",
                                 Value = data ?? DBNull.Value
                             });
@@ -141,7 +141,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                             param.Direction = parameters[i].DIRECTION;
                         }
 
-                        this.DatabaseCommand.Parameters.Add(param);
+                        _ = this.DatabaseCommand.Parameters.Add(param);
                     }
                 }
             }
@@ -238,7 +238,7 @@ namespace bifeldy_sd3_lib_452.Databases {
 
                 var sB = new StringBuilder(fieldNames[0]);
                 for (int p = 1; p < colCount; p++) {
-                    sB.Append(", " + fieldNames[p]);
+                    _ = sB.Append(", " + fieldNames[p]);
                 }
 
                 using (NpgsqlBinaryImporter writer = ((NpgsqlConnection) this.DatabaseConnection).BeginBinaryImport($"COPY {tableName} ({sB}) FROM STDIN (FORMAT BINARY)")) {
@@ -400,10 +400,7 @@ namespace bifeldy_sd3_lib_452.Databases {
         }
 
         public CPostgres CloneConnection() {
-            var postgres = (CPostgres) this.Clone();
-            postgres.InitializePostgresDatabase(this.DbIpAddrss, this.DbPort, this.DbUsername, this.DbPassword, this.DbName);
-            postgres.SettingUpDatabase();
-            return postgres;
+            return this.NewExternalConnection(this.DbIpAddrss, this.DbPort, this.DbUsername, this.DbPassword, this.DbName);
         }
 
     }

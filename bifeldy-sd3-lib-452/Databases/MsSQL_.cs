@@ -106,7 +106,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                             }
 
                             bindStr += $"{prefix}{pName}_{id}";
-                            this.DatabaseCommand.Parameters.Add(new SqlParameter {
+                            _ = this.DatabaseCommand.Parameters.Add(new SqlParameter {
                                 ParameterName = $"{pName}_{id}",
                                 Value = data ?? DBNull.Value
                             });
@@ -129,7 +129,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                             param.Direction = parameters[i].DIRECTION;
                         }
 
-                        this.DatabaseCommand.Parameters.Add(param);
+                        _ = this.DatabaseCommand.Parameters.Add(param);
                     }
                 }
             }
@@ -224,10 +224,7 @@ namespace bifeldy_sd3_lib_452.Databases {
         }
 
         public CMsSQL CloneConnection() {
-            var mssql = (CMsSQL) this.Clone();
-            mssql.InitializeMsSqlDatabase(this.DbIpAddrss, this.DbUsername, this.DbPassword, this.DbName);
-            mssql.SettingUpDatabase();
-            return mssql;
+            return this.NewExternalConnection(this.DbIpAddrss, this.DbUsername, this.DbPassword, this.DbName);
         }
 
     }

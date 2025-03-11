@@ -35,9 +35,9 @@ namespace bifeldy_sd3_lib_452.Libraries {
 
         private static Icon ExtractFromPath(string path) {
             var shinfo = new SHFILEINFO();
-            SHGetFileInfo(
+            _ = SHGetFileInfo(
                 path,
-                0, ref shinfo, (uint) Marshal.SizeOf(shinfo),
+                0, ref shinfo, (uint)Marshal.SizeOf(shinfo),
                 SHGFI_ICON | SHGFI_LARGEICON
             );
             return System.Drawing.Icon.FromHandle(shinfo.hIcon);
@@ -48,7 +48,7 @@ namespace bifeldy_sd3_lib_452.Libraries {
 
         // https://renenyffenegger.ch/development/Windows/PowerShell/examples/WinAPI/ExtractIconEx/shell32.html
         public static Icon Extract(string file, int number, bool largeIcon) {
-            ExtractIconEx(file, number, out IntPtr large, out IntPtr small, 1);
+            _ = ExtractIconEx(file, number, out IntPtr large, out IntPtr small, 1);
             try {
                 return Icon.FromHandle(largeIcon ? large : small);
             }
@@ -97,7 +97,7 @@ namespace bifeldy_sd3_lib_452.Libraries {
                         bw.Write(22);                  // 18-21 offset of image data
                         bw.Write(msImg.ToArray());     // write image data
                         bw.Flush();
-                        bw.Seek(0, SeekOrigin.Begin);
+                        _ = bw.Seek(0, SeekOrigin.Begin);
                         icon = new Icon(msIco);
                     }
                 }
@@ -111,7 +111,7 @@ namespace bifeldy_sd3_lib_452.Libraries {
             using (Stream stream = await httpClient.GetStreamAsync(url)) {
                 using (var ms = new MemoryStream()) {
                     stream.CopyTo(ms);
-                    ms.Seek(0, SeekOrigin.Begin); // See https://stackoverflow.com/a/72205381/640195
+                    _ = ms.Seek(0, SeekOrigin.Begin); // See https://stackoverflow.com/a/72205381/640195
                     var img = Image.FromStream(ms);
                     return ConvertToIco(img, 64);
                 }

@@ -132,6 +132,9 @@
     <Reference Include="SettingLib">
       <HintPath>Libraries\SettingLib.dll</HintPath>
     </Reference>
+    <Reference Include="SettingLibMulti">
+      <HintPath>Libraries\SettingLibMulti.dll</HintPath>
+    </Reference>
     <Reference Include="SettingLibRest">
       <HintPath>Libraries\SettingLibRest.dll</HintPath>
     </Reference>

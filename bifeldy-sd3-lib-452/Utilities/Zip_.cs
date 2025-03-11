@@ -44,7 +44,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
             this.ZipFolderPath = this._config.Get<string>("ZipFolderPath", Path.Combine(this._app.AppLocation, "_data", "Zip_Files"));
             if (!Directory.Exists(this.ZipFolderPath)) {
-                Directory.CreateDirectory(this.ZipFolderPath);
+                _ = Directory.CreateDirectory(this.ZipFolderPath);
             }
         }
 

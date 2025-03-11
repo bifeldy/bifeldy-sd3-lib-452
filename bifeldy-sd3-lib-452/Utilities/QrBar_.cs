@@ -85,10 +85,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
             Image qrBackground = null;
             using (var outStream = new MemoryStream()) {
                 using (var imageFactory = new ImageFactory(true)) {
-                    imageFactory.Load(bgImage);
+                    _ = imageFactory.Load(bgImage);
                     var size = new Size(qrImage.Width, qrImage.Height);
                     var resizeLayer = new ResizeLayer(size, ResizeMode.Crop, AnchorPosition.TopLeft);
-                    imageFactory.Resize(resizeLayer).Brightness(25).Alpha(75).Save(outStream);
+                    _ = imageFactory.Resize(resizeLayer).Brightness(25).Alpha(75).Save(outStream);
                     qrBackground = Image.FromStream(outStream);
                     ((Bitmap) qrImage).MakeTransparent(Color.White);
                     using (var g = Graphics.FromImage(qrBackground)) {

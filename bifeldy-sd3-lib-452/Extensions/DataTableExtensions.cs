@@ -12,9 +12,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -42,7 +42,16 @@ namespace bifeldy_sd3_lib_452.Extensions {
                     string key = pro.Name.ToUpper();
                     if (cols.ContainsKey(key)) {
                         dynamic val = cols[key];
+
                         if (val != null) {
+                            TypeConverter converter = TypeDescriptor.GetConverter(pro.PropertyType);
+                            if (converter.CanConvertFrom(val.GetType())) {
+                                val = converter.ConvertFrom(val);
+                            }
+                            else {
+                                val = Convert.ChangeType(val, pro.PropertyType);
+                            }
+
                             pro.SetValue(objT, val);
                         }
                     }
@@ -59,7 +68,7 @@ namespace bifeldy_sd3_lib_452.Extensions {
                 string sep = string.Empty;
                 var builder = new StringBuilder();
                 foreach (DataColumn col in dt.Columns) {
-                    builder.Append(sep).Append(col.ColumnName);
+                    _ = builder.Append(sep).Append(col.ColumnName);
                     sep = separator;
                 }
 
@@ -69,7 +78,7 @@ namespace bifeldy_sd3_lib_452.Extensions {
                     sep = string.Empty;
                     builder = new StringBuilder();
                     foreach (DataColumn col in dt.Columns) {
-                        builder.Append(sep).Append(row[col.ColumnName]);
+                        _ = builder.Append(sep).Append(row[col.ColumnName]);
                         sep = separator;
                     }
 

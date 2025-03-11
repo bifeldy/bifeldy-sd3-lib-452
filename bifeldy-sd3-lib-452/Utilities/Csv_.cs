@@ -46,7 +46,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
             this.CsvFolderPath = this._config.Get<string>("CsvFolderPath", Path.Combine(this._app.AppLocation, "_data", "Csv_Files"));
             if (!Directory.Exists(this.CsvFolderPath)) {
-                Directory.CreateDirectory(this.CsvFolderPath);
+                _ = Directory.CreateDirectory(this.CsvFolderPath);
             }
         }
 

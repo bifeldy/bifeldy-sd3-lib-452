@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Reflection;
+using System.Threading;
 using System.Windows;
 
 using bifeldy_sd3_lib_452.Models;
@@ -36,6 +37,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
         string AppLocation { get; }
         string AppVersion { get; }
         string GetConfig(string key);
+        string SettingLibMultiGetThreadName(int id);
+        int SettingLibMultiGetJumlahKoneksi();
+        string SettingLibMultiGetListKey(int idx);
         string GetVariabel(string key);
         CIpMacAddress[] GetIpMacAddress();
         string[] GetAllIpAddress();
@@ -54,6 +58,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         private readonly SettingLib.Class1 _SettingLib;
         private readonly SettingLibRest.Class1 _SettingLibRest;
+        private readonly SettingLibMulti.Class1 _SettingLibMulti;
 
         public string AppPath { get; }
         public string AppName { get; }
@@ -63,6 +68,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public bool IsUsingPostgres { get; set; }
 
         private AppSettingsSection AppSettings = null;
+
+        public static string _SETTING_LIB_MULTI_THREAD_NAME = "THREAD#";
 
         public CApplication(IConfig config) {
             this._config = config;
@@ -81,6 +88,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
             this._SettingLib = new SettingLib.Class1();
             this._SettingLibRest = new SettingLibRest.Class1();
+            this._SettingLibMulti = new SettingLibMulti.Class1();
 
             this.AppPath = Process.GetCurrentProcess().MainModule.FileName;
             string appName = Process.GetCurrentProcess().MainModule.ModuleName.ToUpper();
@@ -113,6 +121,18 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
+        public string SettingLibMultiGetThreadName(int id) {
+            return $"{_SETTING_LIB_MULTI_THREAD_NAME}{id}";
+        }
+
+        public int SettingLibMultiGetJumlahKoneksi() {
+            return this._SettingLibMulti.GetJmlKoneksi();
+        }
+
+        public string SettingLibMultiGetListKey(int idx) {
+            return this._SettingLibMulti.GetListKey(idx);
+        }
+
         public string GetVariabel(string key) {
             string id = string.Empty;
             if (this.DebugMode) {
@@ -124,16 +144,40 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 return null;
             }
 
-            try {
-                // http://xxx.xxx.xxx.xxx/KunciGxxx/Service.asmx
-                string result = this._SettingLib.GetVariabel(key, id);
-                return result.ToUpper().Contains("ERROR") ? throw new Exception("SettingLib Gagal") : result;
+            int idxMulti = -1;
+
+            // _SETTING_LIB_MULTI_#0
+            string threadName = Thread.CurrentThread.Name?.ToUpper();
+            if (!string.IsNullOrEmpty(threadName)) {
+                if (threadName.StartsWith(_SETTING_LIB_MULTI_THREAD_NAME)) {
+                    idxMulti = int.Parse(threadName.Split('#').Last());
+                }
             }
-            catch {
+
+            if (idxMulti < 0) {
                 try {
-                    // http://xxx.xxx.xxx.xxx/KunciGxxx
-                    string result = this._SettingLibRest.GetVariabel(key);
-                    return result.ToUpper().Contains("ERROR") ? throw new Exception("SettingLibRest Gagal") : result;
+                    // http://xxx.xxx.xxx.xxx/KunciGxxx/Service.asmx
+                    string result = this._SettingLib.GetVariabel(key, id);
+                    return result.ToUpper().Contains("ERROR") ? throw new Exception("SettingLib Gagal") : result;
+                }
+                catch {
+                    try {
+                        // http://xxx.xxx.xxx.xxx/KunciGxxx
+                        string result = this._SettingLibRest.GetVariabel(key);
+                        return result.ToUpper().Contains("ERROR") ? throw new Exception("SettingLibRest Gagal") : result;
+                    }
+                    catch {
+                        return null;
+                    }
+                }
+            }
+            else {
+                try {
+                    // GXXX=http://xxx.xxx.xxx.xxx/KunciGxxx/Service.asmx
+                    // GXXXSIM=http://xxx.xxx.xxx.xxx/KunciGxxxSim/Service.asmx
+                    string idx = this.SettingLibMultiGetListKey(idxMulti);
+                    string result = this._SettingLibMulti.GetVariabel(key, idx);
+                    return result.ToUpper().Contains("ERROR") ? throw new Exception("SettingLibMulti Gagal") : result;
                 }
                 catch {
                     return null;

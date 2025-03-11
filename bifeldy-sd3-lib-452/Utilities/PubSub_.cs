@@ -65,7 +65,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public void DisposeAndRemoveSubscriber(string key) {
             if (this.keyValuePairs.ContainsKey(key)) {
                 this.keyValuePairs[key].Dispose();
-                this.keyValuePairs.Remove(key);
+                _ = this.keyValuePairs.Remove(key);
             }
         }
 

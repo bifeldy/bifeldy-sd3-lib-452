@@ -12,6 +12,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.IO;
@@ -40,7 +41,16 @@ namespace bifeldy_sd3_lib_452.Extensions {
                         string key = pro.Name.ToUpper();
                         if (cols.ContainsKey(key)) {
                             dynamic val = cols[key];
+
                             if (val != null) {
+                                TypeConverter converter = TypeDescriptor.GetConverter(pro.PropertyType);
+                                if (converter.CanConvertFrom(val.GetType())) {
+                                    val = converter.ConvertFrom(val);
+                                }
+                                else {
+                                    val = Convert.ChangeType(val, pro.PropertyType);
+                                }
+
                                 pro.SetValue(objT, val);
                             }
                         }
