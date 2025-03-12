@@ -154,20 +154,26 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 }
             }
 
+            string result = null;
+
             if (idxMulti < 0) {
                 try {
                     // http://xxx.xxx.xxx.xxx/KunciGxxx/Service.asmx
-                    string result = this._SettingLib.GetVariabel(key, id);
-                    return result.ToUpper().Contains("ERROR") ? throw new Exception("SettingLib Gagal") : result;
+                    result = this._SettingLib.GetVariabel(key, id);
+                    if (result.ToUpper().Contains("ERROR")) {
+                        throw new Exception("SettingLib Gagal");
+                    }
                 }
                 catch {
                     try {
                         // http://xxx.xxx.xxx.xxx/KunciGxxx
-                        string result = this._SettingLibRest.GetVariabel(key);
-                        return result.ToUpper().Contains("ERROR") ? throw new Exception("SettingLibRest Gagal") : result;
+                        result = this._SettingLibRest.GetVariabel(key);
+                        if (result.ToUpper().Contains("ERROR")) {
+                            throw new Exception("SettingLibRest Gagal");
+                        }
                     }
                     catch {
-                        return null;
+                        result = null;
                     }
                 }
             }
@@ -176,13 +182,21 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     // GXXX=http://xxx.xxx.xxx.xxx/KunciGxxx/Service.asmx
                     // GXXXSIM=http://xxx.xxx.xxx.xxx/KunciGxxxSim/Service.asmx
                     string idx = this.SettingLibMultiGetListKey(idxMulti);
-                    string result = this._SettingLibMulti.GetVariabel(key, idx);
-                    return result.ToUpper().Contains("ERROR") ? throw new Exception("SettingLibMulti Gagal") : result;
+                    result = this._SettingLibMulti.GetVariabel(key, idx);
+                    if (result.ToUpper().Contains("ERROR")) {
+                        throw new Exception("SettingLibMulti Gagal");
+                    }
                 }
                 catch {
-                    return null;
+                    result = null;
                 }
             }
+
+            if (!string.IsNullOrEmpty(result)) {
+                result = result.Split(';').FirstOrDefault();
+            }
+
+            return result;
         }
 
         public CIpMacAddress[] GetIpMacAddress() {
