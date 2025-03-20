@@ -104,7 +104,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
             CDatabase dbConHo = null;
 
             string kodeDcSekarang = await this._db.GetKodeDc();
-            if (kodeDcSekarang.ToUpper() != "DCHO") {
+            if (kodeDcSekarang.ToUpper() != "DCHO" && kodeDcSekarang.ToUpper() != "WHHO") {
                 List<DC_TABEL_V> dbInfo = await this.GetListBranchDbInformation("DCHO");
                 DC_TABEL_V dcho = dbInfo.FirstOrDefault();
                 if (dcho != null) {

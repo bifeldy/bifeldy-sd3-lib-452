@@ -43,6 +43,9 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<string> GetJenisDc();
         Task<string> GetKodeDc();
         Task<string> GetNamaDc();
+        Task<bool> IsDcHo();
+        Task<bool> IsWhHo();
+        Task<bool> IsHo();
         Task<string> CekVersi();
         Task<bool> LoginUser(string usernameNik, string password);
         Task<bool> CheckIpMac();
@@ -251,7 +254,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
                 return "NONDC";
             }
 
-            if ((bool)this.OraPg?.DbUsername.ToUpper().Contains("DCHO")) {
+            if ((bool)this.OraPg?.DbUsername.ToUpper().Contains("DCHO") || (bool)this.OraPg?.DbUsername.ToUpper().Contains("WHHO")) {
                 return "HO";
             }
 
@@ -270,6 +273,9 @@ namespace bifeldy_sd3_lib_452.Handlers {
             if ((bool)this.OraPg?.DbUsername.ToUpper().Contains("DCHO")) {
                 return "DCHO";
             }
+            else if ((bool)this.OraPg?.DbUsername.ToUpper().Contains("WHHO")) {
+                return "WHHO";
+            }
 
             if (string.IsNullOrEmpty(this.DcCode)) {
                 this.DcCode = await this.OraPg?.ExecScalarAsync<string>("SELECT TBL_DC_KODE FROM DC_TABEL_DC_T");
@@ -286,12 +292,31 @@ namespace bifeldy_sd3_lib_452.Handlers {
             if ((bool)this.OraPg?.DbUsername.ToUpper().Contains("DCHO")) {
                 return "DC HEAD OFFICE";
             }
+            else if ((bool)this.OraPg?.DbUsername.ToUpper().Contains("WHHO")) {
+                return "WH HEAD OFFICE";
+            }
 
             if (string.IsNullOrEmpty(this.DcName)) {
                 this.DcName = await this.OraPg?.ExecScalarAsync<string>("SELECT TBL_DC_NAMA FROM DC_TABEL_DC_T");
             }
 
             return this.DcName.ToUpper();
+        }
+
+        public async Task<bool> IsDcHo() {
+            string kodeDc = await this.GetKodeDc();
+            return kodeDc == "DCHO";
+        }
+
+        public async Task<bool> IsWhHo() {
+            string kodeDc = await this.GetKodeDc();
+            return kodeDc == "WHHO";
+        }
+
+        public async Task<bool> IsHo() {
+            bool isDcHo = await this.IsDcHo();
+            bool isWhHo = await this.IsWhHo();
+            return isDcHo || isWhHo;
         }
 
         public async Task<string> CekVersi() {
