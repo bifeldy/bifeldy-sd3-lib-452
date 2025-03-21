@@ -69,8 +69,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 return (T) Convert.ChangeType(value, typeof(T));
             }
             catch {
-                Set(keyName, defaultValue, encrypted);
-                return this.Get<T>(keyName);
+                this.Set(keyName, defaultValue, encrypted);
+                return this.Get<T>(keyName, defaultValue, encrypted);
             }
         }
 
