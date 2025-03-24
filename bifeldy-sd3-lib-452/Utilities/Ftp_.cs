@@ -69,6 +69,14 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public async Task RenameFtpFiles(FtpClient ftpConnection, string originalFileName, string newFileName, bool deleteNewFileIfExists = false) {
+            if (this._app.DebugMode) {
+                originalFileName = $"_SIMULASI__{originalFileName}";
+            }
+
+            if (this._app.DebugMode) {
+                newFileName = $"_SIMULASI__{newFileName}";
+            }
+
             if (!ftpConnection.FileExists(originalFileName)) {
                 throw new Exception($"File {originalFileName} Target Tidak DItemukan!");
             }
