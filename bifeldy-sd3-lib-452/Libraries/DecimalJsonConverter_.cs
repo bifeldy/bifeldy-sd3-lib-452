@@ -11,6 +11,7 @@
  */
 
 using System;
+using System.Globalization;
 
 using bifeldy_sd3_lib_452.Extensions;
 
@@ -40,7 +41,7 @@ namespace bifeldy_sd3_lib_452.Libraries {
             decimal value,
             Newtonsoft.Json.JsonSerializer serializer
         ) {
-            writer.WriteRawValue(value.ToString(true));
+            writer.WriteRawValue(value.RemoveTrail().ToString(CultureInfo.InvariantCulture));
         }
 
     }
