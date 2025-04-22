@@ -136,7 +136,15 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public void WriteError(Exception errorException, int skipFrame = 2) {
-            this.WriteError(errorException.Message, skipFrame);
+            string errMsg = errorException.Message;
+
+            Exception innerException = errorException.InnerException;
+            while (innerException != null) {
+                errMsg += " ~ " + innerException.Message;
+                innerException = innerException.InnerException;
+            }
+
+            this.WriteError(errMsg, skipFrame);
         }
 
     }
