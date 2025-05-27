@@ -48,16 +48,18 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         public T JsonToObject<T>(string j2o) {
             return JsonConvert.DeserializeObject<T>(j2o, new JsonSerializerSettings {
-                Converters = new[] {
-                    new DecimalNewtonsoftJsonConverter()
+                Converters = new JsonConverter[] {
+                    new DecimalNewtonsoftJsonConverter(),
+                    new NullableDecimalNewtonsoftJsonConverter()
                 }
             });
         }
 
         public string ObjectToJson(object o2j) {
             return JsonConvert.SerializeObject(o2j, new JsonSerializerSettings {
-                Converters = new[] {
-                    new DecimalNewtonsoftJsonConverter()
+                Converters = new JsonConverter[] {
+                    new DecimalNewtonsoftJsonConverter(),
+                    new NullableDecimalNewtonsoftJsonConverter()
                 }
             });
         }

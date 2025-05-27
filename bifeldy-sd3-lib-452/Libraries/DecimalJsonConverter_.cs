@@ -46,4 +46,27 @@ namespace bifeldy_sd3_lib_452.Libraries {
 
     }
 
+    public sealed class NullableDecimalNewtonsoftJsonConverter : Newtonsoft.Json.JsonConverter<decimal?> {
+
+        public override decimal? ReadJson(
+            Newtonsoft.Json.JsonReader reader,
+            Type objectType,
+            decimal? existingValue,
+            bool hasExistingValue,
+            Newtonsoft.Json.JsonSerializer serializer
+        ) {
+            decimal? _val = reader.ReadAsDecimal();
+            return _val?.RemoveTrail();
+        }
+
+        public override void WriteJson(
+            Newtonsoft.Json.JsonWriter writer,
+            decimal? value,
+            Newtonsoft.Json.JsonSerializer serializer
+        ) {
+            writer.WriteRawValue(value?.RemoveTrail().ToString(CultureInfo.InvariantCulture));
+        }
+
+    }
+
 }
