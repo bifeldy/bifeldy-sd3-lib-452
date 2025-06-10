@@ -255,7 +255,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             return await this.ExecReaderAsync(this.DatabaseCommand, commandBehavior);
         }
 
-        public override async Task<List<string>> RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null) {
+        public override async Task<List<string>> RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null, Encoding encoding = null) {
             this.DatabaseCommand.CommandText = queryString;
             this.DatabaseCommand.CommandType = CommandType.Text;
             this.BindQueryParameter(bindParam);

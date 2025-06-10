@@ -328,7 +328,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             Exception exception = null;
             try {
                 if (!useRawQueryWithoutParam) {
-                    return await base.BulkGetCsv(queryString, delimiter, filename, bindParam, outputFolderPath, useRawQueryWithoutParam, includeHeader, useDoubleQuote, allUppercase, encoding ?? Encoding.UTF8, commandTimeoutSeconds);
+                    return await base.BulkGetCsv(queryString, delimiter, filename, bindParam, outputFolderPath, useRawQueryWithoutParam, includeHeader, useDoubleQuote, allUppercase, encoding ?? Encoding.UTF8);
                 }
 
                 if (bindParam != null) {

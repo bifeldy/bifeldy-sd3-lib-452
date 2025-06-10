@@ -575,7 +575,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         public async Task<string> OraPg_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null) {
-            return await this.OraPg?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputPath);
+            return await this.OraPg?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath);
         }
 
         /* ** */
@@ -617,7 +617,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         public async Task<string> MsSql_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null) {
-            return await this.MsSql?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputPath);
+            return await this.MsSql?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath);
         }
 
         /* ** */
@@ -655,7 +655,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         public async Task<string> SQLite_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null) {
-            return await this.Sqlite?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputPath);
+            return await this.Sqlite?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath);
         }
 
     }
