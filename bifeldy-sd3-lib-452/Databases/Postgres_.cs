@@ -327,8 +327,12 @@ namespace bifeldy_sd3_lib_452.Databases {
             string result = null;
             Exception exception = null;
             try {
+                if (encoding == null) {
+                    encoding = Encoding.UTF8;
+                }
+
                 if (!useRawQueryWithoutParam) {
-                    return await base.BulkGetCsv(queryString, delimiter, filename, bindParam, outputFolderPath, useRawQueryWithoutParam, includeHeader, useDoubleQuote, allUppercase, encoding ?? Encoding.UTF8);
+                    return await base.BulkGetCsv(queryString, delimiter, filename, bindParam, outputFolderPath, useRawQueryWithoutParam, includeHeader, useDoubleQuote, allUppercase, encoding);
                 }
 
                 if (bindParam != null) {
@@ -338,10 +342,6 @@ namespace bifeldy_sd3_lib_452.Databases {
                 string path = Path.Combine(outputFolderPath ?? this._csv.CsvFolderPath, filename);
                 if (File.Exists(path)) {
                     File.Delete(path);
-                }
-
-                if (encoding == null) {
-                    encoding = Encoding.UTF8;
                 }
 
                 string sqlQuery = string.Empty;
@@ -373,7 +373,7 @@ namespace bifeldy_sd3_lib_452.Databases {
 
                 sqlQuery = $"COPY ({queryString}) TO STDOUT WITH CSV DELIMITER '{delimiter}'";
                 if (!useDoubleQuote) {
-                    sqlQuery += " QUOTE ''";
+                    sqlQuery += " QUOTE '\x01'";
                 }
 
                 using (TextReader reader = ((NpgsqlConnection)this.DatabaseConnection).BeginTextExport(sqlQuery)) {
@@ -382,6 +382,10 @@ namespace bifeldy_sd3_lib_452.Databases {
                         while ((line = reader.ReadLine()) != null) {
                             if (allUppercase) {
                                 line = line.ToUpper();
+                            }
+
+                            if (!useDoubleQuote) {
+                                line = line.Replace("\x01", "");
                             }
 
                             writer.WriteLine(line);
