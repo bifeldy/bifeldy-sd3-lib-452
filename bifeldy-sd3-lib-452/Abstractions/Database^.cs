@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -44,9 +45,9 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         Task<bool> ExecQueryAsync(string queryString, List<CDbQueryParamBind> bindParam = null, int minRowsAffected = 1, bool shouldEqualMinRowsAffected = false);
         Task<CDbExecProcResult> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null);
         Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
-        Task<string> BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null);
+        Task<string> BulkGetCsv(string queryString, string delimiter, string filename, List<CDbQueryParamBind> bindParam = null, string outputFolderPath = null, bool useRawQueryWithoutParam = false, bool includeHeader = true, bool useDoubleQuote = true, bool allUppercase = true, Encoding encoding = null);
         Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null, CommandBehavior commandBehavior = CommandBehavior.Default);
-        Task<List<string>> RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null);
+        Task<List<string>> RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null, Encoding encoding = null);
     }
 
     public abstract class CDatabase : IDatabase, ICloneable {
@@ -149,9 +150,16 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             string sqlTextQueryParameters = databaseCommand.CommandText;
             for (int i = 0; i < databaseCommand.Parameters.Count; i++) {
                 dynamic pVal = databaseCommand.Parameters[i].Value;
-                Type pValType = (pVal == null) ? typeof(string) : pVal.GetType();
-                if (pValType == typeof(string) || pValType == typeof(DateTime)) {
+
+                Type pValType = pVal?.GetType();
+                if (pValType == null || pValType == typeof(DBNull)) {
+                    pVal = "NULL";
+                }
+                else if (pValType == typeof(string)) {
                     pVal = $"'{pVal}'";
+                }
+                else if (pValType == typeof(DateTime)) {
+                    pVal = $"TO_TIMESTAMP('{((DateTime)pVal).ToLocalTime():yyyy-MM-dd HH:mm:ss}', 'yyyy-MM-dd HH24:mi:ss')";
                 }
 
                 var regex = new Regex($"{databaseParameterPrefix}{databaseCommand.Parameters[i].ParameterName}");
@@ -160,6 +168,8 @@ namespace bifeldy_sd3_lib_452.Abstractions {
 
             sqlTextQueryParameters = sqlTextQueryParameters.Replace(Environment.NewLine, " ");
             sqlTextQueryParameters = Regex.Replace(sqlTextQueryParameters, @"\s+", " ");
+            sqlTextQueryParameters = sqlTextQueryParameters.Trim();
+
             this._logger.WriteInfo(this.GetType().Name, sqlTextQueryParameters.Trim());
         }
 
@@ -293,7 +303,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             return (exception == null) ? result : throw exception;
         }
 
-        protected virtual async Task<List<string>> RetrieveBlob(DbCommand databaseCommand, string stringPathDownload, string stringFileName = null) {
+        protected virtual async Task<List<string>> RetrieveBlob(DbCommand databaseCommand, string stringPathDownload, string stringFileName = null, Encoding encoding = null) {
             var result = new List<string>();
             Exception exception = null;
             try {
@@ -329,7 +339,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                         }
 
                         using (var fs = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write)) {
-                            using (var bw = new BinaryWriter(fs)) {
+                            using (var bw = new BinaryWriter(fs, encoding ?? Encoding.UTF8)) {
                                 long startIndex = 0;
                                 long retval = rdrGetBlob.GetBytes(0, startIndex, outByte, 0, bufferSize);
 
@@ -363,27 +373,21 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             return (exception == null) ? result : throw exception;
         }
 
-        public virtual async Task<string> BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null) {
+        public virtual async Task<string> BulkGetCsv(string queryString, string delimiter, string filename, List<CDbQueryParamBind> bindParam = null, string outputFolderPath = null, bool useRawQueryWithoutParamWithoutParam = false, bool includeHeader = true, bool useDoubleQuote = true, bool allUppercase = true, Encoding encoding = null) {
             string result = null;
             Exception exception = null;
             try {
-                string path = Path.Combine(outputPath ?? this._csv.CsvFolderPath, filename);
+                string path = Path.Combine(outputFolderPath ?? this._csv.CsvFolderPath, filename);
                 if (File.Exists(path)) {
                     File.Delete(path);
                 }
 
-                if (string.IsNullOrEmpty(rawQueryVulnerableSqlInjection) || string.IsNullOrEmpty(delimiter)) {
-                    throw new Exception("Select Raw Query + Delimiter Harus Di Isi");
+                string sqlQuery = $"SELECT * FROM ({queryString}) alias_{DateTime.Now.Ticks}";
+                using (DbDataReader rdr = await this.ExecReaderAsync(sqlQuery, bindParam, CommandBehavior.SequentialAccess)) {
+                    rdr.ToCsv(delimiter, tempPath, includeHeader, useDoubleQuote, allUppercase, encoding ?? Encoding.UTF8);
                 }
 
-                string sqlQuery = $"SELECT * FROM ({rawQueryVulnerableSqlInjection}) alias_{DateTime.Now.Ticks}";
-                sqlQuery = sqlQuery.Replace(Environment.NewLine, " ");
-                sqlQuery = Regex.Replace(sqlQuery, @"\s+", " ");
-                this._logger.WriteInfo(this.GetType().Name, sqlQuery);
-                using (DbDataReader rdr = await this.ExecReaderAsync(sqlQuery, commandBehavior: CommandBehavior.SequentialAccess)) {
-                    rdr.ToCsv(delimiter, path);
-                    result = path;
-                }
+                result = path;
             }
             catch (Exception ex) {
                 this._logger.WriteError(ex, 3);
@@ -408,7 +412,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         public abstract Task<CDbExecProcResult> ExecProcedureAsync(string procedureName, List<CDbQueryParamBind> bindParam = null);
         public abstract Task<bool> BulkInsertInto(string tableName, DataTable dataTable);
         public abstract Task<DbDataReader> ExecReaderAsync(string queryString, List<CDbQueryParamBind> bindParam = null, CommandBehavior commandBehavior = CommandBehavior.Default);
-        public abstract Task<List<string>> RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null);
+        public abstract Task<List<string>> RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null, Encoding encoding = null);
 
     }
 

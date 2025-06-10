@@ -45,7 +45,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private readonly IPubSub _pubSub;
         private readonly IDbHandler _db;
 
-        TimeSpan timeout = TimeSpan.FromSeconds(10);
+        TimeSpan timeout = TimeSpan.FromSeconds(600); // 10 Minutes
 
         readonly IDictionary<string, dynamic> keyValuePairs = new ExpandoObject();
 

@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -63,26 +64,49 @@ namespace bifeldy_sd3_lib_452.Extensions {
             return ls;
         }
 
-        public static void ToCsv(this DataTable dt, string separator, string outputFilePath = null) {
-            using (var writer = new StreamWriter(outputFilePath)) {
-                string sep = string.Empty;
-                var builder = new StringBuilder();
-                foreach (DataColumn col in dt.Columns) {
-                    _ = builder.Append(sep).Append(col.ColumnName);
-                    sep = separator;
+        public static void ToCsv(this DataTable dt, string delimiter, string outputFilePath = null, bool includeHeader = true, bool useDoubleQuote = true, bool allUppercase = true, Encoding encoding = null) {
+            using (var streamWriter = new StreamWriter(outputFilePath, false, encoding ?? Encoding.UTF8)) {
+                if (includeHeader) {
+                    string header = string.Join(delimiter, dt.Columns.Cast<DataColumn>().Select(col => {
+                        string text = col.ColumnName;
+
+                        if (allUppercase) {
+                            text = text.ToUpper();
+                        }
+
+                        if (useDoubleQuote) {
+                            text = $"\"{text.Replace("\"", "\"\"")}\"";
+                        }
+
+                        return text;
+                    }));
+
+                    streamWriter.WriteLine(header);
                 }
 
-                // Untuk Export *.CSV Di Buat NAMA_KOLOM Besar Semua Tanpa Petik "NAMA_KOLOM"
-                writer.WriteLine(builder.ToString().ToUpper());
                 foreach (DataRow row in dt.Rows) {
-                    sep = string.Empty;
-                    builder = new StringBuilder();
-                    foreach (DataColumn col in dt.Columns) {
-                        _ = builder.Append(sep).Append(row[col.ColumnName]);
-                        sep = separator;
-                    }
+                    string line = string.Join(delimiter, dt.Columns.Cast<DataColumn>().Select(col => {
+                        object value = row[col];
 
-                    writer.WriteLine(builder.ToString());
+                        if (value == DBNull.Value) {
+                            return "";
+                        }
+
+                        string text = value.ToString();
+
+                        if (allUppercase) {
+                            text = text.ToUpper();
+                        }
+
+                        bool mustQuote = text.Contains(delimiter) || text.Contains('"') || text.Contains('\n') || text.Contains('\r');
+                        if (useDoubleQuote || mustQuote) {
+                            text = $"\"{text.Replace("\"", "\"\"")}\"";
+                        }
+
+                        return text;
+                    }));
+
+                    streamWriter.WriteLine(line);
                 }
             }
         }

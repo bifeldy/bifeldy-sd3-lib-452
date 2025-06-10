@@ -67,7 +67,7 @@ namespace bifeldy_sd3_lib_452.Databases {
 
         private void SettingUpDatabase() {
             try {
-                this.DbConnectionString = $"Host={this.DbIpAddrss};Port={this.DbPort};Username={this.DbUsername};Password={this.DbPassword};Database={this.DbName};Timeout=180;ApplicationName={this._app.AppName}_{this._app.AppVersion};"; // 3 menit
+                this.DbConnectionString = $"Host={this.DbIpAddrss};Port={this.DbPort};Username={this.DbUsername};Password={this.DbPassword};Database={this.DbName};Timeout=180;ApplicationName={this._app.AppName}_{this._app.AppVersion};"; // 3 Minutes
                 if (
                     string.IsNullOrEmpty(this.DbIpAddrss) ||
                     string.IsNullOrEmpty(this.DbPort) ||
@@ -87,7 +87,7 @@ namespace bifeldy_sd3_lib_452.Databases {
 
                 this.DatabaseCommand = new NpgsqlCommand {
                     Connection = (NpgsqlConnection) this.DatabaseConnection,
-                    CommandTimeout = 1800 // 30 menit
+                    CommandTimeout = 3600 // 60 Minutes
                 };
                 this.DatabaseAdapter = new NpgsqlDataAdapter(this.DatabaseCommand);
                 this._logger.WriteInfo(this.GetType().Name, this.DbConnectionString);
@@ -298,7 +298,10 @@ namespace bifeldy_sd3_lib_452.Databases {
                                     default:
                                         writer.Write(_obj, types[i]);
                                         break;
+
+                                        //
                                         // TODO :: Add More Handles While Free Time ~
+                                        //
                                 }
                             }
                         }
@@ -320,51 +323,73 @@ namespace bifeldy_sd3_lib_452.Databases {
             return (exception == null) ? result : throw exception;
         }
 
-        public override async Task<string> BulkGetCsv(string rawQuery, string delimiter, string filename, string outputPath = null) {
+        public override async Task<string> BulkGetCsv(string queryString, string delimiter, string filename, List<CDbQueryParamBind> bindParam = null, string outputFolderPath = null, bool useRawQueryWithoutParam = false, bool includeHeader = true, bool useDoubleQuote = true, bool allUppercase = true, Encoding encoding = null) {
             string result = null;
             Exception exception = null;
             try {
-                string path = Path.Combine(outputPath ?? this._csv.CsvFolderPath, filename);
+                if (!useRawQueryWithoutParam) {
+                    return await base.BulkGetCsv(queryString, delimiter, filename, bindParam, outputFolderPath, useRawQueryWithoutParam, includeHeader, useDoubleQuote, allUppercase, encoding ?? Encoding.UTF8, commandTimeoutSeconds);
+                }
+
+                if (bindParam != null) {
+                    throw new Exception("Parameter Binding Terdeteksi, Mohon Mematikan Fitur `useRawQueryWithoutParam`");
+                }
+
+                string path = Path.Combine(outputFolderPath ?? this._csv.CsvFolderPath, filename);
                 if (File.Exists(path)) {
                     File.Delete(path);
                 }
-            
-                if (string.IsNullOrEmpty(rawQuery) || string.IsNullOrEmpty(delimiter)) {
-                    throw new Exception("Select Raw Query + Delimiter Harus Di Isi");
+
+                if (encoding == null) {
+                    encoding = Encoding.UTF8;
                 }
-            
-                string sqlQuery = $"SELECT * FROM ({rawQuery}) alias_{DateTime.Now.Ticks} WHERE 1 = 0";
-                sqlQuery = sqlQuery.Replace(Environment.NewLine, " ");
-                sqlQuery = Regex.Replace(sqlQuery, @"\s+", " ");
-                this._logger.WriteInfo(this.GetType().Name, sqlQuery);
-                using (var rdr = (NpgsqlDataReader) await this.ExecReaderAsync(sqlQuery)) {
-                    ReadOnlyCollection<NpgsqlDbColumn> columns = rdr.GetColumnSchema();
-                    string struktur = columns.Select(c => c.ColumnName).Aggregate((i, j) => $"{i}{delimiter}{j}");
-                    using (var streamWriter = new StreamWriter(path, true)) {
-                        streamWriter.WriteLine(struktur.ToUpper());
-                        streamWriter.Flush();
-                    }
-                }
-            
-                sqlQuery = $"COPY ({rawQuery}) TO STDOUT WITH CSV DELIMITER '{delimiter}' QUOTE '\b'";
-                sqlQuery = sqlQuery.Replace(Environment.NewLine, " ");
-                sqlQuery = Regex.Replace(sqlQuery, @"\s+", " ");
-                this._logger.WriteInfo(this.GetType().Name, sqlQuery);
-            
-                using (TextReader reader = ((NpgsqlConnection) this.DatabaseConnection).BeginTextExport(sqlQuery)) {
-                    using (var streamWriter = new StreamWriter(path, true)) {
-                        string line = null;
-                        do {
-                            line = reader.ReadLine()?.Trim();
-                            if (!string.IsNullOrEmpty(line)) {
-                                streamWriter.WriteLine(line.ToUpper());
-                                streamWriter.Flush();
+
+                string sqlQuery = string.Empty;
+
+                if (includeHeader) {
+                    sqlQuery = $"SELECT * FROM ({queryString}) alias_{DateTime.Now.Ticks} WHERE 1 = 0";
+
+                    using (var rdr = (NpgsqlDataReader)await this.ExecReaderAsync(sqlQuery, bindParam)) {
+                        ReadOnlyCollection<NpgsqlDbColumn> columns = rdr.GetColumnSchema();
+                        string header = string.Join(delimiter, columns.Select(c => {
+                            string text = c.ColumnName;
+
+                            if (allUppercase) {
+                                text = text.ToUpper();
                             }
+
+                            if (useDoubleQuote) {
+                                text = $"\"{text.Replace("\"", "\"\"")}\"";
+                            }
+
+                            return text;
+                        }));
+
+                        using (var writer = new StreamWriter(path, false, encoding)) {
+                            writer.WriteLine(header);
                         }
-                        while (!string.IsNullOrEmpty(line));
-                        result = path;
                     }
                 }
+
+                sqlQuery = $"COPY ({queryString}) TO STDOUT WITH CSV DELIMITER '{delimiter}'";
+                if (!useDoubleQuote) {
+                    sqlQuery += " QUOTE ''";
+                }
+
+                using (TextReader reader = ((NpgsqlConnection)this.DatabaseConnection).BeginTextExport(sqlQuery)) {
+                    using (var writer = new StreamWriter(path, true, encoding)) {
+                        string line = string.Empty;
+                        while ((line = reader.ReadLine()) != null) {
+                            if (allUppercase) {
+                                line = line.ToUpper();
+                            }
+
+                            writer.WriteLine(line);
+                        }
+                    }
+                }
+
+                result = path;
             }
             catch (Exception ex) {
                 this._logger.WriteError(ex, 3);
@@ -385,11 +410,11 @@ namespace bifeldy_sd3_lib_452.Databases {
             return await this.ExecReaderAsync(this.DatabaseCommand, commandBehavior);
         }
 
-        public override async Task<List<string>> RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null) {
+        public override async Task<List<string>> RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null, Encoding encoding = null) {
             this.DatabaseCommand.CommandText = queryString;
             this.DatabaseCommand.CommandType = CommandType.Text;
             this.BindQueryParameter(bindParam);
-            return await this.RetrieveBlob(this.DatabaseCommand, stringPathDownload, stringCustomSingleFileName);
+            return await this.RetrieveBlob(this.DatabaseCommand, stringPathDownload, stringCustomSingleFileName, encoding ?? Encoding.UTF8);
         }
 
         public CPostgres NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName) {

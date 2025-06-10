@@ -28,9 +28,12 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface ICsv {
         string CsvFolderPath { get; }
-        DataTable Csv2DataTable(string filePath, string delimiter, List<CCsvColumn> csvColumn = null, string tableName = null);
-        string Csv2Json(string filePath, string delimiter, List<CCsvColumn> csvColumn = null);
-        List<T> Csv2List<T>(string filePath, string delimiter = ",", List<CCsvColumn> csvColumn = null);
+        List<CCsvColumn> GetColumnFromClassType(Type tableClass);
+        DataTable Csv2DataTable(string filePath, string delimiter, List<CCsvColumn> csvColumn = null, string tableName = null, string nullValue = "", string eolDelimiter = null, Encoding encoding = null);
+        string Csv2Json(string filePath, string delimiter, List<CCsvColumn> csvColumn = null, string nullValue = "", string eolDelimiter = null, Encoding encoding = null);
+        IDataReader Csv2DataReader(string filePath, string delimiter, List<CCsvColumn> csvColumn = null, string nullValue = "", string eolDelimiter = null, Encoding encoding = null);
+        IEnumerable<T> Csv2Enumerable<T>(string filePath, string delimiter, List<CCsvColumn> csvColumn = null, string nullValue = "", string eolDelimiter = null, Encoding encoding = null);
+        List<T> Csv2List<T>(string filePath, string delimiter = ",", List<CCsvColumn> csvColumn = null, string nullValue = "", string eolDelimiter = null, Encoding encoding = null);
     }
 
     public sealed class CCsv : ICsv {
@@ -50,75 +53,133 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
+        public List<CCsvColumn> GetColumnFromClassType(Type tableClass) {
+            PropertyInfo[] properties = tableClass.GetProperties();
+
+            var csvColumn = new List<CCsvColumn>();
+            foreach (PropertyInfo prop in properties) {
+                csvColumn.Add(new CCsvColumn() { ColumnName = prop.Name, Position = 0, FieldType = prop.PropertyType, FieldName = prop.Name });
+            }
+
+            return csvColumn;
+        }
+
         // Posisi Kolom CSV Start Dari 1 Bukan 0
-        private ChoCSVReader<dynamic> ChoEtlSetupCsv(string filePath, string delimiter, List<CCsvColumn> csvColumn) {
-            if (csvColumn == null || csvColumn?.Count <= 0) {
-                throw new Exception("Daftar Kolom Harus Di Isi");
+        private ChoCSVReader<dynamic> ChoEtlSetupCsv(string filePath, string delimiter, List<CCsvColumn> csvColumn = null, string nullValue = "", string eolDelimiter = null, Encoding encoding = null) {
+            var cfg = new ChoCSVRecordConfiguration() {
+                Delimiter = delimiter,
+                MayHaveQuotedFields = true,
+                MayContainEOLInData = true,
+                EOLDelimiter = eolDelimiter ?? Environment.NewLine,
+                NullValue = nullValue,
+                QuoteAllFields = true,
+                Encoding = encoding ?? Encoding.UTF8,
+                MaxLineSize = 1_000_000
+            };
+
+            ChoCSVReader<dynamic> csv = new ChoCSVReader(filePath, cfg);
+
+            if (csvColumn != null) {
+                csv = csv.WithFirstLineHeader(false);
+                csvColumn = csvColumn.OrderBy(c => c.Position).ToList();
+
+                foreach (CCsvColumn cc in csvColumn) {
+                    csv = csv.WithField(cc.ColumnName, cc.Position, cc.FieldType, fieldName: cc.ColumnName);
+                }
+            }
+            else {
+                csv = csv.WithFirstLineHeader(true);
             }
 
-            ChoCSVReader<dynamic> csv = new ChoCSVReader(filePath).WithDelimiter(delimiter);
-            foreach (CCsvColumn cc in csvColumn) {
-                csv = csv.WithField(cc.ColumnName, cc.Position, cc.DataType);
-            }
-
-            csv = csv.WithFirstLineHeader(true).MayHaveQuotedFields().MayContainEOLInData();
             return csv;
         }
 
-        public DataTable Csv2DataTable(string filePath, string delimiter, List<CCsvColumn> csvColumn, string tableName = null) {
-            csvColumn = csvColumn.OrderBy(c => c.Position).ToList();
+        public DataTable Csv2DataTable(string filePath, string delimiter, List<CCsvColumn> csvColumn = null, string tableName = null, string nullValue = "", string eolDelimiter = null, Encoding encoding = null) {
             var fi = new FileInfo(filePath);
 
-            using (ChoCSVReader<dynamic> csv = this.ChoEtlSetupCsv(filePath, delimiter, csvColumn)) {
-                return csv.AsDataTable(tableName ?? fi.Name);
+            using (ChoCSVReader<dynamic> csv = this.ChoEtlSetupCsv(fi.FullName, delimiter, csvColumn, nullValue, eolDelimiter, encoding)) {
+                DataTable dt = csv.AsDataTable(tableName ?? fi.Name);
+
+                foreach (DataRow row in dt.Rows) {
+                    foreach (DataColumn col in dt.Columns) {
+                        if (row[col] is string s) {
+                            if (s.Contains("\"\"")) {
+                                row[col] = s.Replace("\"\"", "\"");
+                            }
+                        }
+                    }
+                }
+
+                return dt;
             }
         }
 
-        public string Csv2Json(string filePath, string delimiter, List<CCsvColumn> csvColumn) {
-            csvColumn = csvColumn.OrderBy(c => c.Position).ToList();
+        public string Csv2Json(string filePath, string delimiter, List<CCsvColumn> csvColumn = null, string nullValue = "", string eolDelimiter = null, Encoding encoding = null) {
             var sb = new StringBuilder();
 
-            using (ChoCSVReader<dynamic> csv = this.ChoEtlSetupCsv(filePath, delimiter, csvColumn)) {
+            using (ChoCSVReader<dynamic> csv = this.ChoEtlSetupCsv(new FileInfo(filePath).FullName, delimiter, csvColumn, nullValue, eolDelimiter, encoding ?? Encoding.UTF8)) {
+                IEnumerable<Dictionary<string, object>> cleaned = csv.Select(record => {
+                    var dict = new Dictionary<string, object>();
+                    foreach (dynamic kvp in record) {
+                        dict[kvp.Key] = kvp.Value;
+                        if (dict[kvp.Key] is string s) {
+                            if (s.Contains("\"\"")) {
+                                dict[kvp.Key] = s.Replace("\"\"", "\"");
+                            }
+                        }
+                    }
+
+                    return dict;
+                });
+
                 using (var w = new ChoJSONWriter(sb)) {
-                    w.Write(csv);
+                    w.Write(cleaned);
                 }
             }
 
             return sb.ToString();
         }
 
-        public List<T> Csv2List<T>(string filePath, string delimiter, List<CCsvColumn> csvColumn) {
-            csvColumn = csvColumn.OrderBy(c => c.Position).ToList();
-            using (ChoCSVReader<dynamic> csv = this.ChoEtlSetupCsv(filePath, delimiter, csvColumn)) {
-                using (IDataReader dr = csv.AsDataReader()) {
-                    var ls = new List<T>();
-                    PropertyInfo[] properties = typeof(T).GetProperties();
+        public IDataReader Csv2DataReader(string filePath, string delimiter, List<CCsvColumn> csvColumn = null, string nullValue = "", string eolDelimiter = null, Encoding encoding = null) {
+            return this.ChoEtlSetupCsv(new FileInfo(filePath).FullName, delimiter, csvColumn, nullValue, eolDelimiter, encoding ?? Encoding.UTF8).AsDataReader();
+        }
 
-                    while (dr.Read()) {
-                        var cols = new Dictionary<string, object>();
-                        for (int i = 0; i < dr.FieldCount; i++) {
-                            if (!dr.IsDBNull(i)) {
-                                cols[dr.GetName(i).ToUpper()] = dr.GetValue(i);
-                            }
+        public IEnumerable<T> Csv2Enumerable<T>(string filePath, string delimiter, List<CCsvColumn> csvColumn = null, string nullValue = "", string eolDelimiter = null, Encoding encoding = null) {
+            using (IDataReader dr = this.Csv2DataReader(filePath, delimiter, csvColumn, nullValue, eolDelimiter, encoding ?? Encoding.UTF8)) {
+                PropertyInfo[] properties = typeof(T).GetProperties();
+
+                while (dr.Read()) {
+                    var cols = new Dictionary<string, dynamic>(StringComparer.InvariantCultureIgnoreCase);
+                    for (int i = 0; i < dr.FieldCount; i++) {
+                        if (!dr.IsDBNull(i)) {
+                            cols[dr.GetName(i).ToUpper()] = dr.GetValue(i);
                         }
-
-                        T objT = Activator.CreateInstance<T>();
-                        foreach (PropertyInfo pro in properties) {
-                            string key = pro.Name.ToUpper();
-                            if (cols.ContainsKey(key)) {
-                                dynamic val = cols[key];
-                                if (val != null) {
-                                    pro.SetValue(objT, val);
-                                }
-                            }
-                        }
-
-                        ls.Add(objT);
                     }
 
-                    return ls;
+                    T objT = Activator.CreateInstance<T>();
+                    foreach (PropertyInfo pro in properties) {
+                        string key = pro.Name.ToUpper();
+                        if (cols.ContainsKey(key)) {
+                            dynamic val = cols[key];
+                            if (val != null) {
+                                if (val is string s) {
+                                    if (s.Contains("\"\"")) {
+                                        val = s.Replace("\"\"", "\"");
+                                    }
+                                }
+
+                                pro.SetValue(objT, val);
+                            }
+                        }
+                    }
+
+                    yield return objT;
                 }
             }
+        }
+
+        public List<T> Csv2List<T>(string filePath, string delimiter, List<CCsvColumn> csvColumn = null, string nullValue = "", string eolDelimiter = null, Encoding encoding = null) {
+            return this.Csv2Enumerable<T>(filePath, delimiter, csvColumn, nullValue, eolDelimiter, encoding ?? Encoding.UTF8).ToList();
         }
 
     }

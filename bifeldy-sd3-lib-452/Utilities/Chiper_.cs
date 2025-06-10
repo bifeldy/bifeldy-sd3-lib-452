@@ -27,7 +27,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IChiper {
         string EncryptText(string plainText, string passPhrase = null);
-        string DecryptText(string cipherText, string passPhrase = null);
+        string DecryptText(string cipherText, string passPhrase = null, Encoding encoding = null);
         string CalculateMD5File(string filePath);
         string CalculateCRC32File(string filePath);
         string CalculateSHA1File(string filePath);
@@ -95,7 +95,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
-        public string DecryptText(string cipherText, string passPhrase = null) {
+        public string DecryptText(string cipherText, string passPhrase = null, Encoding encoding = null) {
             if (string.IsNullOrEmpty(passPhrase) || passPhrase?.Length < 8) {
                 passPhrase = this.HashText(this.AppName);
             }
@@ -117,7 +117,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     using (ICryptoTransform decryptor = symmetricKey.CreateDecryptor(keyBytes, ivStringBytes)) {
                         using (var memoryStream = new MemoryStream(cipherTextBytes)) {
                             using (var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read)) {
-                                using (var streamReader = new StreamReader(cryptoStream, Encoding.UTF8)) {
+                                using (var streamReader = new StreamReader(cryptoStream, encoding ?? Encoding.UTF8)) {
                                     return streamReader.ReadToEnd();
                                 }
                             }
@@ -194,7 +194,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     Marshal.FreeCoTaskMem(mimeTypePtr);
                 }
 
-                return "unknown/unknown";
+                return "application/octet-stream";
             }
         }
 

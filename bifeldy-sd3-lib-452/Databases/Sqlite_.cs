@@ -64,7 +64,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                 this.DatabaseConnection = new SQLiteConnection(this.DbConnectionString);
                 this.DatabaseCommand = new SQLiteCommand {
                     Connection = (SQLiteConnection) this.DatabaseConnection,
-                    CommandTimeout = 1800 // 30 menit
+                    CommandTimeout = 3600 // 60 Minutes
                 };
                 this.DatabaseAdapter = new SQLiteDataAdapter(this.DatabaseCommand);
                 this._logger.WriteInfo(this.GetType().Name, this.DbConnectionString);

@@ -14,6 +14,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Text;
 
 namespace bifeldy_sd3_lib_452.Utilities {
 
@@ -26,7 +27,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         void CleanUp(bool clearPendingFileForZip = true);
         void CopyAllFilesAndDirectories(DirectoryInfo source, DirectoryInfo target, bool isInRecursive = false);
         void BackupAllFilesInFolder(string folderPath);
-        bool CheckSign(FileInfo fileInfo, string signFull, bool isRequired = true);
+        bool CheckSign(FileInfo fileInfo, string signFull, bool isRequired = true, Encoding encoding = null);
     }
 
     public sealed class CBerkas : IBerkas {
@@ -127,9 +128,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
             this.CopyAllFilesAndDirectories(diSource, diTarget);
         }
 
-        public bool CheckSign(FileInfo fileInfo, string signFull, bool isRequired = true) {
+        public bool CheckSign(FileInfo fileInfo, string signFull, bool isRequired = true, Encoding encoding = null) {
             if (isRequired && string.IsNullOrEmpty(signFull)) {
-                throw new Exception("Tidak ada tanda tangan file");
+                throw new Exception("Tidak Ada Tanda Tangan File");
             }
             else if (!isRequired && string.IsNullOrEmpty(signFull)) {
                 return true;
@@ -138,7 +139,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             string[] signSplit = signFull.Split(' ');
             int minFileSize = signSplit.Length;
             if (fileInfo.Length < minFileSize) {
-                throw new Exception("Isi konten file tidak sesuai");
+                throw new Exception("Isi Konten File Tidak Sesuai");
             }
 
             int[] intList = new int[minFileSize];
@@ -151,7 +152,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 }
             }
 
-            using (var reader = new BinaryReader(new FileStream(fileInfo.FullName, FileMode.Open))) {
+            using (var reader = new BinaryReader(new FileStream(fileInfo.FullName, FileMode.Open), encoding ?? Encoding.UTF8)) {
                 byte[] buff = new byte[minFileSize];
                 _ = reader.BaseStream.Seek(0, SeekOrigin.Begin);
                 _ = reader.Read(buff, 0, buff.Length);

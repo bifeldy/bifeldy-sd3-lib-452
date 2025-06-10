@@ -16,8 +16,9 @@ namespace bifeldy_sd3_lib_452.Models {
 
     public sealed class CCsvColumn {
         public string ColumnName { get; set; }
-        public Type DataType { get; set; }
-        public int Position { get; set; }
+        public int Position { get; set; } = 0;
+        public Type FieldType { get; set; }
+        public string FieldName { get; set; }
     }
 
 }

@@ -24,6 +24,7 @@ using Oracle.ManagedDataAccess.Client;
 using bifeldy_sd3_lib_452.Abstractions;
 using bifeldy_sd3_lib_452.Models;
 using bifeldy_sd3_lib_452.Utilities;
+using System.Text;
 
 namespace bifeldy_sd3_lib_452.Databases {
 
@@ -67,7 +68,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                 }
 
                 this.DbName = _dbName;
-                this.DbConnectionString = $"Data Source={this.DbTnsOdp};User ID={this.DbUsername};Password={this.DbPassword};Connection Timeout=180;"; // 3 menit
+                this.DbConnectionString = $"Data Source={this.DbTnsOdp};User ID={this.DbUsername};Password={this.DbPassword};Connection Timeout=180;"; // 3 Minutes
                 if (
                     string.IsNullOrEmpty(this.DbTnsOdp) ||
                     string.IsNullOrEmpty(this.DbUsername) ||
@@ -88,7 +89,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                     BindByName = true,
                     InitialLOBFetchSize = -1,
                     InitialLONGFetchSize = -1,
-                    CommandTimeout = 1800 // 30 menit
+                    CommandTimeout = 3600 // 60 Minutes
                 };
                 this.DatabaseAdapter = new OracleDataAdapter(this.DatabaseCommand);
                 this._logger.WriteInfo(this.GetType().Name, this.DbConnectionString);
@@ -222,11 +223,11 @@ namespace bifeldy_sd3_lib_452.Databases {
             return await this.ExecReaderAsync(this.DatabaseCommand, commandBehavior);
         }
 
-        public override async Task<List<string>> RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null) {
+        public override async Task<List<string>> RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null, Encoding encoding = null) {
             this.DatabaseCommand.CommandText = queryString;
             this.DatabaseCommand.CommandType = CommandType.Text;
             this.BindQueryParameter(bindParam);
-            return await this.RetrieveBlob(this.DatabaseCommand, stringPathDownload, stringCustomSingleFileName);
+            return await this.RetrieveBlob(this.DatabaseCommand, stringPathDownload, stringCustomSingleFileName, encoding ?? Encoding.UTF8);
         }
 
         public COracle NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid) {

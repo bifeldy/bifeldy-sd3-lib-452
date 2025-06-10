@@ -70,25 +70,50 @@ namespace bifeldy_sd3_lib_452.Extensions {
             return table;
         }
 
-        public static void ToCsv<T>(this List<T> listData, string separator, string outputFilePath = null) {
-            using (var sw = new StreamWriter(outputFilePath)) {
-                PropertyInfo[] col = typeof(T).GetProperties();
-                for (int i = 0; i < col.Length - 1; i++) {
-                    sw.Write(col[i].Name + separator);
+        public static void ToCsv<T>(this List<T> listData, string delimiter, string outputFilePath = null, bool includeHeader = true, bool useDoubleQuote = true, bool allUppercase = true, Encoding encoding = null) {
+            using (var streamWriter = new StreamWriter(outputFilePath, false, encoding ?? Encoding.UTF8)) {
+                PropertyInfo[] properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+                if (includeHeader) {
+                    string headerLine = string.Join(delimiter, properties.Select(prop => {
+                        string name = prop.Name;
+
+                        if (allUppercase) {
+                            name = name.ToUpper();
+                        }
+
+                        if (useDoubleQuote) {
+                            name = $"\"{name.Replace("\"", "\"\"")}\"";
+                        }
+
+                        return name;
+                    }));
+
+                    streamWriter.WriteLine(headerLine);
                 }
 
-                string hdr = col[col.Length - 1].Name;
-                sw.Write(hdr + sw.NewLine);
-
                 foreach (T item in listData) {
-                    PropertyInfo[] row = typeof(T).GetProperties();
-                    for (int i = 0; i < row.Length - 1; i++) {
-                        PropertyInfo prop = row[i];
-                        sw.Write(prop.GetValue(item) + separator);
-                    }
+                    string line = string.Join(delimiter, properties.Select(prop => {
+                        object value = prop.GetValue(item);
+                        if (value == null) {
+                            return "";
+                        }
 
-                    PropertyInfo dtl = row[row.Length - 1];
-                    sw.Write(dtl.GetValue(item) + sw.NewLine);
+                        string text = value.ToString();
+
+                        if (allUppercase) {
+                            text = text.ToUpper();
+                        }
+
+                        bool mustQuote = text.Contains(delimiter) || text.Contains('"') || text.Contains('\n') || text.Contains('\r');
+                        if (useDoubleQuote || mustQuote) {
+                            text = $"\"{text.Replace("\"", "\"\"")}\"";
+                        }
+
+                        return text;
+                    }));
+
+                    streamWriter.WriteLine(line);
                 }
             }
         }

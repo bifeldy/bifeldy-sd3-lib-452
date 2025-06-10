@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -56,7 +57,7 @@ namespace bifeldy_sd3_lib_452.Databases {
 
         private void SettingUpDatabase() {
             try {
-                this.DbConnectionString = $"Data Source={this.DbIpAddrss};Initial Catalog={this.DbName};User ID={this.DbUsername};Password={this.DbPassword};Connection Timeout=180;"; // 3 menit
+                this.DbConnectionString = $"Data Source={this.DbIpAddrss};Initial Catalog={this.DbName};User ID={this.DbUsername};Password={this.DbPassword};Connection Timeout=180;"; // 3 Minutes
                 if (
                     string.IsNullOrEmpty(this.DbIpAddrss) ||
                     string.IsNullOrEmpty(this.DbName) ||
@@ -75,7 +76,7 @@ namespace bifeldy_sd3_lib_452.Databases {
 
                 this.DatabaseCommand = new SqlCommand {
                     Connection = (SqlConnection) this.DatabaseConnection,
-                    CommandTimeout = 1800 // 30 menit
+                    CommandTimeout = 3600 // 60 Minutes
                 };
                 this.DatabaseAdapter = new SqlDataAdapter(this.DatabaseCommand);
                 this._logger.WriteInfo(this.GetType().Name, this.DbConnectionString);
@@ -209,11 +210,11 @@ namespace bifeldy_sd3_lib_452.Databases {
             return await this.ExecReaderAsync(this.DatabaseCommand, commandBehavior);
         }
 
-        public override async Task<List<string>> RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null) {
+        public override async Task<List<string>> RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null, Encoding encoding = null) {
             this.DatabaseCommand.CommandText = queryString;
             this.DatabaseCommand.CommandType = CommandType.Text;
             this.BindQueryParameter(bindParam);
-            return await this.RetrieveBlob(this.DatabaseCommand, stringPathDownload, stringCustomSingleFileName);
+            return await this.RetrieveBlob(this.DatabaseCommand, stringPathDownload, stringCustomSingleFileName, encoding ?? Encoding.UTF8);
         }
 
         public CMsSQL NewExternalConnection(string dbIpAddrss, string dbUsername, string dbPassword, string dbName) {
