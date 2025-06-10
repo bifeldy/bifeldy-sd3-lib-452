@@ -334,7 +334,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                 }
             
                 string sqlQuery = $"SELECT * FROM ({rawQuery}) alias_{DateTime.Now.Ticks} WHERE 1 = 0";
-                sqlQuery = sqlQuery.Replace($"\r\n", " ");
+                sqlQuery = sqlQuery.Replace(Environment.NewLine, " ");
                 sqlQuery = Regex.Replace(sqlQuery, @"\s+", " ");
                 this._logger.WriteInfo(this.GetType().Name, sqlQuery);
                 using (var rdr = (NpgsqlDataReader) await this.ExecReaderAsync(sqlQuery)) {
@@ -347,7 +347,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                 }
             
                 sqlQuery = $"COPY ({rawQuery}) TO STDOUT WITH CSV DELIMITER '{delimiter}' QUOTE '\b'";
-                sqlQuery = sqlQuery.Replace($"\r\n", " ");
+                sqlQuery = sqlQuery.Replace(Environment.NewLine, " ");
                 sqlQuery = Regex.Replace(sqlQuery, @"\s+", " ");
                 this._logger.WriteInfo(this.GetType().Name, sqlQuery);
             

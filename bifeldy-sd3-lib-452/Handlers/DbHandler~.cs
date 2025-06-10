@@ -186,11 +186,12 @@ namespace bifeldy_sd3_lib_452.Handlers {
         }
 
         public string GetAllAvailableDbConnectionsString() {
+            string newLine = Environment.NewLine;
             // Bypass Check DB Availablility ~
-            string oracle = $"Oracle :: {this._oracle?.DbName}\r\n\r\n{this._oracle?.DbConnectionString}\r\n\r\n\r\n";
-            string postgre = $"Postgres :: {this._postgres?.DbName}\r\n\r\n{this._postgres?.DbConnectionString}\r\n\r\n\r\n";
-            string mssql = $"MsSql :: {this._mssql?.DbName}\r\n\r\n{this._mssql?.DbConnectionString}\r\n\r\n\r\n";
-            string sqlite = $"SQLite :: {this._sqlite?.DbName?.Replace("\\", "/").Split('/').Last()}\r\n\r\n{this._sqlite?.DbConnectionString}";
+            string oracle = $"Oracle :: {this._oracle?.DbName}{newLine}{newLine}{this._oracle?.DbConnectionString}{newLine}{newLine}{newLine}";
+            string postgre = $"Postgres :: {this._postgres?.DbName}{newLine}{newLine}{this._postgres?.DbConnectionString}{newLine}{newLine}{newLine}";
+            string mssql = $"MsSql :: {this._mssql?.DbName}{newLine}{newLine}{this._mssql?.DbConnectionString}{newLine}{newLine}{newLine}";
+            string sqlite = $"SQLite :: {this._sqlite?.DbName?.Replace("\\", "/").Split('/').Last()}{newLine}{newLine}{this._sqlite?.DbConnectionString}";
             return oracle + postgre + mssql + sqlite;
         }
 
