@@ -67,7 +67,8 @@ namespace bifeldy_sd3_lib_452 {
                 ConcreteReflectionActivatorData,
                 SingleRegistrationStyle
             > registrationBuilder = this._builder
-                                        .RegisterType<CClass>();
+                .RegisterType<CClass>();
+
             if (singleton) {
                 _ = registrationBuilder.SingleInstance();
             }
@@ -82,11 +83,9 @@ namespace bifeldy_sd3_lib_452 {
                 Autofac.Features.Scanning.ScanningActivatorData,
                 DynamicRegistrationStyle
             > registrationBuilder = this._builder
-                                        .RegisterAssemblyTypes(assembly)
-                                        .Where(type => !string.IsNullOrEmpty(type.Namespace)
-                                                        && namespaces.Any(type.Namespace.Contains)
-                                                        && type.IsClass
-                                                        && Regex.IsMatch(type.Name, this._acceptableIndentifierName));
+                .RegisterAssemblyTypes(assembly)
+                .Where(type => !string.IsNullOrEmpty(type.Namespace) && namespaces.Any(type.Namespace.Contains) && type.IsClass && Regex.IsMatch(type.Name, this._acceptableIndentifierName));
+
             if (singleton) {
                 _ = registrationBuilder.SingleInstance();
             }
@@ -101,8 +100,9 @@ namespace bifeldy_sd3_lib_452 {
                 ConcreteReflectionActivatorData,
                 SingleRegistrationStyle
             > registrationBuilder = this._builder
-                                        .RegisterType<CClass>()
-                                        .Named<object>(typeof(CClass).Name);
+                .RegisterType<CClass>()
+                .Named<object>(typeof(CClass).Name);
+
             if (singleton) {
                 _ = registrationBuilder.SingleInstance();
             }
@@ -117,12 +117,10 @@ namespace bifeldy_sd3_lib_452 {
                 Autofac.Features.Scanning.ScanningActivatorData,
                 DynamicRegistrationStyle
             > registrationBuilder = this._builder
-                                        .RegisterAssemblyTypes(assembly)
-                                        .Where(type => !string.IsNullOrEmpty(type.Namespace)
-                                                        && namespaces.Any(type.Namespace.Contains)
-                                                        && type.IsClass
-                                                        && Regex.IsMatch(type.Name, this._acceptableIndentifierName))
-                                        .Named<object>(c => c.Name);
+                .RegisterAssemblyTypes(assembly)
+                .Where(type => !string.IsNullOrEmpty(type.Namespace) && namespaces.Any(type.Namespace.Contains) && type.IsClass && Regex.IsMatch(type.Name, this._acceptableIndentifierName))
+                .Named<object>(c => c.Name);
+
             if (singleton) {
                 _ = registrationBuilder.SingleInstance();
             }
@@ -136,7 +134,9 @@ namespace bifeldy_sd3_lib_452 {
                 CClass,
                 ConcreteReflectionActivatorData,
                 SingleRegistrationStyle
-            > registrationBuilder = this._builder.RegisterType<CClass>().As<IInterface>();
+            > registrationBuilder = this._builder
+                .RegisterType<CClass>().As<IInterface>();
+
             if (singleton) {
                 _ = registrationBuilder.SingleInstance();
             }
@@ -151,12 +151,10 @@ namespace bifeldy_sd3_lib_452 {
                 Autofac.Features.Scanning.ScanningActivatorData,
                 DynamicRegistrationStyle
             > registrationBuilder = this._builder
-                                        .RegisterAssemblyTypes(assembly)
-                                        .Where(type => !string.IsNullOrEmpty(type.Namespace)
-                                                        && namespaces.Any(type.Namespace.Contains)
-                                                        && type.IsClass
-                                                        && Regex.IsMatch(type.Name, this._acceptableIndentifierName))
-                                        .As(c => c.GetInterfaces().Where(i => i.Name == "I" + c.Name.Substring(1)).First());
+                .RegisterAssemblyTypes(assembly)
+                .Where(type => !string.IsNullOrEmpty(type.Namespace) && namespaces.Any(type.Namespace.Contains) && type.IsClass && Regex.IsMatch(type.Name, this._acceptableIndentifierName))
+                .As(c => c.GetInterfaces().Where(i => i.Name == "I" + c.Name.Substring(1)).First());
+
             if (singleton) {
                 _ = registrationBuilder.SingleInstance();
             }
