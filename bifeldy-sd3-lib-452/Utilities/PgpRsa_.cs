@@ -24,22 +24,28 @@ using Org.BouncyCastle.Security;
 namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IPgpRsa {
+        bool IsValidPrivateKey(Stream privateKeyStream, char[] passphrase);
         bool IsValidPrivateKeyFile(string keyFilePath, char[] passphrase);
         bool IsValidPrivateKeyString(string keyFileString, char[] passphrase);
+        bool IsValidPublicKey(Stream publicKeyStream);
         bool IsValidPublicKeyFile(string keyFilePath);
         bool IsValidPublicKeyString(string keyFileString);
         void GenerateKeyPairFile(string identity, char[] passPhrase, string publicKeyPath, string privateKeyPath, Encoding encoding = null);
         (string, string) GenerateKeyPairString(string identity, char[] passPhrase);
+        string SignStreamToString(Stream stream, Stream privateKeyStream, char[] passPhrase = null);
         string SignStreamToStringWithPrivateKeyFile(Stream stream, string privateKeyPath, char[] passPhrase = null);
         string SignStreamToStringWithPrivateKeyString(Stream stream, string privateKeyString, char[] passPhrase = null);
         string SignFileToStringWithPrivateKeyFile(string filePath, string privateKeyPath, char[] passPhrase = null);
         string SignFileToStringWithPrivateKeyString(string filePath, string privateKeyString, char[] passPhrase = null);
+        bool VerifyStreamWithSignatureString(Stream stream, Stream publicKeyStream, string base64Signature);
         bool VerifyStreamWithPublicKeyFileAndSignatureString(Stream stream, string publicKeyPath, string base64Signature);
         bool VerifyStreamWithPublicKeyStringAndSignatureString(Stream stream, string publicKeyString, string base64Signature);
         bool VerifyFileWithPublicKeyFileAndSignatureString(string filePath, string publicKeyPath, string base64Signature);
         bool VerifyFileWithPublicKeyStringAndSignatureString(string filePath, string publicKeyString, string base64Signature);
+        void SignFileDetached(FileStream fileStream, Stream privateKeyStream, string outputSigPath, char[] passPhrase = null);
         void SignFileDetachedWithPrivateKeyFile(string filePath, string privateKeyPath, string outputSigPath, char[] passPhrase = null);
         void SignFileDetachedWithPrivateKeyString(string filePath, string privateKeyString, string outputSigPath, char[] passPhrase = null);
+        bool VerifyFileDetached(FileStream fileStream, Stream publicKeyStream, FileStream inputSigPath);
         bool VerifyFileDetachedWithPublicKeyFile(string filePath, string publicKeyPath, string inputSigPath);
         bool VerifyFileDetachedWithPublicKeyString(string filePath, string publicKeyString, string inputSigPath);
     }
@@ -99,7 +105,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         /* ** */
 
-        private bool IsValidPrivateKey(Stream privateKeyStream, char[] passphrase) {
+        public bool IsValidPrivateKey(Stream privateKeyStream, char[] passphrase) {
             try {
                 using (Stream keyIn = PgpUtilities.GetDecoderStream(privateKeyStream)) {
                     var pgpSec = new PgpSecretKeyRingBundle(keyIn);
@@ -129,7 +135,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
-        private bool IsValidPublicKey(Stream publicKeyStream) {
+        public bool IsValidPublicKey(Stream publicKeyStream) {
             try {
                 using (Stream keyIn = PgpUtilities.GetDecoderStream(publicKeyStream)) {
                     var pubKeyRing = new PgpPublicKeyRingBundle(keyIn);
@@ -218,7 +224,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         /* ** */
 
-        private string SignStreamToString(Stream stream, Stream privateKeyStream, char[] passPhrase = null) {
+        public string SignStreamToString(Stream stream, Stream privateKeyStream, char[] passPhrase = null) {
             using (Stream keyStream = PgpUtilities.GetDecoderStream(stream)) {
                 var pgpSec = new PgpSecretKeyRingBundle(privateKeyStream);
                 PgpSecretKey pgpSecKey = this.GetSigningSecretKey(pgpSec);
@@ -270,7 +276,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         /* ** */
 
-        private bool VerifyStreamWithSignatureString(Stream stream, Stream publicKeyStream, string base64Signature) {
+        public bool VerifyStreamWithSignatureString(Stream stream, Stream publicKeyStream, string base64Signature) {
             using (Stream keyStream = PgpUtilities.GetDecoderStream(stream)) {
                 byte[] signatureBytes = Convert.FromBase64String(base64Signature);
 
@@ -321,7 +327,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         /* ** */
 
-        private void SignFileDetached(FileStream fileStream, Stream privateKeyStream, string outputSigPath, char[] passPhrase = null) {
+        public void SignFileDetached(FileStream fileStream, Stream privateKeyStream, string outputSigPath, char[] passPhrase = null) {
             using (Stream keyIn = PgpUtilities.GetDecoderStream(privateKeyStream)) {
                 var pgpSec = new PgpSecretKeyRingBundle(keyIn);
                 PgpSecretKey pgpSecKey = this.GetSigningSecretKey(pgpSec);
@@ -365,7 +371,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         /* ** */
 
-        private bool VerifyFileDetached(FileStream fileStream, Stream publicKeyStream, FileStream inputSigPath) {
+        public bool VerifyFileDetached(FileStream fileStream, Stream publicKeyStream, FileStream inputSigPath) {
             using (Stream keyStream = PgpUtilities.GetDecoderStream(publicKeyStream)) {
                 using (Stream sigStream = PgpUtilities.GetDecoderStream(inputSigPath)) {
                     var pgpPubRing = new PgpPublicKeyRingBundle(keyStream);
