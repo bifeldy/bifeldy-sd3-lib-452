@@ -60,7 +60,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<bool> OraPg_TruncateTable(string TableName);
         Task<bool> OraPg_BulkInsertInto(string tableName, DataTable dataTable);
         Task<List<string>> OraPg_RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null);
-        Task<string> OraPg_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null);
+        Task<string> OraPg_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool rawQueryWithoutParam = false, bool doubleQuote = true);
         Task<T> OraPg_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<bool> OraPg_ExecQuery(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<DbDataReader> OraPg_ExecReaderAsync(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
@@ -76,7 +76,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<List<T>> MsSql_GetList<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<CDbExecProcResult> MsSql_CALL_(string procedureName, List<CDbQueryParamBind> bindParam = null);
         Task<List<string>> MsSql_RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null);
-        Task<string> MsSql_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null);
+        Task<string> MsSql_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool rawQueryWithoutParam = false, bool doubleQuote = true);
         Task<bool> SQLite_TruncateTable(string TableName);
         Task<bool> SQLite_BulkInsertInto(string tableName, DataTable dataTable);
         Task<T> SQLite_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
@@ -85,7 +85,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<DataTable> SQLite_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<List<T>> SQLite_GetList<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<List<string>> SQLite_RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null);
-        Task<string> SQLite_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null);
+        Task<string> SQLite_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool rawQueryWithoutParam = false, bool doubleQuote = true);
     }
 
     public class CDbHandler : IDbHandler {
@@ -574,8 +574,8 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return await this.OraPg?.RetrieveBlob(stringPathDownload, queryString, bindParam, stringCustomSingleFileName);
         }
 
-        public async Task<string> OraPg_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null) {
-            return await this.OraPg?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath);
+        public async Task<string> OraPg_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool rawQueryWithoutParam = false, bool doubleQuote = true) {
+            return await this.OraPg?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath, useRawQueryWithoutParam: rawQueryWithoutParam, useDoubleQuote: doubleQuote);
         }
 
         /* ** */
@@ -616,8 +616,8 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return await this.MsSql?.RetrieveBlob(stringPathDownload, queryString, bindParam, stringCustomSingleFileName);
         }
 
-        public async Task<string> MsSql_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null) {
-            return await this.MsSql?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath);
+        public async Task<string> MsSql_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool rawQueryWithoutParam = false, bool doubleQuote = true) {
+            return await this.MsSql?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath, useRawQueryWithoutParam: rawQueryWithoutParam, useDoubleQuote: doubleQuote);
         }
 
         /* ** */
@@ -654,8 +654,8 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return await this.Sqlite?.RetrieveBlob(stringPathDownload, queryString, bindParam, stringCustomSingleFileName);
         }
 
-        public async Task<string> SQLite_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null) {
-            return await this.Sqlite?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath);
+        public async Task<string> SQLite_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool rawQueryWithoutParam = false, bool doubleQuote = true) {
+            return await this.Sqlite?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath, useRawQueryWithoutParam: rawQueryWithoutParam, useDoubleQuote: doubleQuote);
         }
 
     }

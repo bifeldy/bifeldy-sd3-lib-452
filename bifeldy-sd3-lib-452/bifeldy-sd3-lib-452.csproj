@@ -235,8 +235,9 @@
     <Compile Include="Libraries\DynamicClass_.cs" />
     <Compile Include="Models\DbExecProcResult_.cs" />
     <Compile Include="Models\DbQueryParamBind_.cs" />
+    <Compile Include="Models\JenisDc_.cs" />
     <Compile Include="Models\TableClassModel_.cs" />
-    <Compile Include="TableView\DC_KAFKA_CONSUMER_T.cs" />
+    <Compile Include="TableView\KAFKA_CONSUMER_AUTO_LOG.cs" />
     <Compile Include="TableView\DC_TABEL_V.cs" />
     <Compile Include="TableView\DC_TABEL_IP_T.cs" />
     <Compile Include="Models\FtpResultInfoSendGet_.cs" />

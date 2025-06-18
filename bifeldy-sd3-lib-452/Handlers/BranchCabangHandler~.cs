@@ -88,7 +88,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
                         dbCon = this._db.NewExternalConnectionPg(dbi.DBPG_IP, dbi.DBPG_PORT, dbi.DBPG_USER, dbi.DBPG_PASS, dbi.DBPG_NAME);
                     }
                     else {
-                        dbCon = this._db.NewExternalConnectionOra(dbi.IP_DB, dbi.DB_PORT, dbi.DB_USER_NAME, dbi.DB_PASSWORD, dbi.DB_SID);
+                        dbCon = this._db.NewExternalConnectionOra(dbi.IP_DB, dbi.DB_PORT.ToString(), dbi.DB_USER_NAME, dbi.DB_PASSWORD, dbi.DB_SID);
                     }
 
                     dbCons.Add(dbi.TBL_DC_KODE, (isPostgre, dbCon));

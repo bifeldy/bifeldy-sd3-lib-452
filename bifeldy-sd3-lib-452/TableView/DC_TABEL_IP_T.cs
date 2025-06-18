@@ -16,7 +16,7 @@ using System;
 namespace bifeldy_sd3_lib_452.TableView {
 
     public sealed class DC_TABEL_IP_T {
-        public decimal DCID { get; set; }
+        public decimal? DCID { get; set; }
         public string DC_KODE { get; set; }
         public string IP_DB { get; set; }
         public string DB_USER_NAME { get; set; }
@@ -24,7 +24,7 @@ namespace bifeldy_sd3_lib_452.TableView {
         public string DB_USER_VIEW { get; set; }
         public string DB_PASS_VIEW { get; set; }
         public string DB_SID { get; set; }
-        public decimal DB_PORT { get; set; }
+        public decimal? DB_PORT { get; set; }
         public string IP_IAS { get; set; }
         public string IAS_USER_NAME { get; set; }
         public string IAS_PASSWORD { get; set; }
@@ -50,7 +50,7 @@ namespace bifeldy_sd3_lib_452.TableView {
         public string IP_SYNCDATA { get; set; }
         public string TNS_NAME { get; set; }
         public string SCHEMA_DPD { get; set; }
-        public DateTime UPDREC_DATE { get; set; }
+        public DateTime? UPDREC_DATE { get; set; }
         public string TNS_TOAD { get; set; }
         public string FTP_FIN_FOLDER { get; set; }
         public string DIR_LIS { get; set; }
@@ -62,13 +62,13 @@ namespace bifeldy_sd3_lib_452.TableView {
         public string FTP_KUNCI_NAME { get; set; }
         public string DIR_LIS_AUTO { get; set; }
         public string DB_PASS_OLD { get; set; }
-        public DateTime LAST_PASS_CHANGE { get; set; }
+        public DateTime? LAST_PASS_CHANGE { get; set; }
         public string TNS_TOAD_850 { get; set; }
-        public DateTime TGL_TUTUP { get; set; }
-        public DateTime TGL_TUTUP_SEMENTARA { get; set; }
+        public DateTime? TGL_TUTUP { get; set; }
+        public DateTime? TGL_TUTUP_SEMENTARA { get; set; }
         public string DB1_SERVICETAG { get; set; }
         public string IAS_SERVICETAG { get; set; }
-        public DateTime LAST_PASSIIS_CHANGE { get; set; }
+        public DateTime? LAST_PASSIIS_CHANGE { get; set; }
         public string IIS_USER_DC { get; set; }
         public string IIS_PASS_DC { get; set; }
         public string PASS_SA_SQLSERVER { get; set; }
@@ -118,9 +118,9 @@ namespace bifeldy_sd3_lib_452.TableView {
         public string SYNC_NGINX { get; set; }
         public string NOTE_NGINX { get; set; }
         public string PASS_NGINX_OLD { get; set; }
-        public DateTime LAST_PASSNGINX_CHANGE { get; set; }
+        public DateTime? LAST_PASSNGINX_CHANGE { get; set; }
         public string FLAG_PICKING { get; set; }
-        public DateTime DBPG_TGLMIGRASI { get; set; }
+        public DateTime? DBPG_TGLMIGRASI { get; set; }
         public string IP_EMBULK { get; set; }
         public string FLAG_DOCKER { get; set; }
         public string IP_KAFKA_CONNECT { get; set; }
