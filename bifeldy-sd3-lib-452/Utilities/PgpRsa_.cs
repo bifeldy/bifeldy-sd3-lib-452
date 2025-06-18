@@ -30,8 +30,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
         bool IsValidPublicKey(Stream publicKeyStream);
         bool IsValidPublicKeyFile(string keyFilePath);
         bool IsValidPublicKeyString(string keyFileString);
-        void GenerateKeyPairFile(string identity, char[] passPhrase, string publicKeyPath, string privateKeyPath, Encoding encoding = null);
         (string, string) GenerateKeyPairString(string identity, char[] passPhrase);
+        void GenerateKeyPairFile(string identity, char[] passPhrase, string publicKeyPath, string privateKeyPath, Encoding encoding = null);
         string SignStreamToString(Stream stream, Stream privateKeyStream, char[] passPhrase = null);
         string SignStreamToStringWithPrivateKeyFile(Stream stream, string privateKeyPath, char[] passPhrase = null);
         string SignStreamToStringWithPrivateKeyString(Stream stream, string privateKeyString, char[] passPhrase = null);
@@ -171,7 +171,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
         /* ** */
 
-        private (string, string) GenerateKeyPair(string identity, char[] passPhrase) {
+        public (string, string) GenerateKeyPairString(string identity, char[] passPhrase) {
             IAsymmetricCipherKeyPairGenerator kpg = new RsaKeyPairGenerator();
             kpg.Init(new KeyGenerationParameters(new SecureRandom(), 2048));
             AsymmetricCipherKeyPair kp = kpg.GenerateKeyPair();
@@ -212,14 +212,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public void GenerateKeyPairFile(string identity, char[] passPhrase, string publicKeyPath, string privateKeyPath, Encoding encoding = null) {
-            (string publicKey, string privateKey) = this.GenerateKeyPair(identity, passPhrase);
+            (string publicKey, string privateKey) = this.GenerateKeyPairString(identity, passPhrase);
 
             File.WriteAllText(publicKeyPath, publicKey, encoding ?? Encoding.UTF8);
             File.WriteAllText(privateKeyPath, privateKey, encoding ?? Encoding.UTF8);
-        }
-
-        public (string, string) GenerateKeyPairString(string identity, char[] passPhrase) {
-            return this.GenerateKeyPair(identity, passPhrase);
         }
 
         /* ** */
