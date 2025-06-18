@@ -49,6 +49,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private const int DerivationIterations = 1000;
 
         public CChiper() {
+            // Tidak bisa pakai Dependency Injection :: IApplication -> IConfig -> IChiper (Circular DI)
             string appName = Process.GetCurrentProcess().MainModule.ModuleName.ToUpper();
             this.AppName = appName.Substring(0, appName.LastIndexOf(".EXE"));
         }
