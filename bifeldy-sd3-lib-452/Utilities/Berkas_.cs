@@ -71,7 +71,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 }
             }
             catch (Exception ex) {
-                this._logger.WriteError(ex.Message);
+                this._logger.WriteError(ex);
             }
         }
 
@@ -93,7 +93,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 }
             }
             catch (Exception ex) {
-                this._logger.WriteError(ex.Message);
+                this._logger.WriteError(ex);
             }
         }
 

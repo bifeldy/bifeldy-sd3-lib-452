@@ -13,8 +13,6 @@
 using System.Collections.Generic;
 using System.IO;
 
-using FluentFTP;
-
 namespace bifeldy_sd3_lib_452.Models {
 
     public sealed class CFtpResultInfo {

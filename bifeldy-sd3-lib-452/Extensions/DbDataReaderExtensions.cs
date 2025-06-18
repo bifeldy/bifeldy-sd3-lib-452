@@ -30,29 +30,50 @@ namespace bifeldy_sd3_lib_452.Extensions {
 
             if (dr.HasRows) {
                 while (dr.Read()) {
-                    var cols = new Dictionary<string, object>();
-                    for (int i = 0; i < dr.FieldCount; i++) {
-                        if (!dr.IsDBNull(i)) {
-                            cols[dr.GetName(i).ToUpper()] = dr.GetValue(i);
+                    T objT = default;
+
+                    Type t = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
+                    if (t.IsPrimitive || t == typeof(string) || t == typeof(DateTime) || t == typeof(decimal)) {
+                        if (!dr.IsDBNull(0)) {
+                            dynamic val = dr.GetValue(0);
+
+                            TypeConverter converter = TypeDescriptor.GetConverter(typeof(T));
+                            if (converter.CanConvertFrom(val.GetType())) {
+                                val = converter.ConvertFrom(val);
+                            }
+                            else {
+                                val = Convert.ChangeType(val, typeof(T));
+                            }
+
+                            objT = val;
                         }
                     }
+                    else {
+                        objT = Activator.CreateInstance<T>();
 
-                    T objT = Activator.CreateInstance<T>();
-                    foreach (PropertyInfo pro in properties) {
-                        string key = pro.Name.ToUpper();
-                        if (cols.ContainsKey(key)) {
-                            dynamic val = cols[key];
+                        var cols = new Dictionary<string, dynamic>(StringComparer.InvariantCultureIgnoreCase);
+                        for (int i = 0; i < dr.FieldCount; i++) {
+                            if (!dr.IsDBNull(i)) {
+                                cols[dr.GetName(i).ToUpper()] = dr.GetValue(i);
+                            }
+                        }
 
-                            if (val != null) {
-                                TypeConverter converter = TypeDescriptor.GetConverter(pro.PropertyType);
-                                if (converter.CanConvertFrom(val.GetType())) {
-                                    val = converter.ConvertFrom(val);
+                        foreach (PropertyInfo pro in properties) {
+                            string key = pro.Name.ToUpper();
+                            if (cols.ContainsKey(key)) {
+                                dynamic val = cols[key];
+
+                                if (val != null) {
+                                    TypeConverter converter = TypeDescriptor.GetConverter(pro.PropertyType);
+                                    if (converter.CanConvertFrom(val.GetType())) {
+                                        val = converter.ConvertFrom(val);
+                                    }
+                                    else {
+                                        val = Convert.ChangeType(val, pro.PropertyType);
+                                    }
+
+                                    pro.SetValue(objT, val);
                                 }
-                                else {
-                                    val = Convert.ChangeType(val, pro.PropertyType);
-                                }
-
-                                pro.SetValue(objT, val);
                             }
                         }
                     }

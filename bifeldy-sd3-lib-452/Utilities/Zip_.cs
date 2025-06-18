@@ -75,7 +75,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 this._logger.WriteInfo($"{this.GetType().Name}ZipSave", path);
             }
             catch (Exception ex) {
-                this._logger.WriteError(ex.Message);
+                this._logger.WriteError(ex);
             }
             finally {
                 if (listFileName == null) {
@@ -113,7 +113,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 this._logger.WriteInfo($"{this.GetType().Name}ZipSave", path);
             }
             catch (Exception ex) {
-                this._logger.WriteError(ex.Message);
+                this._logger.WriteError(ex);
             }
 
             return totalFileInZip;
