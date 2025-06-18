@@ -152,7 +152,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             for (int i = 0; i < databaseCommand.Parameters.Count; i++) {
                 dynamic pVal = databaseCommand.Parameters[i].Value;
 
-                Type pValType = pVal?.GetType();
+                Type pValType = Nullable.GetUnderlyingType(pVal?.GetType()) ?? pVal?.GetType();
                 if (pValType == null || pValType == typeof(DBNull)) {
                     pVal = "NULL";
                 }

@@ -53,7 +53,7 @@ namespace bifeldy_sd3_lib_452.Extensions {
         }
 
         private static object ConvertPropertyToDictionary(PropertyInfo propertyInfo, object owner) {
-            Type propertyType = propertyInfo.PropertyType;
+            Type propertyType = Nullable.GetUnderlyingType(propertyInfo.PropertyType) ?? propertyInfo.PropertyType;
             object propertyValue = propertyInfo.GetValue(owner);
 
             if (propertyValue is Type) {
