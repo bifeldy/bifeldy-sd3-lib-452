@@ -91,6 +91,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 NullValue = nullValue,
                 QuoteAllFields = true,
                 Encoding = encoding ?? Encoding.UTF8,
+                DetectEncodingFromByteOrderMarks = encoding == null,
                 MaxLineSize = 1_000_000
             };
 
