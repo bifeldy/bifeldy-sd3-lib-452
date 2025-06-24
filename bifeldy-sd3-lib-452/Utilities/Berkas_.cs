@@ -152,7 +152,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 }
             }
 
-            using (var reader = new BinaryReader(new FileStream(fileInfo.FullName, FileMode.Open), encoding ?? Encoding.UTF8)) {
+            using (var reader = new BinaryReader(new FileStream(fileInfo.FullName, FileMode.Open), encoding ?? Encoding.UTF8, encoding == null)) {
                 byte[] buff = new byte[minFileSize];
                 _ = reader.BaseStream.Seek(0, SeekOrigin.Begin);
                 _ = reader.Read(buff, 0, buff.Length);
