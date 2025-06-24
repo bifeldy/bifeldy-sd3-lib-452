@@ -70,6 +70,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             if (string.IsNullOrEmpty(eolDelimiter)) {
                 using (var sr = new StreamReader(filePath, encoding ?? Encoding.UTF8, encoding == null)) {
                     string line = sr.ReadLine();
+
                     if (line.Contains("\r\n")) {
                         eolDelimiter = "\r\n";
                     }
