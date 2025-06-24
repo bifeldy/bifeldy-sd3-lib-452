@@ -68,7 +68,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         // Posisi Kolom CSV Start Dari 1 Bukan 0
         private ChoCSVReader<dynamic> ChoEtlSetupCsv(string filePath, string delimiter, List<CCsvColumn> csvColumn = null, string nullValue = "", string eolDelimiter = null, Encoding encoding = null) {
             if (string.IsNullOrEmpty(eolDelimiter)) {
-                using (var sr = new StreamReader(filePath, encoding, encoding == null)) {
+                using (var sr = new StreamReader(filePath, encoding ?? Encoding.UTF8, encoding == null)) {
                     string line = sr.ReadLine();
                     if (line.Contains("\r\n")) {
                         eolDelimiter = "\r\n";
