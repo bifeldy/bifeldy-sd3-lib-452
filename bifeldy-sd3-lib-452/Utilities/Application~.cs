@@ -136,7 +136,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         public string GetVariabel(string key) {
             string id = string.Empty;
             if (this.DebugMode) {
-                id = this._config.Get<string>("SettingDebug", this.GetConfig("setting_debug"));
+                id = this._config.Get<string>("SettingKunciSuffix", this.GetConfig("setting_kunci_suffix"));
             }
             
             bool localDbOnly = this._config.Get<bool>("LocalDbOnly", bool.Parse(this.GetConfig("local_db_only")));

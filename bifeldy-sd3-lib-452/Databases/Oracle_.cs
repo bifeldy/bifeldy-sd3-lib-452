@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -24,13 +25,12 @@ using Oracle.ManagedDataAccess.Client;
 using bifeldy_sd3_lib_452.Abstractions;
 using bifeldy_sd3_lib_452.Models;
 using bifeldy_sd3_lib_452.Utilities;
-using System.Text;
 
 namespace bifeldy_sd3_lib_452.Databases {
 
     public interface IOracle : IDatabase {
-        COracle NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid);
-        COracle CloneConnection();
+        IOracle NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid);
+        IOracle CloneConnection();
     }
 
     public sealed class COracle : CDatabase, IOracle {
@@ -237,7 +237,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             return await this.RetrieveBlob(this.DatabaseCommand, stringPathDownload, stringCustomSingleFileName, encoding ?? Encoding.UTF8);
         }
 
-        public COracle NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid) {
+        public IOracle NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid) {
             var oracle = (COracle) this.Clone();
             string dbTnsOdp = $"(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST={dbIpAddrss})(PORT={dbPort})))(CONNECT_DATA=(SERVICE_NAME={dbNameSid})))";
             oracle.InitializeOracleDatabase(dbUsername, dbPassword, dbTnsOdp);
@@ -245,7 +245,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             return oracle;
         }
 
-        public COracle CloneConnection() {
+        public IOracle CloneConnection() {
             var oracle = (COracle) this.Clone();
             oracle.InitializeOracleDatabase(this.DbUsername, this.DbPassword, this.DbTnsOdp);
             oracle.SettingUpDatabase();

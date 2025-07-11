@@ -28,8 +28,8 @@ using bifeldy_sd3_lib_452.Utilities;
 namespace bifeldy_sd3_lib_452.Databases {
 
     public interface IMsSQL : IDatabase {
-        CMsSQL NewExternalConnection(string dbIpAddrss, string dbUsername, string dbPassword, string dbName);
-        CMsSQL CloneConnection();
+        IMsSQL NewExternalConnection(string dbIpAddrss, string dbUsername, string dbPassword, string dbName);
+        IMsSQL CloneConnection();
     }
 
     public sealed class CMsSQL : CDatabase, IMsSQL {
@@ -224,14 +224,14 @@ namespace bifeldy_sd3_lib_452.Databases {
             return await this.RetrieveBlob(this.DatabaseCommand, stringPathDownload, stringCustomSingleFileName, encoding ?? Encoding.UTF8);
         }
 
-        public CMsSQL NewExternalConnection(string dbIpAddrss, string dbUsername, string dbPassword, string dbName) {
+        public IMsSQL NewExternalConnection(string dbIpAddrss, string dbUsername, string dbPassword, string dbName) {
             var mssql = (CMsSQL) this.Clone();
             mssql.InitializeMsSqlDatabase(dbIpAddrss, dbUsername, dbPassword, dbName);
             mssql.SettingUpDatabase();
             return mssql;
         }
 
-        public CMsSQL CloneConnection() {
+        public IMsSQL CloneConnection() {
             return this.NewExternalConnection(this.DbIpAddrss, this.DbUsername, this.DbPassword, this.DbName);
         }
 

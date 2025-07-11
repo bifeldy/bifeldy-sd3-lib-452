@@ -28,8 +28,8 @@ using bifeldy_sd3_lib_452.Utilities;
 namespace bifeldy_sd3_lib_452.Databases {
 
     public interface ISqlite : IDatabase {
-        CSqlite NewExternalConnection(string dbName);
-        CSqlite CloneConnection();
+        ISqlite NewExternalConnection(string dbName);
+        ISqlite CloneConnection();
     }
 
     public sealed class CSqlite : CDatabase, ISqlite {
@@ -269,14 +269,14 @@ namespace bifeldy_sd3_lib_452.Databases {
             return await this.RetrieveBlob(this.DatabaseCommand, stringPathDownload, stringCustomSingleFileName);
         }
 
-        public CSqlite NewExternalConnection(string dbName) {
+        public ISqlite NewExternalConnection(string dbName) {
             var sqlite = (CSqlite) this.Clone();
             sqlite.InitializeSqliteDatabase(dbName);
             sqlite.SettingUpDatabase();
             return sqlite;
         }
 
-        public CSqlite CloneConnection() {
+        public ISqlite CloneConnection() {
             return this.NewExternalConnection(this.DbName);
         }
 

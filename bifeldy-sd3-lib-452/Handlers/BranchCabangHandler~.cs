@@ -25,8 +25,8 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
     public interface IBranchCabangHandler {
         Task<List<DC_TABEL_V>> GetListBranchDbInformation(string kodeDcInduk);
-        Task<IDictionary<string, (bool, CDatabase)>> GetListBranchDbConnection(string kodeDcInduk);
-        Task<(bool, CDatabase, CDatabase)> OpenConnectionToDcFromHo(string kodeDcTarget);
+        Task<IDictionary<string, (bool, IDatabase)>> GetListBranchDbConnection(string kodeDcInduk);
+        Task<(bool, IDatabase, IDatabase)> OpenConnectionToDcFromHo(string kodeDcTarget);
     }
 
     public class CBranchCabangHandler : IBranchCabangHandler {
@@ -39,11 +39,11 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         private IDictionary<
             string, IDictionary<
-                string, (bool, CDatabase)
+                string, (bool, IDatabase)
             >
         > BranchConnectionInfo { get; } = new Dictionary<
             string, IDictionary<
-                string, (bool, CDatabase)
+                string, (bool, IDatabase)
             >
         >();
 
@@ -57,6 +57,10 @@ namespace bifeldy_sd3_lib_452.Handlers {
 
         public async Task<List<DC_TABEL_V>> GetListBranchDbInformation(string kodeDcInduk) {
             string url = await this._db.OraPg_GetURLWebService("SYNCHO") ?? this._config.Get<string>("WsSyncHo", this._app.GetConfig("ws_syncho"));
+            if (!url.EndsWith("/")) {
+                url += "/";
+            }
+
             url += kodeDcInduk;
 
             HttpResponseMessage httpResponse = await this._api.PostData(url, null);
@@ -71,18 +75,18 @@ namespace bifeldy_sd3_lib_452.Handlers {
         // Atur URL Di `App.config` -> ws_syncho
         //
         // Item1 => bool :: Apakah Menggunakan Postgre
-        // Item2 => CDatabase :: Koneksi Ke Database Oracle / Postgre (Tidak Ada SqlServer)
+        // Item2 => IDatabase :: Koneksi Ke Database Oracle / Postgre (Tidak Ada SqlServer)
         //
-        // IDictionary<string, (bool, CDatabase)> dbCon = await GetListBranchDbConnection("G001");
+        // IDictionary<string, (bool, IDatabase)> dbCon = await GetListBranchDbConnection("G001");
         // var res = dbCon["G055"].Item2.ExecScalarAsync<...>(...);
         //
-        public async Task<IDictionary<string, (bool, CDatabase)>> GetListBranchDbConnection(string kodeDcInduk) {
+        public async Task<IDictionary<string, (bool, IDatabase)>> GetListBranchDbConnection(string kodeDcInduk) {
             if (!this.BranchConnectionInfo.ContainsKey(kodeDcInduk)) {
-                IDictionary<string, (bool, CDatabase)> dbCons = new Dictionary<string, (bool, CDatabase)>();
+                IDictionary<string, (bool, IDatabase)> dbCons = new Dictionary<string, (bool, IDatabase)>();
 
                 List<DC_TABEL_V> dbInfo = await this.GetListBranchDbInformation(kodeDcInduk);
                 foreach (DC_TABEL_V dbi in dbInfo) {
-                    CDatabase dbCon;
+                    IDatabase dbCon;
                     bool isPostgre = dbi.FLAG_DBPG?.ToUpper() == "Y";
                     if (isPostgre) {
                         dbCon = this._db.NewExternalConnectionPg(dbi.DBPG_IP, dbi.DBPG_PORT, dbi.DBPG_USER, dbi.DBPG_PASS, dbi.DBPG_NAME);
@@ -100,8 +104,8 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return this.BranchConnectionInfo[kodeDcInduk];
         }
 
-        public async Task<(bool, CDatabase, CDatabase)> OpenConnectionToDcFromHo(string kodeDcTarget) {
-            CDatabase dbConHo = null;
+        public async Task<(bool, IDatabase, IDatabase)> OpenConnectionToDcFromHo(string kodeDcTarget) {
+            IDatabase dbConHo = null;
 
             string kodeDcSekarang = await this._db.GetKodeDc();
             if (kodeDcSekarang.ToUpper() != "DCHO" && kodeDcSekarang.ToUpper() != "WHHO") {
@@ -112,12 +116,12 @@ namespace bifeldy_sd3_lib_452.Handlers {
                 }
             }
             else {
-                dbConHo = (CDatabase) this._db;
+                dbConHo = (IDatabase) this._db;
             }
 
             bool dbIsUsingPostgre = false;
-            CDatabase dbOraPgDc = null;
-            CDatabase dbSqlDc = null;
+            IDatabase dbOraPgDc = null;
+            IDatabase dbSqlDc = null;
 
             if (dbConHo != null) {
                 DC_TABEL_IP_T dbi = (await dbConHo.GetListAsync<DC_TABEL_IP_T>(

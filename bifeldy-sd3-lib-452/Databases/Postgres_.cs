@@ -35,8 +35,8 @@ using bifeldy_sd3_lib_452.Extensions;
 namespace bifeldy_sd3_lib_452.Databases {
 
     public interface IPostgres : IDatabase {
-        CPostgres NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName);
-        CPostgres CloneConnection();
+        IPostgres NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName);
+        IPostgres CloneConnection();
     }
 
     public sealed class CPostgres : CDatabase, IPostgres {
@@ -430,14 +430,14 @@ namespace bifeldy_sd3_lib_452.Databases {
             return await this.RetrieveBlob(this.DatabaseCommand, stringPathDownload, stringCustomSingleFileName, encoding ?? Encoding.UTF8);
         }
 
-        public CPostgres NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName) {
+        public IPostgres NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName) {
             var postgres = (CPostgres) this.Clone();
             postgres.InitializePostgresDatabase(dbIpAddrss, dbPort, dbUsername, dbPassword, dbName);
             postgres.SettingUpDatabase();
             return postgres;
         }
 
-        public CPostgres CloneConnection() {
+        public IPostgres CloneConnection() {
             return this.NewExternalConnection(this.DbIpAddrss, this.DbPort, this.DbUsername, this.DbPassword, this.DbName);
         }
 

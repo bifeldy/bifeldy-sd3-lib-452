@@ -290,7 +290,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                             Timestamp = result.Message.Timestamp,
                             Value = result.Message.Value
                         };
-                        _ = await this._db.SaveKafkaToTable(result.Topic, result.Offset.Value, result.Partition.Value, msg);
+                        _ = await this._db.OraPg_SaveKafkaToTable(result.Topic, result.Offset.Value, result.Partition.Value, msg);
                     }
                     catch (Exception e) {
                         this._logger.WriteError(e);
