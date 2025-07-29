@@ -374,18 +374,29 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     var pgpFact = new PgpObjectFactory(sigStream);
                     PgpSignatureList sigList = this.GetPgpSigList(pgpFact);
 
-                    PgpSignature sig = sigList[0];
-                    PgpPublicKey key = pgpPubRing.GetPublicKey(sig.KeyId);
+                    int i = 0;
+                    do {
+                        PgpSignature sig = sigList[i];
+                        PgpPublicKey key = pgpPubRing.GetPublicKey(sig.KeyId);
 
-                    sig.InitVerify(key);
+                        if (key != null) {
+                            sig.InitVerify(key);
 
-                    byte[] buf = new byte[8192];
-                    int len = 0;
-                    while ((len = fileStream.Read(buf, 0, buf.Length)) > 0) {
-                        sig.Update(buf, 0, len);
+                            byte[] buf = new byte[8192];
+                            int len = 0;
+                            while ((len = fileStream.Read(buf, 0, buf.Length)) > 0) {
+                                sig.Update(buf, 0, len);
+                            }
+
+                            if (sig.Verify()) {
+                                return true;
+                            }
+                        }
+
+                        i++;
                     }
-
-                    return sig.Verify();
+                    while (i < sigList.Count);
+                    return false;
                 }
             }
         }

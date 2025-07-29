@@ -134,13 +134,13 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public string GetVariabel(string key) {
-            string id = string.Empty;
-            if (this.DebugMode) {
-                id = this._config.Get<string>("SettingKunciSuffix", this.GetConfig("setting_kunci_suffix"));
-            }
-            
+            string id = this._config.Get<string>(
+                "SettingKunciSuffix",
+                this.GetConfig("setting_kunci_suffix")
+            ) ?? string.Empty;
+
             bool localDbOnly = this._config.Get<bool>("LocalDbOnly", bool.Parse(this.GetConfig("local_db_only")));
-            if (localDbOnly) {
+            if (localDbOnly && (!File.Exists("C:\\Application\\Setting.txt") || !File.Exists($"C:\\Application\\Setting_{id}.txt"))) {
                 return null;
             }
 

@@ -50,10 +50,10 @@ namespace bifeldy_sd3_lib_452.Databases {
         }
 
         private void InitializeMySqlDatabase(string dbIpAddrss = null, string dbUsername = null, string dbPassword = null, string dbName = null) {
-            this.DbIpAddrss = dbIpAddrss ?? this._app.GetVariabel("MysqlServer");
-            this.DbUsername = dbUsername ?? this._app.GetVariabel("MysqlUid");
-            this.DbPassword = dbPassword ?? this._app.GetVariabel("MysqlPwd");
-            this.DbName = dbName ?? this._app.GetVariabel("MysqlDatabase");
+            this.DbIpAddrss = dbIpAddrss ?? this._app.GetVariabel("mysqlip") ?? this._app.GetVariabel("MysqlServer");
+            this.DbUsername = dbUsername ?? this._app.GetVariabel("mysqluser") ?? this._app.GetVariabel("MysqlUid");
+            this.DbPassword = dbPassword ?? this._app.GetVariabel("mysqlpass") ?? this._app.GetVariabel("MysqlPwd");
+            this.DbName = dbName ?? this._app.GetVariabel("mysqldb") ?? this._app.GetVariabel("MysqlDatabase");
         }
 
         private void SettingUpDatabase() {
