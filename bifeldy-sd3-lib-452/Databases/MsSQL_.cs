@@ -29,21 +29,14 @@ namespace bifeldy_sd3_lib_452.Databases {
 
     public interface IMsSQL : IDatabase {
         IMsSQL NewExternalConnection(string dbIpAddrss, string dbUsername, string dbPassword, string dbName);
-        IMsSQL CloneConnection();
     }
 
     public sealed class CMsSQL : CDatabase, IMsSQL {
 
-        private readonly IApplication _app;
-        private readonly ILogger _logger;
-
         private SqlCommand DatabaseCommand { get; set; }
         private SqlDataAdapter DatabaseAdapter { get; set; }
 
-        public CMsSQL(IApplication app, ILogger logger, IConverter converter, ICsv csv) : base(logger, converter, csv) {
-            this._app = app;
-            this._logger = logger;
-
+        public CMsSQL(IApplication app, ILogger logger, IConverter converter, ICsv csv, ILocker locker) : base(app, logger, converter, csv, locker) {
             this.InitializeMsSqlDatabase();
             this.SettingUpDatabase();
         }
@@ -190,6 +183,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             bool result = false;
             Exception exception = null;
             try {
+                _ = await this._locker.MutexGlobalApp.WaitAsync(-1);
                 await this.OpenConnection();
                 using (var dbBulkCopy = new SqlBulkCopy((SqlConnection) this.DatabaseConnection) {
                     DestinationTableName = tableName
@@ -204,6 +198,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             }
             finally {
                 this.CloseConnection();
+                _ = this._locker.MutexGlobalApp.Release();
             }
 
             return (exception == null) ? result : throw exception;
@@ -231,7 +226,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             return mssql;
         }
 
-        public IMsSQL CloneConnection() {
+        public override IDatabase CloneConnection() {
             return this.NewExternalConnection(this.DbIpAddrss, this.DbUsername, this.DbPassword, this.DbName);
         }
 

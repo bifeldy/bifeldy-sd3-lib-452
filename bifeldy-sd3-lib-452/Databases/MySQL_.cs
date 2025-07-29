@@ -30,21 +30,14 @@ namespace bifeldy_sd3_lib_452.Databases {
 
     public interface IMySQL : IDatabase {
         IMySQL NewExternalConnection(string dbIpAddrss, string dbUsername, string dbPassword, string dbName);
-        IMySQL CloneConnection();
     }
 
     public sealed class CMySQL : CDatabase, IMySQL {
 
-        private readonly IApplication _app;
-        private readonly ILogger _logger;
-
         private MySqlCommand DatabaseCommand { get; set; }
         private MySqlDataAdapter DatabaseAdapter { get; set; }
 
-        public CMySQL(IApplication app, ILogger logger, IConverter converter, ICsv csv) : base(logger, converter, csv) {
-            this._app = app;
-            this._logger = logger;
-
+        public CMySQL(IApplication app, ILogger logger, IConverter converter, ICsv csv, ILocker locker) : base(app, logger, converter, csv, locker) {
             this.InitializeMySqlDatabase();
             this.SettingUpDatabase();
         }
@@ -185,6 +178,8 @@ namespace bifeldy_sd3_lib_452.Databases {
             bool result = false;
             Exception exception = null;
             try {
+                _ = await this._locker.MutexGlobalApp.WaitAsync(-1);
+
                 if (string.IsNullOrEmpty(tableName)) {
                     throw new Exception("Target Tabel Tidak Ditemukan");
                 }
@@ -259,6 +254,9 @@ namespace bifeldy_sd3_lib_452.Databases {
                 this._logger.WriteError(ex, 3);
                 exception = ex;
             }
+            finally {
+                _ = this._locker.MutexGlobalApp.Release();
+            }
 
             return (exception == null) ? result : throw exception;
         }
@@ -285,7 +283,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             return mssql;
         }
 
-        public IMySQL CloneConnection() {
+        public override IDatabase CloneConnection() {
             return this.NewExternalConnection(this.DbIpAddrss, this.DbUsername, this.DbPassword, this.DbName);
         }
 

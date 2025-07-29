@@ -38,6 +38,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         Task MarkBeforeCommitRollback();
         void MarkSuccessCommitAndClose();
         void MarkFailedRollbackAndClose();
+        IDatabase CloneConnection();
         Task<DataColumnCollection> GetAllColumnTableAsync(string tableName);
         Task<DataTable> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         Task<List<T>> GetListAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null);
@@ -53,9 +54,11 @@ namespace bifeldy_sd3_lib_452.Abstractions {
 
     public abstract class CDatabase : IDatabase, ICloneable {
 
-        private readonly ILogger _logger;
-        private readonly IConverter _converter;
-        private readonly ICsv _csv;
+        protected readonly IApplication _app;
+        protected readonly ILogger _logger;
+        protected readonly IConverter _converter;
+        protected readonly ICsv _csv;
+        protected readonly ILocker _locker;
 
         protected DbConnection DatabaseConnection { get; set; }
         protected DbTransaction DatabaseTransaction { get; set; }
@@ -71,10 +74,12 @@ namespace bifeldy_sd3_lib_452.Abstractions {
         public bool Available => this.DatabaseConnection != null;
         public bool HasUnCommitRollbackSqlQuery => this.DatabaseTransaction != null;
 
-        public CDatabase(ILogger logger, IConverter converter, ICsv csv) {
+        public CDatabase(IApplication app, ILogger logger, IConverter converter, ICsv csv, ILocker locker) {
+            this._app = app;
             this._logger = logger;
             this._converter = converter;
             this._csv = csv;
+            this._locker = locker;
         }
 
         public object Clone() {
@@ -183,6 +188,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             var result = new DataTable();
             Exception exception = null;
             try {
+                _ = await this._locker.MutexGlobalApp.WaitAsync(-1);
                 // await OpenConnection();
                 // dataAdapter.Fill(result);
                 using (DbDataReader dr = await this.ExecReaderAsync(databaseCommand)) {
@@ -195,6 +201,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             }
             finally {
                 this.CloseConnection();
+                _ = this._locker.MutexGlobalApp.Release();
             }
 
             return (exception == null) ? result : throw exception;
@@ -204,6 +211,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             var result = new List<T>();
             Exception exception = null;
             try {
+                _ = await this._locker.MutexGlobalApp.WaitAsync(-1);
                 using (DbDataReader dr = await this.ExecReaderAsync(databaseCommand, CommandBehavior.SequentialAccess)) {
                     result = dr.ToList<T>();
                 }
@@ -214,6 +222,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             }
             finally {
                 this.CloseConnection();
+                _ = this._locker.MutexGlobalApp.Release();
             }
 
             return (exception == null) ? result : throw exception;
@@ -223,6 +232,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             T result = default;
             Exception exception = null;
             try {
+                _ = await this._locker.MutexGlobalApp.WaitAsync(-1);
                 await this.OpenConnection();
                 object _obj = await databaseCommand.ExecuteScalarAsync();
                 if (_obj != null && _obj != DBNull.Value) {
@@ -235,6 +245,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             }
             finally {
                 this.CloseConnection();
+                _ = this._locker.MutexGlobalApp.Release();
             }
 
             return (exception == null) ? result : throw exception;
@@ -244,6 +255,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             int affectedRows = 0;
             Exception exception = null;
             try {
+                _ = await this._locker.MutexGlobalApp.WaitAsync(-1);
                 await this.OpenConnection();
                 affectedRows = await databaseCommand.ExecuteNonQueryAsync();
             }
@@ -253,6 +265,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             }
             finally {
                 this.CloseConnection();
+                _ = this._locker.MutexGlobalApp.Release();
             }
 
             return (exception == null) ? affectedRows : throw exception;
@@ -271,6 +284,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             };
             Exception exception = null;
             try {
+                _ = await this._locker.MutexGlobalApp.WaitAsync(-1);
                 await this.OpenConnection();
                 result.STATUS = await databaseCommand.ExecuteNonQueryAsync() == -1;
                 result.PARAMETERS = databaseCommand.Parameters;
@@ -281,6 +295,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             }
             finally {
                 this.CloseConnection();
+                _ = this._locker.MutexGlobalApp.Release();
             }
 
             return (exception == null) ? result : throw exception;
@@ -293,6 +308,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             DbDataReader result = null;
             Exception exception = null;
             try {
+                // _ = await this._locker.MutexGlobalApp.WaitAsync(-1);
                 await this.OpenConnection();
                 result = await databaseCommand.ExecuteReaderAsync(commandBehavior);
             }
@@ -303,6 +319,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             finally {
                 // Kalau Koneksinya Di Close Dari Sini Tidak Akan Bisa Pakai Reader Untuk Baca Lagi
                 // this.CloseConnection();
+                // _ = this._locker.MutexGlobalApp.Release();
             }
 
             return (exception == null) ? result : throw exception;
@@ -312,6 +329,8 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             var result = new List<string>();
             Exception exception = null;
             try {
+                _ = await this._locker.MutexGlobalApp.WaitAsync(-1);
+
                 string _oldCmdTxt = databaseCommand.CommandText;
                 databaseCommand.CommandText = $"SELECT COUNT(*) FROM ( {_oldCmdTxt} ) RetrieveBlob_{DateTime.Now.Ticks}";
                 ulong _totalFiles = await this.ExecScalarAsync<ulong>(databaseCommand);
@@ -373,6 +392,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             }
             finally {
                 this.CloseConnection();
+                _ = this._locker.MutexGlobalApp.Release();
             }
 
             return (exception == null) ? result : throw exception;
@@ -382,6 +402,8 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             string result = null;
             Exception exception = null;
             try {
+                _ = await this._locker.MutexGlobalApp.WaitAsync(-1);
+
                 string path = Path.Combine(outputFolderPath ?? this._csv.CsvFolderPath, filename);
                 if (File.Exists(path)) {
                     File.Delete(path);
@@ -400,6 +422,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             }
             finally {
                 this.CloseConnection();
+                _ = this._locker.MutexGlobalApp.Release();
             }
 
             return (exception == null) ? result : throw exception;
@@ -409,6 +432,7 @@ namespace bifeldy_sd3_lib_452.Abstractions {
 
         protected abstract void BindQueryParameter(List<CDbQueryParamBind> parameters);
 
+        public abstract IDatabase CloneConnection();
         public abstract Task<DataColumnCollection> GetAllColumnTableAsync(string tableName);
         public abstract Task<DataTable> GetDataTableAsync(string queryString, List<CDbQueryParamBind> bindParam = null);
         public abstract Task<List<T>> GetListAsync<T>(string queryString, List<CDbQueryParamBind> bindParam = null);

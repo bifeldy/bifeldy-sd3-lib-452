@@ -29,22 +29,17 @@ namespace bifeldy_sd3_lib_452.Databases {
 
     public interface ISqlite : IDatabase {
         ISqlite NewExternalConnection(string dbName);
-        ISqlite CloneConnection();
     }
 
     public sealed class CSqlite : CDatabase, ISqlite {
 
-        private readonly IApplication _app;
         private readonly IConfig _config;
-        private readonly ILogger _logger;
 
         private SQLiteCommand DatabaseCommand { get; set; }
         private SQLiteDataAdapter DatabaseAdapter { get; set; }
 
-        public CSqlite(IApplication app, IConfig config, ILogger logger, IConverter converter, ICsv csv) : base(logger, converter, csv) {
-            this._app = app;
+        public CSqlite(IApplication app, IConfig config, ILogger logger, IConverter converter, ICsv csv, ILocker locker) : base(app, logger, converter, csv, locker) {
             this._config = config;
-            this._logger = logger;
 
             this.InitializeSqliteDatabase();
             this.SettingUpDatabase();
@@ -176,6 +171,8 @@ namespace bifeldy_sd3_lib_452.Databases {
             bool result = false;
             Exception exception = null;
             try {
+                _ = await this._locker.MutexGlobalApp.WaitAsync(-1);
+
                 if (string.IsNullOrEmpty(tableName)) {
                     throw new Exception("Target Tabel Tidak Ditemukan");
                 }
@@ -250,6 +247,9 @@ namespace bifeldy_sd3_lib_452.Databases {
                 this._logger.WriteError(ex, 3);
                 exception = ex;
             }
+            finally {
+                _ = this._locker.MutexGlobalApp.Release();
+            }
 
             return (exception == null) ? result : throw exception;
         }
@@ -276,7 +276,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             return sqlite;
         }
 
-        public ISqlite CloneConnection() {
+        public override IDatabase CloneConnection() {
             return this.NewExternalConnection(this.DbName);
         }
 

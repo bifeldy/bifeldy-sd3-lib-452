@@ -30,21 +30,14 @@ namespace bifeldy_sd3_lib_452.Databases {
 
     public interface IOracle : IDatabase {
         IOracle NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbNameSid);
-        IOracle CloneConnection();
     }
 
     public sealed class COracle : CDatabase, IOracle {
 
-        private readonly IApplication _app;
-        private readonly ILogger _logger;
-
         private OracleCommand DatabaseCommand { get; set; }
         private OracleDataAdapter DatabaseAdapter { get; set; }
 
-        public COracle(IApplication app, ILogger logger, IConverter converter, ICsv csv) : base(logger, converter, csv) {
-            this._app = app;
-            this._logger = logger;
-
+        public COracle(IApplication app, ILogger logger, IConverter converter, ICsv csv, ILocker locker) : base(app, logger, converter, csv, locker) {
             this.InitializeOracleDatabase();
             this.SettingUpDatabase();
         }
@@ -203,6 +196,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             bool result = false;
             Exception exception = null;
             try {
+                _ = await this._locker.MutexGlobalApp.WaitAsync(-1);
                 await this.OpenConnection();
                 using (var dbBulkCopy = new OracleBulkCopy((OracleConnection) this.DatabaseConnection) {
                     DestinationTableName = tableName
@@ -217,6 +211,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             }
             finally {
                 this.CloseConnection();
+                _ = this._locker.MutexGlobalApp.Release();
             }
 
             return (exception == null) ? result : throw exception;
@@ -245,7 +240,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             return oracle;
         }
 
-        public IOracle CloneConnection() {
+        public override IDatabase CloneConnection() {
             var oracle = (COracle) this.Clone();
             oracle.InitializeOracleDatabase(this.DbUsername, this.DbPassword, this.DbTnsOdp);
             oracle.SettingUpDatabase();

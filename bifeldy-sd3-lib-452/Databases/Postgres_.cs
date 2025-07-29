@@ -36,23 +36,14 @@ namespace bifeldy_sd3_lib_452.Databases {
 
     public interface IPostgres : IDatabase {
         IPostgres NewExternalConnection(string dbIpAddrss, string dbPort, string dbUsername, string dbPassword, string dbName);
-        IPostgres CloneConnection();
     }
 
     public sealed class CPostgres : CDatabase, IPostgres {
 
-        private readonly IApplication _app;
-        private readonly ILogger _logger;
-        private readonly ICsv _csv;
-
         private NpgsqlCommand DatabaseCommand { get; set; }
         private NpgsqlDataAdapter DatabaseAdapter { get; set; }
 
-        public CPostgres(IApplication app, ILogger logger, IConverter converter, ICsv csv) : base(logger, converter, csv) {
-            this._app = app;
-            this._logger = logger;
-            this._csv = csv;
-
+        public CPostgres(IApplication app, ILogger logger, IConverter converter, ICsv csv, ILocker locker) : base(app, logger, converter, csv, locker) {
             this.InitializePostgresDatabase();
             this.SettingUpDatabase();
         }
@@ -213,6 +204,8 @@ namespace bifeldy_sd3_lib_452.Databases {
             bool result = false;
             Exception exception = null;
             try {
+                _ = await this._locker.MutexGlobalApp.WaitAsync(-1);
+
                 if (string.IsNullOrEmpty(tableName)) {
                     throw new Exception("Target Tabel Tidak Ditemukan");
                 }
@@ -325,6 +318,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             }
             finally {
                 this.CloseConnection();
+                _ = this._locker.MutexGlobalApp.Release();
             }
 
             return (exception == null) ? result : throw exception;
@@ -341,6 +335,8 @@ namespace bifeldy_sd3_lib_452.Databases {
                 if (!useRawQueryWithoutParam) {
                     return await base.BulkGetCsv(queryString, delimiter, filename, bindParam, outputFolderPath, useRawQueryWithoutParam, includeHeader, useDoubleQuote, allUppercase, encoding);
                 }
+
+                _ = await this._locker.MutexGlobalApp.WaitAsync(-1);
 
                 if (bindParam != null) {
                     throw new Exception("Parameter Binding Terdeteksi, Mohon Mematikan Fitur `useRawQueryWithoutParam`");
@@ -410,6 +406,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             }
             finally {
                 this.CloseConnection();
+                _ = this._locker.MutexGlobalApp.Release();
             }
             
             return (exception == null) ? result : throw exception;
@@ -437,7 +434,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             return postgres;
         }
 
-        public IPostgres CloneConnection() {
+        public override IDatabase CloneConnection() {
             return this.NewExternalConnection(this.DbIpAddrss, this.DbPort, this.DbUsername, this.DbPassword, this.DbName);
         }
 

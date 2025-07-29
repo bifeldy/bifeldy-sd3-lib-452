@@ -409,9 +409,9 @@ namespace bifeldy_sd3_lib_452.Handlers {
                             SELECT
                                 CASE
                                     WHEN COALESCE(aprove, 'N') = 'Y' AND {(
-                                            this._app.IsUsingPostgres ?
-                                            "COALESCE(tgl_berlaku, NOW())::DATE <= CURRENT_DATE" :
-                                            "TRUNC(COALESCE(tgl_berlaku, SYSDATE)) <= TRUNC(SYSDATE)"
+                                            this._app.IsUsingPostgres
+                                                ? "COALESCE(tgl_berlaku, NOW())::DATE <= CURRENT_DATE"
+                                                : "TRUNC(COALESCE(tgl_berlaku, SYSDATE)) <= TRUNC(SYSDATE)"
                                         )} 
                                         THEN COALESCE(VERSI_BARU, '0')
                                     WHEN COALESCE(aprove, 'N') = 'N'
@@ -520,7 +520,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
                             UPPER(c.sec_app_name) LIKE :app_name
                     ",
                     new List<CDbQueryParamBind> {
-                        new CDbQueryParamBind { NAME = "user_name", VALUE = LoggedInUsername },
+                        new CDbQueryParamBind { NAME = "user_name", VALUE = this.LoggedInUsername },
                         new CDbQueryParamBind { NAME = "ip_v4_v6", VALUE = this._app.GetAllIpAddress() },
                         new CDbQueryParamBind { NAME = "mac_addr", VALUE = this._app.GetAllMacAddress() },
                         new CDbQueryParamBind { NAME = "app_name", VALUE = $"%{this._app.AppName}%" }
