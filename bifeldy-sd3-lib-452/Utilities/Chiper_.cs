@@ -16,6 +16,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Security.Cryptography;
 using System.Runtime.InteropServices;
 
@@ -28,9 +29,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
     public interface IChiper {
         string EncryptText(string plainText, string passPhrase = null);
         string DecryptText(string cipherText, string passPhrase = null, Encoding encoding = null);
-        string CalculateMD5File(string filePath);
-        string CalculateCRC32File(string filePath);
-        string CalculateSHA1File(string filePath);
+        Task<string> CalculateMD5File(string filePath, IProgress<string> logReporter = null);
+        Task<string> CalculateCRC32File(string filePath, IProgress<string> logReporter = null);
+        Task<string> CalculateSHA1File(string filePath, IProgress<string> logReporter = null);
         string GetMime(string filePath);
         string HashByte(byte[] data);
         string HashText(string textMessage);
@@ -128,24 +129,97 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
         }
 
-        public string CalculateMD5File(string filePath) {
+        public async Task<string> CalculateMD5File(string filePath, IProgress<string> logReporter = null) {
             using (var md5 = MD5.Create()) {
-                using (FileStream stream = File.OpenRead(filePath)) {
-                    return md5.ComputeHash(stream).ToStringHex();
+                using (FileStream fileStream = File.OpenRead(filePath)) {
+                    string fileName = new FileInfo(fileStream.Name).Name;
+                    ulong totalBytesRead = 0;
+                    DateTime lastReportTime = DateTime.UtcNow;
+
+                    byte[] buf = new byte[8192];
+                    int len = 0;
+
+                    fileStream.Position = 0;
+                    while ((len = await fileStream.ReadAsync(buf, 0, buf.Length)) > 0) {
+                        _ = md5.TransformBlock(buf, 0, len, buf, 0);
+                        totalBytesRead += (ulong)len;
+
+                        if (logReporter != null && (DateTime.UtcNow - lastReportTime).TotalSeconds >= 1) {
+                            double percentage = (double)totalBytesRead / fileStream.Length * 100;
+                            logReporter.Report($"[{DateTime.Now:HH:mm:ss tt zzz}] {this.GetType().Name}CalculateMD5File :: {fileName} - {percentage:F2}% {Environment.NewLine}");
+                            lastReportTime = DateTime.UtcNow;
+                        }
+                    }
+
+                    if (logReporter != null) {
+                        logReporter.Report($"[{DateTime.Now:HH:mm:ss tt zzz}] {this.GetType().Name}CalculateMD5File :: {fileName} - 100% {Environment.NewLine}");
+                    }
+
+                    _ = md5.TransformFinalBlock(buf, 0, 0);
+                    return md5.Hash.ToStringHex();
                 }
             }
         }
 
-        public string CalculateCRC32File(string filePath) {
+        public async Task<string> CalculateCRC32File(string filePath, IProgress<string> logReporter = null) {
             using (FileStream stream = File.OpenRead(filePath)) {
-                return new CRC32().GetCrc32(stream).ToString("x");
+                string fileName = new FileInfo(stream.Name).Name;
+                ulong totalBytesRead = 0;
+                DateTime lastReportTime = DateTime.UtcNow;
+
+                byte[] buf = new byte[8192];
+                int len = 0;
+
+                var crc32 = new CRC32();
+
+                stream.Position = 0;
+                while ((len = await stream.ReadAsync(buf, 0, buf.Length)) > 0) {
+                    crc32.SlurpBlock(buf, 0, len);
+                    totalBytesRead += (ulong)len;
+
+                    if (logReporter != null && (DateTime.UtcNow - lastReportTime).TotalSeconds >= 1) {
+                        double percentage = (double)totalBytesRead / stream.Length * 100;
+                        logReporter.Report($"[{DateTime.Now:HH:mm:ss tt zzz}] {this.GetType().Name}CalculateCRC32File :: {fileName} - {percentage:F2}% {Environment.NewLine}");
+                        lastReportTime = DateTime.UtcNow;
+                    }
+                }
+
+                if (logReporter != null) {
+                    logReporter.Report($"[{DateTime.Now:HH:mm:ss tt zzz}] {this.GetType().Name}CalculateCRC32File :: {fileName} - 100% {Environment.NewLine}");
+                }
+
+                return crc32.Crc32Result.ToString("X8");
             }
         }
 
-        public string CalculateSHA1File(string filePath) {
+        public async Task<string> CalculateSHA1File(string filePath, IProgress<string> logReporter = null) {
             using (var sha1 = SHA1.Create()) {
-                using (FileStream stream = File.OpenRead(filePath)) {
-                    return sha1.ComputeHash(stream).ToStringHex();
+                using (FileStream fileStream = File.OpenRead(filePath)) {
+                    string fileName = new FileInfo(fileStream.Name).Name;
+                    ulong totalBytesRead = 0;
+                    DateTime lastReportTime = DateTime.UtcNow;
+
+                    byte[] buf = new byte[8192];
+                    int len = 0;
+
+                    fileStream.Position = 0;
+                    while ((len = await fileStream.ReadAsync(buf, 0, buf.Length)) > 0) {
+                        _ = sha1.TransformBlock(buf, 0, len, buf, 0);
+                        totalBytesRead += (ulong)len;
+
+                        if (logReporter != null && (DateTime.UtcNow - lastReportTime).TotalSeconds >= 1) {
+                            double percentage = (double)totalBytesRead / fileStream.Length * 100;
+                            logReporter.Report($"[{DateTime.Now:HH:mm:ss tt zzz}] {this.GetType().Name}CalculateSHA1File :: {fileName} - {percentage:F2}% {Environment.NewLine}");
+                            lastReportTime = DateTime.UtcNow;
+                        }
+                    }
+
+                    if (logReporter != null) {
+                        logReporter.Report($"[{DateTime.Now:HH:mm:ss tt zzz}] {this.GetType().Name}CalculateSHA1File :: {fileName} - 100% {Environment.NewLine}");
+                    }
+
+                    _ = sha1.TransformFinalBlock(buf, 0, 0);
+                    return sha1.Hash.ToStringHex();
                 }
             }
         }
