@@ -277,8 +277,17 @@ namespace bifeldy_sd3_lib_452.Databases {
                                         break;
                                     case NpgsqlDbType.Char:
                                         if (lengths[i] == 1) {
-                                            writer.Write(Convert.ToString(_obj).ToCharArray().First(), types[i]);
-                                            break;
+                                            string str = Convert.ToString(_obj);
+                                            if (string.IsNullOrEmpty(str)) {
+                                                _obj = string.Empty;
+                                            }
+                                            else {
+                                                char[] chr = str.ToCharArray();
+                                                if (chr.Length == lengths[i]) {
+                                                    writer.Write(chr[lengths[i] - 1], types[i]);
+                                                    break;
+                                                }
+                                            }
                                         }
 
                                         goto case NpgsqlDbType.Varchar;
@@ -299,9 +308,9 @@ namespace bifeldy_sd3_lib_452.Databases {
                                         writer.Write(_obj, types[i]);
                                         break;
 
-                                        //
-                                        // TODO :: Add More Handles While Free Time ~
-                                        //
+                                    //
+                                    // TODO :: Add More Handles While Free Time ~
+                                    //
                                 }
                             }
                         }

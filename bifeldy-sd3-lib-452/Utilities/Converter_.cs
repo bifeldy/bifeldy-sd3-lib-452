@@ -18,6 +18,7 @@ using System.Drawing;
 using System.Reflection;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using bifeldy_sd3_lib_452.Libraries;
 
@@ -46,7 +47,55 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return (Bitmap) new ImageConverter().ConvertFrom(byteArray);
         }
 
+        private List<object> JArrayToList(JArray jsonArray) {
+            var result = new List<object>();
+
+            foreach (JToken item in jsonArray) {
+                switch (item.Type) {
+                    case JTokenType.Object:
+                        result.Add(this.JObjectToDictionary((JObject)item));
+                        break;
+                    case JTokenType.Array:
+                        result.Add(this.JArrayToList((JArray)item));
+                        break;
+                    default:
+                        result.Add(item.ToObject<object>());
+                        break;
+                }
+            }
+
+            return result;
+        }
+
+        private Dictionary<string, object> JObjectToDictionary(JObject jsonObject) {
+            var result = new Dictionary<string, object>();
+
+            foreach (JProperty property in jsonObject.Properties()) {
+                string key = property.Name;
+                JToken value = property.Value;
+
+                switch (value.Type) {
+                    case JTokenType.Object:
+                        result[key] = this.JObjectToDictionary((JObject)value);
+                        break;
+                    case JTokenType.Array:
+                        result[key] = this.JArrayToList((JArray)value);
+                        break;
+                    default:
+                        result[key] = value.ToObject<object>();
+                        break;
+                }
+            }
+
+            return result;
+        }
+
         public T JsonToObject<T>(string j2o) {
+            if (typeof(IDictionary<string, object>).IsAssignableFrom(typeof(T))) {
+                var jObject = JObject.Parse(j2o);
+                return (dynamic)this.JObjectToDictionary(jObject);
+            }
+
             return JsonConvert.DeserializeObject<T>(j2o, new JsonSerializerSettings {
                 Converters = new JsonConverter[] {
                     new DecimalNewtonsoftJsonConverter(),
