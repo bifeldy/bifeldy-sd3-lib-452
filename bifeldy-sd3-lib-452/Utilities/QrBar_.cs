@@ -42,67 +42,75 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public Image Generate128BarCode(string content, int minWidthPx = 512, int heightPx = 192, bool withPadding = true) {
-            int retry = 0;
-            int sizeLimit = minWidthPx;
+            var writer = new ZXing.BarcodeWriter() {
+                Format = ZXing.BarcodeFormat.CODE_128,
+                Options = new ZXing.Common.EncodingOptions {
+                    PureBarcode = false,
+                    NoPadding = true,
+                    Margin = 0
+                }
+            };
 
-            while (retry <= MAX_RETRY) {
-                var writer = new ZXing.BarcodeWriter() {
-                    Format = ZXing.BarcodeFormat.CODE_128,
-                    Options = new ZXing.Common.EncodingOptions {
-                        PureBarcode = false,
-                        NoPadding = true,
-                        Margin = 0
-                    }
-                };
+            using (Bitmap generatedImage = writer.Write(content)) {
+                int retry = 0;
+                int sizeLimit = minWidthPx;
 
                 int padding = withPadding ? 10 : 0;
+                var drawLocation = new Point(padding, padding);
                 var res = new Bitmap(sizeLimit, heightPx);
 
-                using (Bitmap img = writer.Write(content)) {
-                    using (var outStream = new MemoryStream()) {
+                while (retry <= MAX_RETRY) {
+                    var size = new Size(sizeLimit - (padding * 2), heightPx - (padding * 2));
+                    var resizeLayer = new ResizeLayer(size, ResizeMode.Stretch);
+
+                    using (var img = new Bitmap(generatedImage)) {
                         using (var imageFactory = new ImageFactory(true)) {
                             _ = imageFactory.Load(img);
-                            var size = new Size(sizeLimit - (padding * 2), heightPx - (padding * 2));
-                            var resizeLayer = new ResizeLayer(size, ResizeMode.Stretch);
-                            _ = imageFactory.Resize(resizeLayer).Save(outStream);
-                            var imgResized = Image.FromStream(outStream);
+                            _ = imageFactory.Resize(resizeLayer);
 
-                            using (var g = Graphics.FromImage(res)) {
-                                g.DrawImage(imgResized, new Point(padding, padding));
+                            using (var outStream = new MemoryStream()) {
+                                _ = imageFactory.Save(outStream);
+
+                                using (var imgResized = Image.FromStream(outStream)) {
+                                    using (var g = Graphics.FromImage(res)) {
+                                        g.DrawImage(imgResized, drawLocation);
+
+                                        string qrText = this.ReadTextFromQrBarCode(res);
+                                        if (content == qrText) {
+                                            return res;
+                                        }
+
+                                        retry++;
+                                        sizeLimit = minWidthPx + (minWidthPx * retry / 2);
+                                    }
+
+                                }
                             }
                         }
                     }
                 }
 
-                string qrText = this.ReadTextFromQrBarCode(res);
-                if (content == qrText) {
-                    return res;
-                }
-
                 res.Dispose();
-                retry++;
-                sizeLimit = minWidthPx + (minWidthPx * retry / 2);
+                throw new Exception("Hasil Bar Code Tidak Terbaca, Mohon Perbesar Resolusi");
             }
-
-            throw new Exception("Hasil Bar Code Tidak Terbaca, Mohon Perbesar Resolusi");
         }
 
         public Image GenerateQrCode(string content, int version = -1, int minSizePx = 512) {
-            int retry = 0;
-            int sizeLimit = minSizePx;
+            var qrGenerator = new QRCoder.QRCodeGenerator();
+            QRCoder.QRCodeData qrCodeData = qrGenerator.CreateQrCode(
+                content,
+                QRCoder.QRCodeGenerator.ECCLevel.L,
+                requestedVersion: version
+            );
+            var qrCode = new QRCoder.ArtQRCode(qrCodeData);
 
-            while (retry <= MAX_RETRY) {
-                var qrGenerator = new QRCoder.QRCodeGenerator();
-                QRCoder.QRCodeData qrCodeData = qrGenerator.CreateQrCode(
-                    content,
-                    QRCoder.QRCodeGenerator.ECCLevel.L,
-                    requestedVersion: version
-                );
-                var qrCode = new QRCoder.ArtQRCode(qrCodeData);
+            using (Bitmap qrImage = qrCode.GetGraphic()) {
+                qrImage.MakeTransparent(Color.White);
 
-                using (Bitmap qrImage = qrCode.GetGraphic()) {
-                    qrImage.MakeTransparent(Color.White);
+                int retry = 0;
+                int sizeLimit = minSizePx;
 
+                while (retry <= MAX_RETRY) {
                     var res = new Bitmap(qrImage, new Size(sizeLimit, sizeLimit));
 
                     string qrText = this.ReadTextFromQrBarCode(res);
@@ -110,13 +118,14 @@ namespace bifeldy_sd3_lib_452.Utilities {
                         return res;
                     }
 
-                    res.Dispose();
                     retry++;
                     sizeLimit = minSizePx + (minSizePx * retry / 2);
-                }
-            }
 
-            throw new Exception("Hasil QR Code Tidak Terbaca, Mohon Perbesar Resolusi");
+                    res.Dispose();
+                }
+
+                throw new Exception("Hasil QR Code Tidak Terbaca, Mohon Perbesar Resolusi");
+            }
         }
 
         public Image AddBackground(Image qrImage, Image bgImage) {
