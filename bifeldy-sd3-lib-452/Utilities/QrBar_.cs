@@ -11,12 +11,12 @@
  * 
  */
 
+using ImageProcessor;
+using ImageProcessor.Imaging;
 using System;
 using System.Drawing;
 using System.IO;
-
-using ImageProcessor;
-using ImageProcessor.Imaging;
+using System.Windows.Forms;
 
 // using QRCoder;
 // using ZXing;
@@ -52,16 +52,24 @@ namespace bifeldy_sd3_lib_452.Utilities {
             };
 
             using (Bitmap generatedImage = writer.Write(content)) {
+                generatedImage.MakeTransparent(Color.White);
+
                 int retry = 0;
                 int sizeLimit = minWidthPx;
-
                 int padding = withPadding ? 10 : 0;
+
                 var drawLocation = new Point(padding, padding);
-                var res = new Bitmap(sizeLimit, heightPx);
 
                 while (retry <= MAX_RETRY) {
-                    var size = new Size(sizeLimit - (padding * 2), heightPx - (padding * 2));
-                    var resizeLayer = new ResizeLayer(size, ResizeMode.Stretch);
+                    var res = new Bitmap(sizeLimit, heightPx);
+
+                    var resizeLayer = new ResizeLayer(
+                        new Size(
+                            sizeLimit - (padding * 2),
+                            heightPx - (padding * 2)
+                        ),
+                        ResizeMode.Stretch
+                    );
 
                     using (var img = new Bitmap(generatedImage)) {
                         using (var imageFactory = new ImageFactory(true)) {
@@ -88,9 +96,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
                             }
                         }
                     }
+
+                    res.Dispose();
                 }
 
-                res.Dispose();
                 throw new Exception("Hasil Bar Code Tidak Terbaca, Mohon Perbesar Resolusi");
             }
         }
@@ -104,22 +113,47 @@ namespace bifeldy_sd3_lib_452.Utilities {
             );
             var qrCode = new QRCoder.ArtQRCode(qrCodeData);
 
-            using (Bitmap qrImage = qrCode.GetGraphic()) {
-                qrImage.MakeTransparent(Color.White);
+            using (Bitmap generatedImage = qrCode.GetGraphic()) {
+                generatedImage.MakeTransparent(Color.White);
 
                 int retry = 0;
                 int sizeLimit = minSizePx;
 
+                var drawLocation = new Point(0, 0);
+
                 while (retry <= MAX_RETRY) {
-                    var res = new Bitmap(qrImage, new Size(sizeLimit, sizeLimit));
+                    var res = new Bitmap(sizeLimit, sizeLimit);
 
-                    string qrText = this.ReadTextFromQrBarCode(res);
-                    if (content == qrText) {
-                        return res;
+                    var resizeLayer = new ResizeLayer(
+                        new Size(sizeLimit, sizeLimit),
+                        ResizeMode.Stretch
+                    );
+
+                    using (var img = new Bitmap(generatedImage)) {
+                        using (var imageFactory = new ImageFactory(true)) {
+                            _ = imageFactory.Load(img);
+                            _ = imageFactory.Resize(resizeLayer);
+
+                            using (var outStream = new MemoryStream()) {
+                                _ = imageFactory.Save(outStream);
+
+                                using (var imgResized = Image.FromStream(outStream)) {
+                                    using (var g = Graphics.FromImage(res)) {
+                                        g.DrawImage(imgResized, drawLocation);
+
+                                        string qrText = this.ReadTextFromQrBarCode(res);
+                                        if (content == qrText) {
+                                            return res;
+                                        }
+
+                                        retry++;
+                                        sizeLimit = minSizePx + (minSizePx * retry / 2);
+                                    }
+
+                                }
+                            }
+                        }
                     }
-
-                    retry++;
-                    sizeLimit = minSizePx + (minSizePx * retry / 2);
 
                     res.Dispose();
                 }
