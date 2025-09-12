@@ -16,7 +16,6 @@ using ImageProcessor.Imaging;
 using System;
 using System.Drawing;
 using System.IO;
-using System.Windows.Forms;
 
 // using QRCoder;
 // using ZXing;
@@ -111,6 +110,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 QRCoder.QRCodeGenerator.ECCLevel.L,
                 requestedVersion: version
             );
+
             var qrCode = new QRCoder.ArtQRCode(qrCodeData);
 
             using (Bitmap generatedImage = qrCode.GetGraphic()) {
@@ -163,23 +163,32 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public Image AddBackground(Image qrImage, Image bgImage) {
-            Image qrBackground = null;
-            using (var outStream = new MemoryStream()) {
-                using (var imageFactory = new ImageFactory(true)) {
-                    _ = imageFactory.Load(bgImage);
-                    var size = new Size(qrImage.Width, qrImage.Height);
-                    var resizeLayer = new ResizeLayer(size, ResizeMode.Crop);
-                    _ = imageFactory.Resize(resizeLayer).Brightness(25).Alpha(75).Save(outStream);
-                    qrBackground = Image.FromStream(outStream);
-                    ((Bitmap) qrImage).MakeTransparent(Color.White);
+            var drawLocation = new Point(0, 0);
+
+            var resizeLayer = new ResizeLayer(
+                new Size(qrImage.Width, qrImage.Height),
+                ResizeMode.Crop
+            );
+
+            using (var imageFactory = new ImageFactory(true)) {
+                _ = imageFactory.Load(bgImage);
+                _ = imageFactory.Resize(resizeLayer);
+                _ = imageFactory.Brightness(25);
+                _ = imageFactory.Alpha(75);
+
+                using (var outStream = new MemoryStream()) {
+                    _ = imageFactory.Save(outStream);
+
+                    var qrBackground = Image.FromStream(outStream);
+                    ((Bitmap)qrBackground).MakeTransparent(Color.White);
 
                     using (var g = Graphics.FromImage(qrBackground)) {
-                        g.DrawImage(qrImage, new Point(0, 0));
+                        g.DrawImage(qrImage, drawLocation);
+
+                        return qrBackground;
                     }
                 }
             }
-
-            return qrBackground;
         }
 
         public Image AddLogo(Image qrImage, Image overlayImage, double logoScale) {
@@ -191,33 +200,41 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
             using (var g = Graphics.FromImage(qrImage)) {
                 g.DrawImage(logoImage, new Point(deltaWidth / 2, deltaHeigth / 2));
-            }
 
-            return qrImage;
+                return qrImage;
+            }
         }
 
         public Image AddQrCaption(Image qrImage, string caption) {
-            var qrImageExtended = (Bitmap) qrImage;
+            var drawLocation = new Point(0, 0);
 
             using (var font = new Font(FontFamily.GenericMonospace, (float) qrImage.Width / Math.Max(caption.Length, 45))) {
-                qrImageExtended = new Bitmap(qrImage.Width, qrImage.Height + font.Height + (2 * MARGIN));
+                var qrImageExtended = new Bitmap(qrImage.Width, qrImage.Height + font.Height + (2 * MARGIN));
 
                 using (var g = Graphics.FromImage(qrImageExtended)) {
                     using (var frBrush = new SolidBrush(Color.Black)) {
                         using (var bgBrush = new SolidBrush(Color.White)) {
                             using (var format = new StringFormat()) {
                                 format.Alignment = StringAlignment.Center;
+
                                 g.FillRectangle(bgBrush, 0, 0, qrImageExtended.Width, qrImageExtended.Height);
-                                g.DrawImage(qrImage, new Point(0, 0));
-                                var rect = new RectangleF(MARGIN / 2, qrImageExtended.Height - font.Height - MARGIN, qrImageExtended.Width - MARGIN, font.Height);
+                                g.DrawImage(qrImage, drawLocation);
+
+                                var rect = new RectangleF(
+                                    MARGIN / 2,
+                                    qrImageExtended.Height - font.Height - MARGIN,
+                                    qrImageExtended.Width - MARGIN,
+                                    font.Height
+                                );
+
                                 g.DrawString(caption, font, frBrush, rect, format);
+
+                                return qrImageExtended;
                             }
                         }
                     }
                 }
             }
-
-            return qrImageExtended;
         }
 
         public string ReadTextFromQrBarCode(Image bitmapImage) {
@@ -229,7 +246,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     TryHarder = true
                 }
             };
+
             ZXing.Result result = reader.Decode((Bitmap) bitmapImage);
+
             return result.Text;
         }
 
