@@ -99,18 +99,21 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     requestedVersion: version
                 );
                 var qrCode = new QRCoder.ArtQRCode(qrCodeData);
-                Bitmap qrImage = qrCode.GetGraphic();
-                qrImage.MakeTransparent(Color.White);
-                var img = new Bitmap(qrImage, new Size(sizeLimit, sizeLimit));
 
-                string qrText = this.ReadTextFromQrBarCode(img);
-                if (content == qrText) {
-                    return img;
+                using (Bitmap qrImage = qrCode.GetGraphic()) {
+                    qrImage.MakeTransparent(Color.White);
+
+                    var res = new Bitmap(qrImage, new Size(sizeLimit, sizeLimit));
+
+                    string qrText = this.ReadTextFromQrBarCode(res);
+                    if (content == qrText) {
+                        return res;
+                    }
+
+                    res.Dispose();
+                    retry++;
+                    sizeLimit = minSizePx + (minSizePx * retry / 2);
                 }
-
-                img.Dispose();
-                retry++;
-                sizeLimit = minSizePx + (minSizePx * retry / 2);
             }
 
             throw new Exception("Hasil QR Code Tidak Terbaca, Mohon Perbesar Resolusi");
