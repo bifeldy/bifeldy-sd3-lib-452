@@ -129,8 +129,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
             IDictionary<string, dynamic> dict = this._converter.JsonToObject<IDictionary<string, dynamic>>(jsonDb);
             foreach (KeyValuePair<string, dynamic> kvp in dict) {
-                IDictionary<string, dynamic>[] tblRows = kvp.Value.ToObject<IDictionary<string, dynamic>[]>();
-                foreach (IDictionary<string, dynamic> tblRow in tblRows) {
+                foreach (IDictionary<string, dynamic> tblRow in kvp.Value) {
                     string sqlInsertColumnQuery = $" INSERT INTO {kvp.Key} ( ";
                     string sqlInsertValuesQuery = $" ) VALUES ( ";
                     var sqlInsertParam = new List<CDbQueryParamBind>();
