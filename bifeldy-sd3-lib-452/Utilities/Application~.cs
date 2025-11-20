@@ -139,8 +139,16 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 this.GetConfig("setting_kunci_suffix")
             ) ?? string.Empty;
 
+            string settingTxtPath = string.IsNullOrEmpty(id) ? "C:\\Application\\Setting.txt" : $"C:\\Application\\Setting_{id}.txt";
+
             bool localDbOnly = this._config.Get<bool>("LocalDbOnly", bool.Parse(this.GetConfig("local_db_only")));
-            if (localDbOnly && (!File.Exists("C:\\Application\\Setting.txt") || !File.Exists($"C:\\Application\\Setting_{id}.txt"))) {
+            if (!localDbOnly && !File.Exists(settingTxtPath)) {
+                string errMsg = "File Tidak Ada" + Environment.NewLine + settingTxtPath;
+                _ = MessageBox.Show(errMsg, "SettingLib/Rest", MessageBoxButton.OK, MessageBoxImage.Error);
+                Environment.Exit(-1);
+                return null;
+            }
+            else if (localDbOnly && !File.Exists(settingTxtPath)) {
                 return null;
             }
 
