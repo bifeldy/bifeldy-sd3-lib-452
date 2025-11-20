@@ -93,6 +93,9 @@ namespace bifeldy_sd3_lib_452.Extensions {
                         }
 
                         string text = value.ToString();
+                        if (value is DateTime tgl) {
+                            text = tgl.ToString("O");
+                        }
 
                         if (allUppercase) {
                             text = text.ToUpper();

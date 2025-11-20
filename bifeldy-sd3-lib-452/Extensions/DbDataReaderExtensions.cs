@@ -10,6 +10,7 @@
  * 
  */
 
+using Google.Protobuf.WellKnownTypes;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -111,7 +112,12 @@ namespace bifeldy_sd3_lib_452.Extensions {
                             return "";
                         }
 
-                        string text = dr.GetValue(i).ToString();
+                        object value = dr.GetValue(i);
+
+                        string text = value.ToString();
+                        if (value is DateTime tgl) {
+                            text = tgl.ToString("O");
+                        }
 
                         if (allUppercase) {
                             text = text.ToUpper();
