@@ -53,7 +53,7 @@ namespace bifeldy_sd3_lib_452.Databases {
             try {
                 this.DbConnectionString = $"Data Source={this.DbName}";
                 if (string.IsNullOrEmpty(this.DbName)) {
-                    throw new Exception("Database Tidak Tersedia");
+                    throw new Exception("Database Sqlite Tidak Tersedia");
                 }
 
                 this.DatabaseConnection = new SQLiteConnection(this.DbConnectionString);

@@ -67,7 +67,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                     string.IsNullOrEmpty(this.DbUsername) ||
                     string.IsNullOrEmpty(this.DbPassword)
                 ) {
-                    throw new Exception("Database Tidak Tersedia");
+                    throw new Exception("Database Oracle Tidak Tersedia");
                 }
 
                 this.DatabaseConnection = new OracleConnection(this.DbConnectionString);

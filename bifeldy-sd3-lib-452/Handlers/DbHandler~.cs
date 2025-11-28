@@ -62,7 +62,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<bool> OraPg_TruncateTable(string TableName);
         Task<bool> OraPg_BulkInsertInto(string tableName, DataTable dataTable);
         Task<List<string>> OraPg_RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null);
-        Task<string> OraPg_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool rawQueryWithoutParam = false, bool doubleQuote = true);
+        Task<string> OraPg_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool doubleQuote = true);
         Task<T> OraPg_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<bool> OraPg_ExecQuery(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<DbDataReader> OraPg_ExecReaderAsync(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
@@ -78,7 +78,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<List<T>> Oracle_GetList<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<CDbExecProcResult> Oracle_CALL_(string procedureName, List<CDbQueryParamBind> bindParam = null);
         Task<List<string>> Oracle_RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null);
-        Task<string> Oracle_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool rawQueryWithoutParam = false, bool doubleQuote = true);
+        Task<string> Oracle_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool doubleQuote = true);
         Task<bool> Postgres_TruncateTable(string TableName);
         Task<bool> Postgres_BulkInsertInto(string tableName, DataTable dataTable);
         Task<T> Postgres_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
@@ -88,7 +88,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<List<T>> Postgres_GetList<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<CDbExecProcResult> Postgres_CALL_(string procedureName, List<CDbQueryParamBind> bindParam = null);
         Task<List<string>> Postgres_RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null);
-        Task<string> Postgres_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool rawQueryWithoutParam = false, bool doubleQuote = true);
+        Task<string> Postgres_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool doubleQuote = true);
         Task<bool> MsSql_TruncateTable(string TableName);
         Task<bool> MsSql_BulkInsertInto(string tableName, DataTable dataTable);
         Task<T> MsSql_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
@@ -98,7 +98,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<List<T>> MsSql_GetList<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<CDbExecProcResult> MsSql_CALL_(string procedureName, List<CDbQueryParamBind> bindParam = null);
         Task<List<string>> MsSql_RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null);
-        Task<string> MsSql_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool rawQueryWithoutParam = false, bool doubleQuote = true);
+        Task<string> MsSql_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool doubleQuote = true);
         Task<bool> MySql_TruncateTable(string TableName);
         Task<bool> MySql_BulkInsertInto(string tableName, DataTable dataTable);
         Task<T> MySql_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
@@ -108,7 +108,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<List<T>> MySql_GetList<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<CDbExecProcResult> MySql_CALL_(string procedureName, List<CDbQueryParamBind> bindParam = null);
         Task<List<string>> MySql_RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null);
-        Task<string> MySql_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool rawQueryWithoutParam = false, bool doubleQuote = true);
+        Task<string> MySql_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool doubleQuote = true);
         Task<bool> SQLite_TruncateTable(string TableName);
         Task<bool> SQLite_BulkInsertInto(string tableName, DataTable dataTable);
         Task<T> SQLite_ExecScalar<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
@@ -117,7 +117,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         Task<DataTable> SQLite_GetDataTable(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<List<T>> SQLite_GetList<T>(string sqlQuery, List<CDbQueryParamBind> bindParam = null);
         Task<List<string>> SQLite_RetrieveBlob(string stringPathDownload, string queryString, List<CDbQueryParamBind> bindParam = null, string stringCustomSingleFileName = null);
-        Task<string> SQLite_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool rawQueryWithoutParam = false, bool doubleQuote = true);
+        Task<string> SQLite_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool doubleQuote = true);
     }
 
     public class CDbHandler : IDbHandler {
@@ -652,8 +652,8 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return await this.OraPg?.RetrieveBlob(stringPathDownload, queryString, bindParam, stringCustomSingleFileName);
         }
 
-        public async Task<string> OraPg_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool rawQueryWithoutParam = false, bool doubleQuote = true) {
-            return await this.OraPg?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath, useRawQueryWithoutParam: rawQueryWithoutParam, useDoubleQuote: doubleQuote);
+        public async Task<string> OraPg_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool doubleQuote = true) {
+            return await this.OraPg?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath, useRawQueryWithoutParam: true, useDoubleQuote: doubleQuote);
         }
 
         /* ** */
@@ -694,8 +694,8 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return await this.Oracle?.RetrieveBlob(stringPathDownload, queryString, bindParam, stringCustomSingleFileName);
         }
 
-        public async Task<string> Oracle_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool rawQueryWithoutParam = false, bool doubleQuote = true) {
-            return await this.Oracle?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath, useRawQueryWithoutParam: rawQueryWithoutParam, useDoubleQuote: doubleQuote);
+        public async Task<string> Oracle_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool doubleQuote = true) {
+            return await this.Oracle?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath, useRawQueryWithoutParam: true, useDoubleQuote: doubleQuote);
         }
 
         /* ** */
@@ -736,8 +736,8 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return await this.Postgres?.RetrieveBlob(stringPathDownload, queryString, bindParam, stringCustomSingleFileName);
         }
 
-        public async Task<string> Postgres_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool rawQueryWithoutParam = false, bool doubleQuote = true) {
-            return await this.Postgres?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath, useRawQueryWithoutParam: rawQueryWithoutParam, useDoubleQuote: doubleQuote);
+        public async Task<string> Postgres_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool doubleQuote = true) {
+            return await this.Postgres?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath, useRawQueryWithoutParam: true, useDoubleQuote: doubleQuote);
         }
 
         /* ** */
@@ -778,8 +778,8 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return await this.MsSql?.RetrieveBlob(stringPathDownload, queryString, bindParam, stringCustomSingleFileName);
         }
 
-        public async Task<string> MsSql_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool rawQueryWithoutParam = false, bool doubleQuote = true) {
-            return await this.MsSql?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath, useRawQueryWithoutParam: rawQueryWithoutParam, useDoubleQuote: doubleQuote);
+        public async Task<string> MsSql_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool doubleQuote = true) {
+            return await this.MsSql?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath, useRawQueryWithoutParam: true, useDoubleQuote: doubleQuote);
         }
 
         /* ** */
@@ -820,8 +820,8 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return await this.MySql?.RetrieveBlob(stringPathDownload, queryString, bindParam, stringCustomSingleFileName);
         }
 
-        public async Task<string> MySql_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool rawQueryWithoutParam = false, bool doubleQuote = true) {
-            return await this.MySql?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath, useRawQueryWithoutParam: rawQueryWithoutParam, useDoubleQuote: doubleQuote);
+        public async Task<string> MySql_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool doubleQuote = true) {
+            return await this.MySql?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath, useRawQueryWithoutParam: true, useDoubleQuote: doubleQuote);
         }
 
         /* ** */
@@ -862,8 +862,8 @@ namespace bifeldy_sd3_lib_452.Handlers {
             return await this.Sqlite?.RetrieveBlob(stringPathDownload, queryString, bindParam, stringCustomSingleFileName);
         }
 
-        public async Task<string> SQLite_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool rawQueryWithoutParam = false, bool doubleQuote = true) {
-            return await this.Sqlite?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath, useRawQueryWithoutParam: rawQueryWithoutParam, useDoubleQuote: doubleQuote);
+        public async Task<string> SQLite_BulkGetCsv(string rawQueryVulnerableSqlInjection, string delimiter, string filename, string outputPath = null, bool doubleQuote = true) {
+            return await this.Sqlite?.BulkGetCsv(rawQueryVulnerableSqlInjection, delimiter, filename, outputFolderPath: outputPath, useRawQueryWithoutParam: true, useDoubleQuote: doubleQuote);
         }
 
     }

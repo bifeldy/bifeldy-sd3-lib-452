@@ -25,7 +25,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
     public interface IUpdater {
         bool CheckUpdater(int newVersionTargetRequested = 0);
-        Task UpdateSqliteDatabase();
+        Task UpdateSqliteDbFromFtp(string jsonFileName = null);
     }
 
     public sealed class CUpdater : IUpdater {
@@ -98,7 +98,11 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return false;
         }
 
-        public async Task UpdateSqliteDatabase() {
+        public async Task UpdateSqliteDbFromFtp(string jsonFileName = null) {
+            if (string.IsNullOrEmpty(jsonFileName)) {
+                jsonFileName = $"{this._app.AppName}.json";
+            }
+
             var Directories = new List<string>();
 
             var ftpRequest = (FtpWebRequest) WebRequest.Create(new Uri(this.ConnectionString));
@@ -114,7 +118,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 }
             }
 
-            string jsonDbPath = Directories.Find(d => d.ToUpper().Contains($"{this._app.AppName}.json".ToUpper()));
+            string jsonDbPath = Directories.Find(d => d.ToUpper().Contains(jsonFileName.ToUpper()));
             if (string.IsNullOrEmpty(jsonDbPath)) {
                 return;
             }
@@ -133,26 +137,31 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     string sqlInsertColumnQuery = $" INSERT INTO {kvp.Key} ( ";
                     string sqlInsertValuesQuery = $" ) VALUES ( ";
                     var sqlInsertParam = new List<CDbQueryParamBind>();
+
                     string sqlUpdateQuery = $" UPDATE {kvp.Key} SET ";
                     var sqlUpdateParam = new List<CDbQueryParamBind>();
-                    string sqlUpdateCondition = $" WHERE ";
-                    long i = 0;
+                    string sqlUpdateCondition = await this._db.SQLite_ExecScalar<string>($@"
+                        SELECT ' WHERE ' || GROUP_CONCAT(name || ' = :' || name, ' AND ') || ' ' AS where_update
+                        FROM pragma_table_info(""{kvp.Key}"") WHERE pk > 0;
+                    ");
+
                     foreach (KeyValuePair<string, dynamic> row in tblRow) {
                         string column = row.Key;
                         dynamic value = row.Value;
-                        if (i == 0) {
-                            sqlUpdateCondition += $" {column} = :{column} ";
-                        }
-                        else {
-                            if (i > 1) {
-                                sqlUpdateQuery += " , ";
+
+                        if (!string.IsNullOrEmpty(sqlUpdateCondition)) {
+                            if (!sqlUpdateCondition.Contains(column)) {
+                                if (sqlUpdateQuery.Contains(":")) {
+                                    sqlUpdateQuery += " , ";
+                                }
+
+                                sqlUpdateQuery += $" {column} = :{column} ";
                             }
 
-                            sqlUpdateQuery += $" {column} = :{column} ";
+                            sqlUpdateParam.Add(new CDbQueryParamBind { NAME = column, VALUE = value });
                         }
 
-                        sqlUpdateParam.Add(new CDbQueryParamBind { NAME = column, VALUE = value });
-                        if (i > 0) {
+                        if (sqlInsertValuesQuery.Contains(":")) {
                             sqlInsertColumnQuery += " , ";
                             sqlInsertValuesQuery += " , ";
                         }
@@ -160,7 +169,6 @@ namespace bifeldy_sd3_lib_452.Utilities {
                         sqlInsertColumnQuery += $" {column} ";
                         sqlInsertValuesQuery += $" :{column} ";
                         sqlInsertParam.Add(new CDbQueryParamBind { NAME = column, VALUE = value });
-                        i++;
                     }
 
                     try {
@@ -168,8 +176,15 @@ namespace bifeldy_sd3_lib_452.Utilities {
                         _ = await this._db.SQLite_ExecQuery(sql, sqlInsertParam);
                     }
                     catch {
-                        string sql = sqlUpdateQuery + sqlUpdateCondition;
-                        _ = await this._db.SQLite_ExecQuery(sql, sqlUpdateParam);
+                        try {
+                            if (!string.IsNullOrEmpty(sqlUpdateCondition)) {
+                                string sql = sqlUpdateQuery + sqlUpdateCondition;
+                                _ = await this._db.SQLite_ExecQuery(sql, sqlUpdateParam);
+                            }
+                        }
+                        catch (Exception ex) {
+                            this._logger.WriteError(ex);
+                        }
                     }
                 }
             }

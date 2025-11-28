@@ -66,7 +66,7 @@ namespace bifeldy_sd3_lib_452.Databases {
                     string.IsNullOrEmpty(this.DbPassword) ||
                     string.IsNullOrEmpty(this.DbName)
                 ) {
-                    throw new Exception("Database Tidak Tersedia");
+                    throw new Exception("Database Postgre Tidak Tersedia");
                 }
 
                 this.DatabaseConnection = new NpgsqlConnection(this.DbConnectionString);
