@@ -91,10 +91,31 @@ namespace bifeldy_sd3_lib_452.Databases {
                             }
 
                             bindStr += $"{pName}_{id}";
-                            _ = this.DatabaseCommand.Parameters.Add(new SQLiteParameter {
-                                ParameterName = $"{prefix}{pName}_{id}",
+
+                            var param = new SQLiteParameter {
+                                ParameterName = $"{pName}_{id}",
                                 Value = data ?? DBNull.Value
-                            });
+                            };
+
+                            if (parameters[i].SIZE > 0) {
+                                param.Size = parameters[i].SIZE;
+                            }
+
+                            if (parameters[i].DIRECTION > 0) {
+                                param.Direction = parameters[i].DIRECTION;
+                            }
+
+                            if (parameters[i].DATA_TYPE != null) {
+                                if (parameters[i].DATA_TYPE.GetType() == typeof(DbType)) {
+                                    param.DbType = parameters[i].DATA_TYPE;
+                                }
+                                else {
+                                    param.DbType = Enum.Parse(typeof(DbType), parameters[i].DATA_TYPE, true);
+                                }
+                            }
+
+                            _ = this.DatabaseCommand.Parameters.Add(param);
+
                             id++;
                         }
 
@@ -106,12 +127,22 @@ namespace bifeldy_sd3_lib_452.Databases {
                             ParameterName = pName,
                             Value = pVal ?? DBNull.Value
                         };
+
                         if (parameters[i].SIZE > 0) {
                             param.Size = parameters[i].SIZE;
                         }
 
                         if (parameters[i].DIRECTION > 0) {
                             param.Direction = parameters[i].DIRECTION;
+                        }
+
+                        if (parameters[i].DATA_TYPE != null) {
+                            if (parameters[i].DATA_TYPE.GetType() == typeof(DbType)) {
+                                param.DbType = parameters[i].DATA_TYPE;
+                            }
+                            else {
+                                param.DbType = Enum.Parse(typeof(DbType), parameters[i].DATA_TYPE, true);
+                            }
                         }
 
                         _ = this.DatabaseCommand.Parameters.Add(param);

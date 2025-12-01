@@ -20,6 +20,7 @@ namespace bifeldy_sd3_lib_452.Models {
         public dynamic VALUE { get; set; }
         public int SIZE { get; set; }
         public ParameterDirection DIRECTION { get; set; }
+        public dynamic DATA_TYPE { get; set; }
     }
 
 }
