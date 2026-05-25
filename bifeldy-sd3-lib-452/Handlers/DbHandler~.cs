@@ -31,6 +31,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
     public interface IDbHandler {
         bool LocalDbOnly { get; }
         string LoggedInUsername { get; set; }
+        string LoggedInUsernik { get; set; }
         string DbName { get; }
         string GetAllAvailableDbConnectionsString();
         void CloseAllConnection(bool force = false);
@@ -137,6 +138,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         private string DcJenis = null;
 
         public string LoggedInUsername { get; set; }
+        public string LoggedInUsernik { get; set; }
 
         public CDbHandler(IApplication app, IConfig config, IOracle oracle, IPostgres postgres, IMsSQL mssql, IMySQL mysql, ISqlite sqlite) {
             this.LocalDbOnly = config.Get<bool>("LocalDbOnly", bool.Parse(app.GetConfig("local_db_only")));
@@ -467,7 +469,8 @@ namespace bifeldy_sd3_lib_452.Handlers {
         public async Task<bool> LoginUser(string userNameNik, string password) {
             string query = $@"
                 SELECT
-                    {(this.LocalDbOnly ? "uname" : "user_name")}
+                    {(this.LocalDbOnly ? "uname" : "user_name")} as Username,
+                    {(this.LocalDbOnly ? "unik" : "user_nik")} as Usernik
                 FROM
                     {(this.LocalDbOnly ? "users" : "dc_user_t")}
                 WHERE
@@ -487,12 +490,28 @@ namespace bifeldy_sd3_lib_452.Handlers {
                     byte[] pswd = new SHA1Managed().ComputeHash(Encoding.UTF8.GetBytes(password));
                     string hash = string.Concat(pswd.Select(b => b.ToString("x2")));
                     param.Add(new CDbQueryParamBind { NAME = "pass", VALUE = hash });
-                    this.LoggedInUsername = await this.Sqlite.ExecScalarAsync<string>(query, param);
+
+                    // GANTI ExecScalarAsync dengan method yang mengembalikan satu baris data (bukan objek tunggal)
+                    // Contoh menggunakan ExecQueryFirstAsync atau method sejenis di library Anda
+                    DataTable dataUser = await this.Sqlite.GetDataTableAsync(query, param);
+                    if (dataUser.Rows.Count > 0) {
+                        this.LoggedInUsername = dataUser.Rows[0]["Username"].ToString();
+                        this.LoggedInUsernik = dataUser.Rows[0]["Usernik"].ToString();
+                    }
+
+                    //this.LoggedInUsername = await this.Sqlite.ExecScalarAsync<string>(query, param);
                 }
                 else {
                     param.Add(new CDbQueryParamBind { NAME = "unik", VALUE = userNameNik });
                     param.Add(new CDbQueryParamBind { NAME = "pass", VALUE = password });
-                    this.LoggedInUsername = await this.OraPg?.ExecScalarAsync<string>(query, param);
+
+                    // Lakukan hal yang sama untuk DB Server (OraPg)
+                    DataTable dataUser = await this.OraPg?.GetDataTableAsync(query, param);
+                    if (dataUser.Rows.Count > 0) {
+                        this.LoggedInUsername = dataUser.Rows[0]["Username"].ToString();
+                        this.LoggedInUsernik = dataUser.Rows[0]["Usernik"].ToString();
+                    }
+                    //this.LoggedInUsername = await this.OraPg?.ExecScalarAsync<string>(query, param);
                 }
             }
 
