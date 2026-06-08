@@ -317,7 +317,7 @@ namespace bifeldy_sd3_lib_452.Models {
         }
     }
 
-    public sealed class GcsMediaUpload : InsertMediaUpload {
+    public sealed class GcsMediaUpload : InsertMediaUpload, IDisposable {
 
         public GcsMediaUpload(
             IClientService clientService,
@@ -327,6 +327,11 @@ namespace bifeldy_sd3_lib_452.Models {
             string contentType
         ) : base(clientService, body, bucket, stream, contentType) {
             //
+        }
+
+        public void Dispose() {
+            this.ContentStream?.Close();
+            this.ContentStream?.Dispose();
         }
 
     }

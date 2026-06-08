@@ -47,6 +47,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         Task<GcsTransferJob> CreateS3ToGcsTransferJob(string s3Bucket, string awsAccessKey, string awsSecretKey, string gcsBucket, string objectPrefix);
         Task<List<GcsTransferJob>> ListTransferJobsAsync();
         Task DeleteTransferJobAsync(string jobName);
+        void CleanUp(GcsMediaUpload mediaUpload);
     }
 
     public sealed class CGoogleCloudStorage : IGoogleCloudStorage {
@@ -546,6 +547,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
             PatchRequest request = this.stsService.TransferJobs.Patch(updateRequest, jobName);
             _ = await request.ExecuteAsync();
         }
+
+        public void CleanUp(GcsMediaUpload mediaUpload) => mediaUpload.Dispose();
 
     }
 
