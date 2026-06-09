@@ -14,6 +14,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
@@ -28,7 +29,6 @@ using Google.Apis.Storagetransfer.v1;
 using Google.Apis.Storagetransfer.v1.Data;
 using Google.Cloud.Storage.V1;
 using static Google.Apis.Storagetransfer.v1.TransferJobsResource;
-using System.Linq;
 
 namespace bifeldy_sd3_lib_452.Utilities {
 
@@ -37,8 +37,8 @@ namespace bifeldy_sd3_lib_452.Utilities {
         void InitializeClient();
         Task<List<GcsBucket>> ListAllBuckets();
         Task<(List<GcsPrefix>, List<GcsObject>)> ListAllObjects(string bucketName, string prefix = "", string delimiter = "");
-        GcsMediaUpload GenerateUploadMedia(FileInfo fileInfo, string bucketName);
-        GcsMediaUpload GenerateUploadMedia(string fileKey, string bucketName, Stream stream, string contentType);
+        GcsMediaUpload GenerateUploadMedia(FileInfo fileInfo, string bucketName, string folderName = null);
+        GcsMediaUpload GenerateUploadMedia(string fileKey, string bucketName, Stream stream, string contentType, string folderName = null);
         Task<Uri> CreateUploadUri(GcsMediaUpload mediaUpload);
         Task<CGcsUploadProgress> UploadFile(GcsMediaUpload mediaUpload, Uri uploadSession = null, Action<CGcsUploadProgress> uploadProgress = null, bool forceLogging = false);
         Task DownloadFile(GcsObject fileObj, string fileLocalPath, Action<CGcsDownloadProgress> downloadProgress = null, bool forceLogging = false);
@@ -277,9 +277,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return (resultPrefixes, resultObjects);
         }
 
-        public GcsMediaUpload GenerateUploadMedia(FileInfo fileInfo, string bucketName) {
+        public GcsMediaUpload GenerateUploadMedia(FileInfo fileInfo, string bucketName, string folderName = null) {
             var obj = new GcsObject {
-                Name = fileInfo.Name,
+                Name = $"{folderName}{fileInfo.Name}",
                 Bucket = bucketName,
                 ContentType = this._chiper.GetMime(fileInfo.FullName)
             };
@@ -292,9 +292,9 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return mu;
         }
 
-        public GcsMediaUpload GenerateUploadMedia(string fileKey, string bucketName, Stream stream, string contentType) {
+        public GcsMediaUpload GenerateUploadMedia(string fileKey, string bucketName, Stream stream, string contentType, string folderName = null) {
             var obj = new GcsObject {
-                Name = fileKey,
+                Name = $"{folderName}{fileKey}",
                 Bucket = bucketName,
                 ContentType = contentType
             };
@@ -341,12 +341,21 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public async Task DownloadFile(GcsObject fileObj, string fileLocalPath, Action<CGcsDownloadProgress> downloadProgress = null, bool forceLogging = false) {
-            string fileTempPath = Path.Combine(this._berkas.DownloadFolderPath, fileObj.Name);
+            string fileTempPath = Path.Combine(this._berkas.DownloadFolderPath, Path.GetFileName(fileLocalPath));
 
             long lastDownloadedBytes = 0;
             if (File.Exists(fileTempPath)) {
                 lastDownloadedBytes = new FileInfo(fileTempPath).Length;
-                // lastDownloadedBytes++;
+            }
+
+            if (lastDownloadedBytes >= (long)fileObj.Size) {
+                this._logger.WriteInfo($"{this.GetType().Name}DownloadSkipped", $"{fileLocalPath} is already fully downloaded.", force: forceLogging);
+                downloadProgress?.Invoke(new CGcsDownloadProgress {
+                    Status = EGcsDownloadStatus.Completed,
+                    BytesDownloaded = (long)fileObj.Size,
+                    Exception = null
+                });
+                return;
             }
 
             var doo = new DownloadObjectOptions() {
@@ -358,10 +367,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 _ = Enum.TryParse(progressNew.Status.ToString(), out EGcsDownloadStatus progressStatus);
                 var dwPrgs = new CGcsDownloadProgress {
                     Status = progressStatus,
-                    BytesDownloaded = progressNew.BytesDownloaded,
+                    BytesDownloaded = lastDownloadedBytes + progressNew.BytesDownloaded,
                     Exception = progressNew.Exception
                 };
-                downloadProgress(dwPrgs);
+                downloadProgress?.Invoke(dwPrgs);
             });
 
             StorageClient storage = await StorageClient.CreateAsync(this.googleCredential);
