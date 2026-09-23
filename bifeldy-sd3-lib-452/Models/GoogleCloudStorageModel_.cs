@@ -23,6 +23,11 @@ using static Google.Apis.Storage.v1.ObjectsResource;
 
 namespace bifeldy_sd3_lib_452.Models {
 
+    public sealed class GcsPrefix {
+        public string BucketName { get; set; }
+        public string Prefix { get; set; }
+    }
+
     public enum EGcsUploadStatus {
         NotStarted = 0,
         Starting = 1,
@@ -312,7 +317,7 @@ namespace bifeldy_sd3_lib_452.Models {
         }
     }
 
-    public sealed class GcsMediaUpload : InsertMediaUpload {
+    public sealed class GcsMediaUpload : InsertMediaUpload, IDisposable {
 
         public GcsMediaUpload(
             IClientService clientService,
@@ -324,6 +329,19 @@ namespace bifeldy_sd3_lib_452.Models {
             //
         }
 
+        public void Dispose() {
+            this.ContentStream?.Close();
+            this.ContentStream?.Dispose();
+        }
+
+    }
+
+    public sealed class GcsTransferJob {
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public string Status { get; set; }
+        public string ProjectId { get; set; }
+        public DateTime? CreationTime { get; set; }
     }
 
 }

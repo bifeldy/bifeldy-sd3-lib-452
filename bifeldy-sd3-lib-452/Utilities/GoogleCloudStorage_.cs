@@ -14,19 +14,21 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using System.Web;
+
+using bifeldy_sd3_lib_452.Models;
 
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Download;
+using Google.Apis.Upload;
 using Google.Apis.Services;
 using Google.Apis.Storage.v1;
-using Google.Apis.Upload;
-
+using Google.Apis.Storagetransfer.v1;
+using Google.Apis.Storagetransfer.v1.Data;
 using Google.Cloud.Storage.V1;
-
-using bifeldy_sd3_lib_452.Models;
+using static Google.Apis.Storagetransfer.v1.TransferJobsResource;
 
 namespace bifeldy_sd3_lib_452.Utilities {
 
@@ -34,13 +36,18 @@ namespace bifeldy_sd3_lib_452.Utilities {
         void LoadCredential(string pathFile = null, bool isEncrypted = false);
         void InitializeClient();
         Task<List<GcsBucket>> ListAllBuckets();
-        Task<List<GcsObject>> ListAllObjects(string path, string prefix = "", string delimiter = "");
-        GcsMediaUpload GenerateUploadMedia(FileInfo fileInfo, string bucketName, Stream stream);
+        Task<(List<GcsPrefix>, List<GcsObject>)> ListAllObjects(string bucketName, string prefix = "", string delimiter = "");
+        GcsMediaUpload GenerateUploadMedia(FileInfo fileInfo, string bucketName, string folderName = null);
+        GcsMediaUpload GenerateUploadMedia(string fileKey, string bucketName, Stream stream, string contentType, string folderName = null);
         Task<Uri> CreateUploadUri(GcsMediaUpload mediaUpload);
         Task<CGcsUploadProgress> UploadFile(GcsMediaUpload mediaUpload, Uri uploadSession = null, Action<CGcsUploadProgress> uploadProgress = null, bool forceLogging = false);
         Task DownloadFile(GcsObject fileObj, string fileLocalPath, Action<CGcsDownloadProgress> downloadProgress = null, bool forceLogging = false);
         Task<string> CreateDownloadUrlSigned(GcsObject fileObj, TimeSpan expiredDurationFromNow);
         Task<string> CreateDownloadUrlSigned(GcsObject fileObj, DateTime expiryDateTime);
+        Task<GcsTransferJob> CreateS3ToGcsTransferJob(string s3Bucket, string awsAccessKey, string awsSecretKey, string gcsBucket, string objectPrefix);
+        Task<List<GcsTransferJob>> ListTransferJobsAsync();
+        Task DeleteTransferJobAsync(string jobName);
+        void CleanUp(GcsMediaUpload mediaUpload);
     }
 
     public sealed class CGoogleCloudStorage : IGoogleCloudStorage {
@@ -56,6 +63,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
         private GoogleCredential googleCredential = null;
         private StorageService storageService = null;
         private UrlSigner urlSigner = null;
+        private StoragetransferService stsService = null;
 
         public CGoogleCloudStorage(ILogger logger, IChiper chiper, IConverter converter, IBerkas berkas) {
             this._logger = logger;
@@ -72,16 +80,18 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
             string text = File.ReadAllText(this.credentialPath);
             this._logger.WriteInfo($"{this.GetType().Name}Credential", text);
+
             if (isEncrypted) {
                 text = this._chiper.DecryptText(text);
-            }
-            else {
-                File.WriteAllText($"{this.credentialPath}.txt", this._chiper.EncryptText(text));
             }
 
             IDictionary<string, string> json = this._converter.JsonToObject<Dictionary<string, string>>(text);
             _ = json.TryGetValue("project_id", out this.projectId);
-            this.googleCredential = GoogleCredential.FromJson(text).CreateScoped(StorageService.Scope.DevstorageFullControl);
+            this.googleCredential = GoogleCredential.FromJson(text).CreateScoped(
+                StorageService.Scope.DevstorageFullControl,
+                StoragetransferService.Scope.CloudPlatform
+            );
+
             using (var ms = new MemoryStream()) {
                 using (var writer = new StreamWriter(ms)) {
                     writer.Write(text);
@@ -90,19 +100,25 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     this.urlSigner = UrlSigner.FromServiceAccountData(ms);
                 }
             }
+
+            if (!isEncrypted) {
+                File.WriteAllText($"{this.credentialPath}.txt", this._chiper.EncryptText(text));
+            }
         }
 
         public void InitializeClient() {
             if (this.googleCredential == null) {
-                this.LoadCredential(this.credentialPath);
+                this.LoadCredential(this.credentialPath, this.credentialPath.ToLower().EndsWith(".txt"));
             }
 
-            this.storageService = new StorageService(
-                new BaseClientService.Initializer() {
-                    HttpClientInitializer = googleCredential,
-                    ApplicationName = projectId
-                }
-            );
+            var initializer = new BaseClientService.Initializer() {
+                HttpClientInitializer = googleCredential,
+                ApplicationName = projectId
+            };
+
+            this.storageService = new StorageService(initializer);
+            this.stsService = new StoragetransferService(initializer);
+
             this._logger.WriteInfo($"{this.GetType().Name}Client", this.projectId);
         }
 
@@ -167,15 +183,18 @@ namespace bifeldy_sd3_lib_452.Utilities {
             return allBuckets;
         }
 
-        public async Task<List<GcsObject>> ListAllObjects(string path, string prefix = "", string delimiter = "") {
+        public async Task<(List<GcsPrefix>, List<GcsObject>)> ListAllObjects(string bucketName, string prefix = "", string delimiter = "") {
             if (this.storageService == null) {
                 this.InitializeClient();
             }
 
-            var allObjects = new List<GcsObject>();
+            var resultPrefixes = new List<GcsPrefix>();
+            var resultObjects = new List<GcsObject>();
 
-            ObjectsResource.ListRequest request = this.storageService.Objects.List(path);
-            request.Fields = "nextPageToken, items";
+            ObjectsResource.ListRequest request = this.storageService.Objects.List(bucketName);
+
+            request.Fields = "nextPageToken, items, prefixes";
+
             if (!string.IsNullOrEmpty(prefix)) {
                 request.Prefix = prefix;
             }
@@ -192,10 +211,24 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 request.PageToken = pageToken;
                 Google.Apis.Storage.v1.Data.Objects objects = await request.ExecuteAsync();
                 pageToken = objects.NextPageToken;
+
                 if (objects != null) {
+                    if (objects.Prefixes != null) {
+                        foreach (string p in objects.Prefixes) {
+                            resultPrefixes.Add(new GcsPrefix {
+                                BucketName = bucketName,
+                                Prefix = p
+                            });
+                        }
+                    }
+
                     if (objects.Items != null) {
                         foreach (Google.Apis.Storage.v1.Data.Object obj in objects.Items) {
-                            allObjects.Add(new GcsObject {
+                            if (obj.Name == prefix) {
+                                continue;
+                            }
+
+                            resultObjects.Add(new GcsObject {
                                 Owner = obj.Owner,
                                 RetentionExpirationTimeRaw = obj.RetentionExpirationTimeRaw,
                                 RetentionExpirationTime = obj.RetentionExpirationTime,
@@ -241,19 +274,36 @@ namespace bifeldy_sd3_lib_452.Utilities {
             }
             while (pageToken != null);
 
-            return allObjects;
+            return (resultPrefixes, resultObjects);
         }
 
-        public GcsMediaUpload GenerateUploadMedia(FileInfo fileInfo, string bucketName, Stream stream) {
+        public GcsMediaUpload GenerateUploadMedia(FileInfo fileInfo, string bucketName, string folderName = null) {
             var obj = new GcsObject {
-                Name = fileInfo.Name,
+                Name = $"{folderName}{fileInfo.Name}",
                 Bucket = bucketName,
-                ContentType = MimeMapping.GetMimeMapping(fileInfo.Name),
+                ContentType = this._chiper.GetMime(fileInfo.FullName)
             };
 
-            var mu = new GcsMediaUpload(this.storageService, obj, bucketName, stream, obj.ContentType);
-            mu.Fields = "id, name, size, contentType";
-            mu.ChunkSize = ResumableUpload.MinimumChunkSize;
+            var mu = new GcsMediaUpload(this.storageService, obj, bucketName, fileInfo.OpenRead(), obj.ContentType) {
+                Fields = "id, name, size, contentType",
+                ChunkSize = ResumableUpload.MinimumChunkSize
+            };
+
+            return mu;
+        }
+
+        public GcsMediaUpload GenerateUploadMedia(string fileKey, string bucketName, Stream stream, string contentType, string folderName = null) {
+            var obj = new GcsObject {
+                Name = $"{folderName}{fileKey}",
+                Bucket = bucketName,
+                ContentType = contentType
+            };
+
+            var mu = new GcsMediaUpload(this.storageService, obj, bucketName, stream, obj.ContentType) {
+                Fields = "id, name, size, contentType",
+                ChunkSize = ResumableUpload.MinimumChunkSize
+            };
+
             return mu;
         }
 
@@ -283,7 +333,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
             this._logger.WriteInfo($"{this.GetType().Name}UploadCompleted", $"{mediaUpload.Body.Name} ===>>> {mediaUpload.Bucket} :: 100 %", force: forceLogging);
 
             _ = Enum.TryParse(result.Status.ToString(), out EGcsUploadStatus uploadStatus);
-            return  new CGcsUploadProgress {
+            return new CGcsUploadProgress {
                 Status = uploadStatus,
                 BytesSent = result.BytesSent,
                 Exception = result.Exception
@@ -291,12 +341,21 @@ namespace bifeldy_sd3_lib_452.Utilities {
         }
 
         public async Task DownloadFile(GcsObject fileObj, string fileLocalPath, Action<CGcsDownloadProgress> downloadProgress = null, bool forceLogging = false) {
-            string fileTempPath = Path.Combine(this._berkas.DownloadFolderPath, fileObj.Name);
+            string fileTempPath = Path.Combine(this._berkas.DownloadFolderPath, Path.GetFileName(fileLocalPath));
 
             long lastDownloadedBytes = 0;
             if (File.Exists(fileTempPath)) {
                 lastDownloadedBytes = new FileInfo(fileTempPath).Length;
-                // lastDownloadedBytes++;
+            }
+
+            if (lastDownloadedBytes >= (long)fileObj.Size) {
+                this._logger.WriteInfo($"{this.GetType().Name}DownloadSkipped", $"{fileLocalPath} is already fully downloaded.", force: forceLogging);
+                downloadProgress?.Invoke(new CGcsDownloadProgress {
+                    Status = EGcsDownloadStatus.Completed,
+                    BytesDownloaded = (long)fileObj.Size,
+                    Exception = null
+                });
+                return;
             }
 
             var doo = new DownloadObjectOptions() {
@@ -308,10 +367,10 @@ namespace bifeldy_sd3_lib_452.Utilities {
                 _ = Enum.TryParse(progressNew.Status.ToString(), out EGcsDownloadStatus progressStatus);
                 var dwPrgs = new CGcsDownloadProgress {
                     Status = progressStatus,
-                    BytesDownloaded = progressNew.BytesDownloaded,
+                    BytesDownloaded = lastDownloadedBytes + progressNew.BytesDownloaded,
                     Exception = progressNew.Exception
                 };
-                downloadProgress(dwPrgs);
+                downloadProgress?.Invoke(dwPrgs);
             });
 
             StorageClient storage = await StorageClient.CreateAsync(this.googleCredential);
@@ -320,7 +379,6 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
             using (var fs = new FileStream(fileTempPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite)) {
                 await storage.DownloadObjectAsync(fileObj.Bucket, fileObj.Name, fs, doo, progress: idp);
-
                 this._logger.WriteInfo($"{this.GetType().Name}DownloadCompleted", $"{fileLocalPath} <<<=== {fileObj.Bucket}/{fileObj.Name} :: 100 %", force: forceLogging);
             }
         }
@@ -336,6 +394,170 @@ namespace bifeldy_sd3_lib_452.Utilities {
             this._logger.WriteInfo($"{this.GetType().Name}DirectDownloadLinkDateTime", ddl);
             return ddl;
         }
+
+        public async Task<GcsTransferJob> CreateS3ToGcsTransferJob(string s3Bucket, string awsAccessKey, string awsSecretKey, string gcsBucket, string objectPrefix) {
+            if (this.stsService == null) {
+                this.InitializeClient();
+            }
+
+            DateTime now = DateTime.UtcNow;
+
+            var excludeList = new List<string>();
+            string allPossibleNextChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;':\",./<>?`~";
+            foreach (char c in allPossibleNextChars) {
+                excludeList.Add(objectPrefix + c);
+            }
+
+            var transferJob = new TransferJob {
+                Description = $"Transfer {objectPrefix} dari S3 ke GCS via WinForms",
+                Status = "ENABLED",
+                ProjectId = this.projectId,
+                TransferSpec = new TransferSpec {
+                    AwsS3DataSource = new AwsS3Data {
+                        BucketName = s3Bucket,
+                        AwsAccessKey = new AwsAccessKey {
+                            AccessKeyId = awsAccessKey,
+                            SecretAccessKey = awsSecretKey
+                        }
+                    },
+                    GcsDataSink = new GcsData {
+                        BucketName = gcsBucket
+                    },
+                    ObjectConditions = new ObjectConditions {
+                        IncludePrefixes = new List<string> {
+                            objectPrefix
+                        },
+                        ExcludePrefixes = excludeList
+                    },
+                    TransferOptions = new TransferOptions {
+                        OverwriteObjectsAlreadyExistingInSink = false
+                    }
+                },
+                Schedule = new Schedule {
+                    ScheduleStartDate = new Date {
+                        Year = now.Year,
+                        Month = now.Month,
+                        Day = now.Day
+                    },
+                    ScheduleEndDate = new Date {
+                        Year = now.Year,
+                        Month = now.Month,
+                        Day = now.Day
+                    }
+                }
+            };
+
+            this._logger.WriteInfo($"{this.GetType().Name}CreateStsJob", $"Mengirim perintah ke Google untuk {s3Bucket}/{objectPrefix}");
+
+            CreateRequest request = this.stsService.TransferJobs.Create(transferJob);
+            TransferJob googleResponse = await request.ExecuteAsync();
+
+            return new GcsTransferJob {
+                Name = googleResponse.Name,
+                Description = googleResponse.Description,
+                Status = googleResponse.Status,
+                ProjectId = googleResponse.ProjectId,
+                CreationTime = googleResponse.CreationTimeDateTimeOffset?.DateTime
+            };
+        }
+
+        public async Task<List<GcsTransferJob>> ListTransferJobsAsync() {
+            if (this.stsService == null) {
+                this.InitializeClient();
+            }
+
+            var allJobs = new List<TransferJob>();
+            var allOps = new List<Operation>();
+            var results = new List<GcsTransferJob>();
+
+            string filterJob = $"{{\"projectId\": \"{this.projectId}\", \"jobStatuses\": [\"ENABLED\", \"DISABLED\"]}}";
+            ListRequest requestJob = this.stsService.TransferJobs.List(filterJob);
+
+            string pageTokenJob = null;
+            do {
+                requestJob.PageToken = pageTokenJob;
+                ListTransferJobsResponse responseJob = await requestJob.ExecuteAsync();
+
+                if (responseJob.TransferJobs != null) {
+                    allJobs.AddRange(responseJob.TransferJobs);
+                }
+
+                pageTokenJob = responseJob.NextPageToken;
+            }
+            while (pageTokenJob != null);
+
+            string filterOp = $"{{\"projectId\": \"{this.projectId}\"}}";
+            TransferOperationsResource.ListRequest requestOp = this.stsService.TransferOperations.List("transferOperations", filterOp);
+
+            string pageTokenOp = null;
+            do {
+                requestOp.PageToken = pageTokenOp;
+                ListOperationsResponse responseOp = await requestOp.ExecuteAsync();
+
+                if (responseOp.Operations != null) {
+                    allOps.AddRange(responseOp.Operations);
+                }
+
+                pageTokenOp = responseOp.NextPageToken;
+            }
+            while (pageTokenOp != null);
+
+            foreach (TransferJob job in allJobs) {
+                string finalStatus = job.Status;
+
+                Operation myOp = allOps.LastOrDefault(op =>
+                    op.Metadata != null &&
+                    op.Metadata.ContainsKey("transferJobName") &&
+                    op.Metadata["transferJobName"].ToString() == job.Name
+                );
+
+                if (myOp != null) {
+                    if (myOp.Metadata.ContainsKey("status")) {
+                        finalStatus = myOp.Metadata["status"].ToString();
+                    }
+
+                    if (finalStatus == "FAILED") {
+                        if (myOp.Error != null && !string.IsNullOrEmpty(myOp.Error.Message)) {
+                            finalStatus = $"FAILED :: {myOp.Error.Message}";
+                        }
+                        else if (myOp.Metadata.ContainsKey("errorBreakdowns")) {
+                            finalStatus = $"FAILED :: File bermasalah cek di Cloud Console";
+                        }
+                    }
+                }
+
+                results.Add(new GcsTransferJob {
+                    Name = job.Name,
+                    Description = job.Description,
+                    Status = finalStatus,
+                    ProjectId = job.ProjectId,
+                    CreationTime = job.CreationTimeDateTimeOffset?.DateTime
+                });
+            }
+
+            return results.OrderByDescending(j => j.CreationTime).ToList();
+        }
+
+        public async Task DeleteTransferJobAsync(string jobName) {
+            if (this.stsService == null) {
+                this.InitializeClient();
+            }
+
+            var updateRequest = new UpdateTransferJobRequest {
+                ProjectId = this.projectId,
+                TransferJob = new TransferJob {
+                    Status = "DELETED"
+                },
+                UpdateTransferJobFieldMask = "status"
+            };
+
+            this._logger.WriteInfo($"{this.GetType().Name}DeleteJob", $"Menghapus riwayat job {jobName} dari Google Cloud");
+
+            PatchRequest request = this.stsService.TransferJobs.Patch(updateRequest, jobName);
+            _ = await request.ExecuteAsync();
+        }
+
+        public void CleanUp(GcsMediaUpload mediaUpload) => mediaUpload.Dispose();
 
     }
 

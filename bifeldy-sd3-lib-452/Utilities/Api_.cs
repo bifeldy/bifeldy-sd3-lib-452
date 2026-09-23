@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -99,14 +100,14 @@ namespace bifeldy_sd3_lib_452.Utilities {
                             lsContent.Add(
                                 await GetHttpContent(
                                     httpContent[i],
-                                    contentType?.Length > 0 ? contentType[i] : "application/octet-stream",
+                                    contentType?.Length > 0 ? contentType[i] : MediaTypeNames.Application.Octet,
                                     encoding ?? Encoding.UTF8
                                 )
                             );
                         }
                     }
                     else {
-                        lsContent.Add(await GetHttpContent(httpContent, "application/octet-stream"));
+                        lsContent.Add(await GetHttpContent(httpContent, MediaTypeNames.Application.Octet));
                     }
 
                     httpContent = new MultipartFormDataContent();

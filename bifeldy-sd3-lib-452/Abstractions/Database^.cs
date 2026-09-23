@@ -13,6 +13,9 @@
  * 
  */
 
+using bifeldy_sd3_lib_452.Extensions;
+using bifeldy_sd3_lib_452.Models;
+using bifeldy_sd3_lib_452.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -21,10 +24,6 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-
-using bifeldy_sd3_lib_452.Extensions;
-using bifeldy_sd3_lib_452.Models;
-using bifeldy_sd3_lib_452.Utilities;
 
 namespace bifeldy_sd3_lib_452.Abstractions {
 
@@ -329,8 +328,6 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             var result = new List<string>();
             Exception exception = null;
             try {
-                _ = await this._locker.MutexGlobalApp.WaitAsync(-1);
-
                 string _oldCmdTxt = databaseCommand.CommandText;
                 databaseCommand.CommandText = $"SELECT COUNT(*) FROM ( {_oldCmdTxt} ) RetrieveBlob_{DateTime.Now.Ticks}";
                 ulong _totalFiles = await this.ExecScalarAsync<ulong>(databaseCommand);
@@ -339,51 +336,59 @@ namespace bifeldy_sd3_lib_452.Abstractions {
                 }
 
                 databaseCommand.CommandText = _oldCmdTxt;
-                using (DbDataReader rdrGetBlob = await this.ExecReaderAsync(databaseCommand, CommandBehavior.SequentialAccess)) {
-                    if (string.IsNullOrEmpty(stringFileName) && rdrGetBlob.FieldCount != 2) {
-                        throw new Exception($"Jika Nama File Kosong Maka Harus Berjumlah 2 Kolom{Environment.NewLine}SELECT kolom_blob_data, kolom_nama_file FROM ...");
-                    }
-                    else if (!string.IsNullOrEmpty(stringFileName) && rdrGetBlob.FieldCount > 1) {
-                        throw new Exception($"Harus Berjumlah 1 Kolom{Environment.NewLine}SELECT kolom_blob_data FROM ...");
-                    }
 
-                    int bufferSize = 1024;
-                    byte[] outByte = new byte[bufferSize];
+                try {
+                    _ = await this._locker.MutexGlobalApp.WaitAsync(-1);
 
-                    while (await rdrGetBlob.ReadAsync()) {
-                        string filePath = Path.Combine(stringPathDownload, stringFileName);
-
-                        if (rdrGetBlob.FieldCount == 2) {
-                            string fileMultipleName = rdrGetBlob.GetString(1);
-                            if (string.IsNullOrEmpty(fileMultipleName)) {
-                                fileMultipleName = $"{DateTime.Now.Ticks}";
-                            }
-
-                            filePath = Path.Combine(stringPathDownload, fileMultipleName);
+                    using (DbDataReader rdrGetBlob = await this.ExecReaderAsync(databaseCommand, CommandBehavior.SequentialAccess)) {
+                        if (string.IsNullOrEmpty(stringFileName) && rdrGetBlob.FieldCount != 2) {
+                            throw new Exception($"Jika Nama File Kosong Maka Harus Berjumlah 2 Kolom{Environment.NewLine}SELECT kolom_blob_data, kolom_nama_file FROM ...");
+                        }
+                        else if (!string.IsNullOrEmpty(stringFileName) && rdrGetBlob.FieldCount > 1) {
+                            throw new Exception($"Harus Berjumlah 1 Kolom{Environment.NewLine}SELECT kolom_blob_data FROM ...");
                         }
 
-                        using (var fs = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write)) {
-                            using (var bw = new BinaryWriter(fs, encoding ?? Encoding.UTF8)) {
-                                long startIndex = 0;
-                                long retval = rdrGetBlob.GetBytes(0, startIndex, outByte, 0, bufferSize);
+                        int bufferSize = 1024;
+                        byte[] outByte = new byte[bufferSize];
 
-                                while (retval == bufferSize) {
-                                    bw.Write(outByte);
+                        while (await rdrGetBlob.ReadAsync()) {
+                            string filePath = Path.Combine(stringPathDownload, stringFileName);
+
+                            if (rdrGetBlob.FieldCount == 2) {
+                                string fileMultipleName = rdrGetBlob.GetString(1);
+                                if (string.IsNullOrEmpty(fileMultipleName)) {
+                                    fileMultipleName = $"{DateTime.Now.Ticks}";
+                                }
+
+                                filePath = Path.Combine(stringPathDownload, fileMultipleName);
+                            }
+
+                            using (var fs = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write)) {
+                                using (var bw = new BinaryWriter(fs, encoding ?? Encoding.UTF8)) {
+                                    long startIndex = 0;
+                                    long retval = rdrGetBlob.GetBytes(0, startIndex, outByte, 0, bufferSize);
+
+                                    while (retval == bufferSize) {
+                                        bw.Write(outByte);
+                                        bw.Flush();
+                                        startIndex += bufferSize;
+                                        retval = rdrGetBlob.GetBytes(0, startIndex, outByte, 0, bufferSize);
+                                    }
+
+                                    if (retval > 0) {
+                                        bw.Write(outByte, 0, (int)retval);
+                                    }
+
                                     bw.Flush();
-                                    startIndex += bufferSize;
-                                    retval = rdrGetBlob.GetBytes(0, startIndex, outByte, 0, bufferSize);
                                 }
-
-                                if (retval > 0) {
-                                    bw.Write(outByte, 0, (int) retval);
-                                }
-
-                                bw.Flush();
                             }
-                        }
 
-                        result.Add(filePath);
+                            result.Add(filePath);
+                        }
                     }
+                }
+                finally {
+                    _ = this._locker.MutexGlobalApp.Release();
                 }
             }
             catch (Exception ex) {
@@ -392,7 +397,6 @@ namespace bifeldy_sd3_lib_452.Abstractions {
             }
             finally {
                 this.CloseConnection();
-                _ = this._locker.MutexGlobalApp.Release();
             }
 
             return (exception == null) ? result : throw exception;

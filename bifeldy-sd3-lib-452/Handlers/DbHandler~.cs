@@ -31,6 +31,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
     public interface IDbHandler {
         bool LocalDbOnly { get; }
         string LoggedInUsername { get; set; }
+        string LoggedInUsernik { get; set; }
         string DbName { get; }
         string GetAllAvailableDbConnectionsString();
         void CloseAllConnection(bool force = false);
@@ -137,6 +138,7 @@ namespace bifeldy_sd3_lib_452.Handlers {
         private string DcJenis = null;
 
         public string LoggedInUsername { get; set; }
+        public string LoggedInUsernik { get; set; }
 
         public CDbHandler(IApplication app, IConfig config, IOracle oracle, IPostgres postgres, IMsSQL mssql, IMySQL mysql, ISqlite sqlite) {
             this.LocalDbOnly = config.Get<bool>("LocalDbOnly", bool.Parse(app.GetConfig("local_db_only")));
@@ -467,7 +469,11 @@ namespace bifeldy_sd3_lib_452.Handlers {
         public async Task<bool> LoginUser(string userNameNik, string password) {
             string query = $@"
                 SELECT
-                    {(this.LocalDbOnly ? "uname" : "user_name")}
+                    {
+                        (this.LocalDbOnly
+                        ? "uname"
+                        : "user_name AS username, user_nik AS usernik")
+                    }
                 FROM
                     {(this.LocalDbOnly ? "users" : "dc_user_t")}
                 WHERE
@@ -479,20 +485,29 @@ namespace bifeldy_sd3_lib_452.Handlers {
                         AND UPPER(user_password) = UPPER(:pass)
                     ")}
             ";
+
             var param = new List<CDbQueryParamBind> {
                 new CDbQueryParamBind { NAME = "uname", VALUE = userNameNik }
             };
+
             if (string.IsNullOrEmpty(this.LoggedInUsername)) {
                 if (this.LocalDbOnly) {
                     byte[] pswd = new SHA1Managed().ComputeHash(Encoding.UTF8.GetBytes(password));
                     string hash = string.Concat(pswd.Select(b => b.ToString("x2")));
                     param.Add(new CDbQueryParamBind { NAME = "pass", VALUE = hash });
+
                     this.LoggedInUsername = await this.Sqlite.ExecScalarAsync<string>(query, param);
+                    this.LoggedInUsernik = this.LoggedInUsername;
                 }
                 else {
                     param.Add(new CDbQueryParamBind { NAME = "unik", VALUE = userNameNik });
                     param.Add(new CDbQueryParamBind { NAME = "pass", VALUE = password });
-                    this.LoggedInUsername = await this.OraPg?.ExecScalarAsync<string>(query, param);
+
+                    DataTable dataUser = await this.OraPg?.GetDataTableAsync(query, param);
+                    if (dataUser.Rows.Count > 0) {
+                        this.LoggedInUsername = dataUser.Rows[0]["username"].ToString();
+                        this.LoggedInUsernik = dataUser.Rows[0]["usernik"].ToString();
+                    }
                 }
             }
 

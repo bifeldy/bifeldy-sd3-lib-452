@@ -29,6 +29,8 @@ namespace bifeldy_sd3_lib_452.TableView {
         public string DBPG_PASS { get; set; }
         public string DBPG_PORT { get; set; }
         public string FLAG_DBPG { get; set; }
+        public string FLAG_CLOUD { get; set; }
+        public string IP_NGINX_CLOUD { get; set; }
     }
 
 }

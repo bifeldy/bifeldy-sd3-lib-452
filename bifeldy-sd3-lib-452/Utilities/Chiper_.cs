@@ -15,12 +15,15 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
 using System.Runtime.InteropServices;
+using System.Web;
 
 using Ionic.Crc;
+using MimeKit;
 
 using bifeldy_sd3_lib_452.Extensions;
 
@@ -269,7 +272,21 @@ namespace bifeldy_sd3_lib_452.Utilities {
                     Marshal.FreeCoTaskMem(mimeTypePtr);
                 }
 
-                return "application/octet-stream";
+                string mime = null;
+
+                if (string.IsNullOrEmpty(mime)) {
+                    mime = MimeTypes.GetMimeType(filePath);
+                }
+
+                if (string.IsNullOrEmpty(mime)) {
+                    mime = MimeMapping.GetMimeMapping(filePath);
+                }
+
+                if (string.IsNullOrEmpty(mime)) {
+                    mime = MediaTypeNames.Application.Octet;
+                }
+
+                return mime;
             }
         }
 
