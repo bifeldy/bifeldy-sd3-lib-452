@@ -249,7 +249,7 @@ namespace bifeldy_sd3_lib_452.Utilities {
 
             ZXing.Result result = reader.Decode((Bitmap) bitmapImage);
 
-            return result.Text;
+            return result?.Text;
         }
 
     }
